@@ -1,0 +1,1 @@
+export { default } from "D:/Android/project/Printer ESCPOS/webside/node_modules/@nuxt/image/dist/runtime/components/NuxtImg.vue";
