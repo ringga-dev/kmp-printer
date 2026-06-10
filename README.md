@@ -1,99 +1,198 @@
-# 🖨️ KmpPrinter (V2.1.1)
-**Solusi Cetak Thermal Kotlin Multiplatform Terbaik untuk Profesional.**
+# KmpPrinter
 
-**Bahasa:** **Bahasa Indonesia** | [English](./README_EN.md) | [简体中文](./README_ZH.md)
+KmpPrinter is a Kotlin Multiplatform ESC/POS thermal printing library for Android, iOS, JVM/Desktop, and Web targets. It provides a single API for printer discovery, connection management, receipt building, raw ESC/POS output, image printing, barcodes, QR codes, and printer status checks.
 
-![Build Status](https://github.com/ringga-dev/kmp-printer/actions/workflows/publishgithub.yml/badge.svg)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![KMP](https://img.shields.io/badge/Kotlin-Multiplatform-blue?logo=kotlin)](https://kotlinlang.org/docs/multiplatform.html)
+The source version configured in this repository is `2.2.0`.
 
----
+## Features
 
-KmpPrinter adalah library pencetakan thermal ESC/POS kelas industri dengan performa tinggi yang dirancang untuk integrasi mulus di **Android, iOS, JVM (Desktop), dan Web (WASM/JS)**.
+- Kotlin Multiplatform support for Android, iOS, JVM/Desktop, JS, and WASM.
+- ESC/POS receipt builder with text styling, alignment, tables, dividers, images, barcodes, QR codes, cash drawer commands, and paper cutting.
+- Bluetooth, BLE, USB, TCP/network, and virtual printer connectors depending on platform support.
+- Flow-based printer discovery and print status updates.
+- Real-time status querying for compatible printers.
+- Built-in concurrency protection and chunked sending to reduce data corruption and printer buffer overflow.
+- Preview block generation for UI receipt previews.
 
----
+## Platform Support
 
-## 📋 Dukungan Konektivitas Platform
+| Platform | Bluetooth Classic | BLE | USB | Network TCP | Status Query |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Android | Yes | Yes | Yes | Yes | Yes |
+| iOS | No | Yes | No | Yes | Yes |
+| JVM/Desktop | No | No | Yes | Yes | Limited |
+| Web | Yes | Yes | Yes | Yes | Browser dependent |
 
-| Platform | Bluetooth | BLE | USB (OTG) | Network (TCP) |
-| :--- | :---: | :---: | :---: | :---: |
-| **Android** | ✅ | ✅ | ✅ | ✅ |
-| **iOS** | ❌ | ✅ | ❌ | ✅ |
-| **JVM/Desktop**| ❌ | ❌ | ✅ | ✅ |
-| **Web (WASM)** | ✅ | ✅ | ✅ | ✅ |
+Support still depends on the printer firmware, browser APIs, OS permissions, and hardware transport availability.
 
----
+## Installation
 
-## 💎 Fitur Unggulan Industri
+Add the Maven repository:
 
-- **🛡️ Stabilitas Hardened (V2.1)**: Mekanisme `Mutex` internal mencegah kerusakan data saat ada banyak proses cetak bersamaan.
-- **🚀 Ultra-Fast Image Engine**: Algoritma dithering yang dioptimalkan (**Floyd-Steinberg & Atkinson**) menggunakan aritmatika *integer fixed-point*.
-- **📊 Real-time Monitoring**: Deteksi status hardware printer secara akurat (Paper Out, Cover Open, Offline) di Android dan iOS.
-- **🌐 Web Support**: Dukungan penuh untuk WebBluetooth dan WebUSB pada target KMP WASM/JS.
-
----
-
-## 📦 Instalasi (v2.1.1)
-
-### 1. Tambahkan Repository GitHub Maven
-Tambahkan di `settings.gradle.kts` proyek Anda:
 ```kotlin
+// settings.gradle.kts
 dependencyResolutionManagement {
     repositories {
+        google()
         mavenCentral()
-        maven { url = uri("https://raw.githubusercontent.com/ringga-dev/kmp-printer/maven-repo") }
+        maven {
+            url = uri("https://raw.githubusercontent.com/ringga-dev/kmp-printer/maven-repo")
+        }
     }
 }
 ```
 
-### 2. Tambahkan Dependency
-Tambahkan di modul Anda (contoh: `commonMain` untuk proyek KMP):
+Add the dependency:
+
 ```kotlin
-dependencies {
-    implementation("io.github.ringga-dev:kmp_printer:2.1.1")
+// build.gradle.kts
+kotlin {
+    sourceSets {
+        commonMain.dependencies {
+            implementation("io.github.ringga-dev:kmp_printer:2.2.0")
+        }
+    }
 }
 ```
 
----
+This dependency version is synchronized from `LIB_VERSION` in `gradle.properties` by running `./gradlew syncDocumentationVersion`.
 
-## 🛠️ Penggunaan Cepat
-
-Menggunakan **Printer DSL** untuk kode yang bersih:
+## Quick Start
 
 ```kotlin
+import kotlinx.coroutines.flow.collect
+import ngga.ring.printer.KmpPrinter
+import ngga.ring.printer.model.PrinterConfig
+
 val printer = KmpPrinter()
-val config = PrinterConfig(name = "MTP-II", connectionType = "BLUETOOTH", address = "00:11...")
+
+val config = PrinterConfig(
+    name = "Receipt Printer",
+    connectionType = "NETWORK",
+    address = "192.168.1.50",
+    port = 9100,
+    characterPerLine = 32,
+    paperWidth = 58,
+    paperWidthDots = 384
+)
 
 printer.print(config) {
-    initialize()
     alignCenter()
-    imageAdvanced(logoBytes, width, height, dithering = "ATKINSON")
-    setBold(true)
-    line("SISTEM POS ENTERPRISE")
-    setBold(false)
+    bold(true)
+    line("STORE RECEIPT")
+    bold(false)
     divider()
-    tableRow(listOf("Menu A", "1x", "Rp 10.000"), listOf(2, 1, 1))
-    qrCodeNative("https://github.com/ringga-dev", size = 8, center = true)
+    tableRow(listOf("Coffee", "1", "$3.00"), listOf(2, 1, 1))
+    tableRow(listOf("Tax", "", "$0.30"), listOf(2, 1, 1))
+    divider()
+    qrCodeNative("https://example.com/order/123", center = true)
     feed(3)
     cut()
+}.collect { status ->
+    println(status)
 }
 ```
 
----
+## Printer Configuration
 
-## 📦 Rilis Manual (AAR & XCFramework)
-Anda bisa men-download file biner langsung dari [GitHub Releases](https://github.com/ringga-dev/kmp-printer/releases):
-- `printer-release.aar` (Android)
-- `KmpPrinter.xcframework.zip` (iOS)
-- `sonatype-bundle-2.1.1.zip` (Untuk upload manual ke Maven Central)
+```kotlin
+data class PrinterConfig(
+    val name: String,
+    val connectionType: String,
+    val address: String? = null,
+    val port: Int = 9100,
+    val characterPerLine: Int = 31,
+    val paperWidth: Int = 58,
+    val paperWidthDots: Int = 0,
+    val leftMargin: Int = 0,
+    val autoCenter: Boolean = false,
+    val charsetName: String = "UTF-8",
+    val escPosCodePage: Byte = 0x00,
+    val connectionTimeoutMs: Int = 5000,
+    val readTimeoutMs: Int = 2000
+)
+```
 
----
+Common `connectionType` values are `BLUETOOTH`, `BLE`, `USB`, `NETWORK`, and `VIRTUAL`.
 
-## 🔒 Kebijakan Izin (Permissions)
+## Discovery
 
-### Android
-Pastikan Anda meminta izin `BLUETOOTH_SCAN` dan `BLUETOOTH_CONNECT` secara runtime pada Android 12+.
+```kotlin
+printer.discovery("NETWORK") { log ->
+    println(log)
+}.collect { devices ->
+    devices.forEach { device ->
+        println("${device.name} ${device.address}:${device.port}")
+    }
+}
+```
 
----
+## Status Monitoring
 
-Developed with ❤️ by **Ringga**
+```kotlin
+printer.monitorStatus(config, intervalMs = 2000).collect { status ->
+    if (status.isPaperOut) {
+        println("Printer is out of paper")
+    }
+}
+```
+
+Status monitoring uses ESC/POS `DLE EOT` queries and only works when the connector and printer firmware support reading responses.
+
+## Platform Setup
+
+Android applications usually need:
+
+```xml
+<uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+<uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+<uses-permission android:name="android.permission.INTERNET" />
+```
+
+USB printing uses Android's USB host permission flow for the selected device. It is not declared as a normal manifest permission.
+
+iOS applications that use BLE need:
+
+```xml
+<key>NSBluetoothAlwaysUsageDescription</key>
+<string>This app uses Bluetooth to connect to receipt printers.</string>
+```
+
+Web printing requires a secure context and a user gesture before the browser can show Bluetooth, USB, or serial device pickers.
+
+## Development
+
+Run the version sync task after changing `LIB_VERSION` in `gradle.properties`:
+
+```bash
+./gradlew syncDocumentationVersion
+```
+
+Use the Gradle wrapper for builds:
+
+```bash
+./gradlew build
+```
+
+## Changelog
+
+Current source version: `2.2.0`.
+
+Recent highlights:
+
+- Multiplatform ESC/POS support for Android, iOS, JVM/Desktop, JS, and WASM.
+- Hardened connector sending with mutex protection and chunked transfer.
+- Receipt DSL for text, tables, images, barcodes, QR codes, cash drawer, and cutter commands.
+- Printer discovery, preview blocks, virtual printer support, and status monitoring for compatible hardware.
+
+## Contributing
+
+- Keep public API changes intentional and documented here.
+- Prefer shared `commonMain` code when behavior is platform independent.
+- Keep platform-specific transport code inside the matching source set.
+- Test affected targets before publishing.
+
+## License
+
+MIT License. See [LICENSE](./LICENSE).
