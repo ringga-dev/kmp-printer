@@ -1,0 +1,137 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "url": "../../printer/2.2.0/printer-2.2.0.module",
+    "group": "io.github.ringga-dev",
+    "module": "printer",
+    "version": "2.2.0",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "8.14.3"
+    }
+  },
+  "variants": [
+    {
+      "name": "jsApiElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-api",
+        "org.jetbrains.kotlin.js.compiler": "ir",
+        "org.jetbrains.kotlin.platform.type": "js"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-dom-api-compat",
+          "version": {
+            "requires": "2.3.20"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.3.20"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "printer-js-2.2.0.klib",
+          "url": "printer-js-2.2.0.klib",
+          "size": 178413,
+          "sha512": "7e69482e1b268c52a082449fe82b469d2c16581e9ed6cf62d130a12510318e7f786c8413bbf3abb1bcce325502afff3faeaa9957cfd59e4f29ed0a8d8238fdb3",
+          "sha256": "bfa0639896324d4bd659150dedb227ea241db23e21411ec54b36eb864c208812",
+          "sha1": "3a7bb4b70dea34c17bb68756be21a1f90ed3f346",
+          "md5": "beed7caa9a47d1afedf29192c2955d76"
+        }
+      ]
+    },
+    {
+      "name": "jsRuntimeElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-runtime",
+        "org.jetbrains.kotlin.js.compiler": "ir",
+        "org.jetbrains.kotlin.platform.type": "js"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-dom-api-compat",
+          "version": {
+            "requires": "2.3.20"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.3.20"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-coroutines-core",
+          "version": {
+            "requires": "1.10.2"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-datetime",
+          "version": {
+            "requires": "0.7.1"
+          }
+        },
+        {
+          "group": "io.github.aakira",
+          "module": "napier",
+          "version": {
+            "requires": "2.7.1"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "printer-js-2.2.0.klib",
+          "url": "printer-js-2.2.0.klib",
+          "size": 178413,
+          "sha512": "7e69482e1b268c52a082449fe82b469d2c16581e9ed6cf62d130a12510318e7f786c8413bbf3abb1bcce325502afff3faeaa9957cfd59e4f29ed0a8d8238fdb3",
+          "sha256": "bfa0639896324d4bd659150dedb227ea241db23e21411ec54b36eb864c208812",
+          "sha1": "3a7bb4b70dea34c17bb68756be21a1f90ed3f346",
+          "md5": "beed7caa9a47d1afedf29192c2955d76"
+        }
+      ]
+    },
+    {
+      "name": "jsSourcesElements-published",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-runtime",
+        "org.jetbrains.kotlin.js.compiler": "ir",
+        "org.jetbrains.kotlin.platform.type": "js"
+      },
+      "files": [
+        {
+          "name": "printer-js-2.2.0-sources.jar",
+          "url": "printer-js-2.2.0-sources.jar",
+          "size": 43254,
+          "sha512": "b862dae012fb008bd5bbfa2d0dd268edad589fb9792035c70c7122ceb200102494245c5d62d3b632123a50e989208c1acd73ffdd8c0549164205705c27632151",
+          "sha256": "dccb2abeecf083596a4fe75dd4b5d0e27c1fc65880e7a0f02e1b2c3ef04518de",
+          "sha1": "84233dea8b68cc358f19f547552255ceae0bc0c9",
+          "md5": "5a1af26a1aa99f92deae6bd820be748f"
+        }
+      ]
+    }
+  ]
+}
