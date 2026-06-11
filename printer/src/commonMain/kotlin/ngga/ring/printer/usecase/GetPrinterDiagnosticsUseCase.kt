@@ -4,6 +4,7 @@ import ngga.ring.printer.manager.PrinterPlatformDiagnostics
 import ngga.ring.printer.model.PrinterBleDiagnostic
 import ngga.ring.printer.model.PrinterConfig
 import ngga.ring.printer.model.PrinterPlatformReport
+import ngga.ring.printer.model.PrinterSerialDiagnostic
 import ngga.ring.printer.model.PrinterUsbDiagnostic
 
 class GetPrinterDiagnosticsUseCase(
@@ -21,5 +22,9 @@ class GetPrinterDiagnosticsUseCase(
 
     fun diagnoseBle(config: PrinterConfig): PrinterBleDiagnostic {
         return diagnostics.diagnoseBle(config)
+    }
+
+    fun diagnoseSerial(config: PrinterConfig): PrinterSerialDiagnostic {
+        return diagnostics.diagnoseSerial(config)
     }
 }

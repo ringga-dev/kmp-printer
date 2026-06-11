@@ -4,8 +4,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
 
 import ngga.ring.printer.manager.PrinterInitializer
 import ngga.ring.printer.manager.PrinterPermissionManager
@@ -33,10 +31,4 @@ class MainActivity : ComponentActivity() {
         // Relay result to the library
         PrinterPermissionManager().onPermissionResult(requestCode, permissions, grantResults)
     }
-}
-
-@Preview
-@Composable
-fun AppAndroidPreview() {
-    App()
 }

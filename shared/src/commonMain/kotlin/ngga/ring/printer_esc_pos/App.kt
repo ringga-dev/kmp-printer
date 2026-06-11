@@ -43,6 +43,7 @@ import ngga.ring.printer.KmpPrinter
 import ngga.ring.printer.model.DiscoveredPrinter
 import ngga.ring.printer.model.DiscoveryConfig
 import ngga.ring.printer.model.PrinterConfig
+import ngga.ring.printer.model.PrinterConnectionType
 import ngga.ring.printer.model.PrintStatus
 
 private data class ConnectionOption(
@@ -82,6 +83,11 @@ private fun PrinterWizardApp() {
     var baudRate by remember { mutableStateOf("9600") }
     var charsPerLine by remember { mutableStateOf("32") }
     var paperDots by remember { mutableStateOf("384") }
+    var bleServiceUuid by remember { mutableStateOf("0000ff00-0000-1000-8000-00805f9b34fb") }
+    var bleCharacteristicUuid by remember { mutableStateOf("0000ff01-0000-1000-8000-00805f9b34fb") }
+    var bleBridgeCommand by remember { mutableStateOf("") }
+    var bleAutoDiscover by remember { mutableStateOf(true) }
+    var bleHandshake by remember { mutableStateOf(true) }
     var devices by remember { mutableStateOf<List<DiscoveredPrinter>>(emptyList()) }
     var selectedDevice by remember { mutableStateOf<DiscoveredPrinter?>(null) }
     var log by remember { mutableStateOf("Choose a connection type to start.") }
@@ -96,7 +102,12 @@ private fun PrinterWizardApp() {
         port = port.toIntOrNull() ?: 9100,
         characterPerLine = charsPerLine.toIntOrNull() ?: 32,
         paperWidthDots = paperDots.toIntOrNull() ?: 384,
-        baudRate = baudRate.toIntOrNull() ?: 9600
+        baudRate = baudRate.toIntOrNull() ?: 9600,
+        bleServiceUuid = bleServiceUuid,
+        bleWriteCharacteristicUuid = bleCharacteristicUuid,
+        bleAutoDiscover = bleAutoDiscover,
+        bleHandshakeEnabled = bleHandshake,
+        bleBridgeCommand = bleBridgeCommand.ifBlank { null }
     )
 
     fun select(device: DiscoveredPrinter) {
@@ -182,6 +193,51 @@ private fun PrinterWizardApp() {
         }
     }
 
+    fun testConnection() {
+        scope.launch {
+            log = when (val status = printer.testConnection(config())) {
+                PrintStatus.Success -> "Connection test success."
+                is PrintStatus.Error -> "Connection test failed: ${status.message}"
+                else -> "Connection test: $status"
+            }
+        }
+    }
+
+    fun runDiagnostics() {
+        val cfg = config()
+        val report = printer.platformReport()
+        log = when (cfg.connectionType) {
+            PrinterConnectionType.USB -> {
+                val usb = printer.diagnoseUsb(cfg)
+                buildString {
+                    append("USB diagnostic: ${usb.failureReason}. ${usb.message}")
+                    if (usb.suggestedFix.isNotBlank()) append(" Fix: ${usb.suggestedFix}")
+                    if (usb.udevRule != null) append(" Udev: ${usb.udevRule}")
+                }
+            }
+            PrinterConnectionType.BLUETOOTH_LE -> {
+                val ble = printer.diagnoseBle(cfg)
+                "BLE diagnostic: ${ble.failureReason}. ${ble.message} Fix: ${ble.suggestedFix}"
+            }
+            PrinterConnectionType.BLUETOOTH,
+            PrinterConnectionType.SERIAL -> {
+                val serial = printer.diagnoseSerial(cfg)
+                buildString {
+                    append("${cfg.connectionType} diagnostic: ${serial.failureReason}. ${serial.message}")
+                    if (serial.suggestedFix.isNotBlank()) append(" Fix: ${serial.suggestedFix}")
+                    if (serial.ports.isNotEmpty()) {
+                        append(" Ports: ")
+                        append(serial.ports.joinToString { "${it.address}(${it.confidence}%)" })
+                    }
+                }
+            }
+            else -> {
+                val capability = report.capabilityFor(cfg.connectionType)
+                "Platform ${report.platformName}/${report.osName}. ${cfg.connectionType}: supported=${capability?.isSupported}, native=${capability?.isNative}. ${printer.troubleshootingHint(cfg.connectionType)}"
+            }
+        }
+    }
+
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val compact = maxWidth < 840.dp
         val outerModifier = Modifier.fillMaxSize().padding(if (compact) 12.dp else 20.dp)
@@ -213,12 +269,24 @@ private fun PrinterWizardApp() {
                 onAddress = { address = it },
                 onPort = { port = it },
                 onBaudRate = { baudRate = it },
+                bleServiceUuid = bleServiceUuid,
+                bleCharacteristicUuid = bleCharacteristicUuid,
+                bleBridgeCommand = bleBridgeCommand,
+                bleAutoDiscover = bleAutoDiscover,
+                bleHandshake = bleHandshake,
+                onBleServiceUuid = { bleServiceUuid = it },
+                onBleCharacteristicUuid = { bleCharacteristicUuid = it },
+                onBleBridgeCommand = { bleBridgeCommand = it },
+                onBleAutoDiscover = { bleAutoDiscover = it },
+                onBleHandshake = { bleHandshake = it },
                 onScan = { scan() },
                 onSelect = { select(it) },
                 onAdvancedToggle = { advancedOpen = !advancedOpen },
                 onCharsPerLine = { charsPerLine = it },
                 onPaperDots = { paperDots = it },
                 onPrint = { printTest() },
+                onTestConnection = { testConnection() },
+                onDiagnostics = { runDiagnostics() },
                 canContinue = when (step) {
                     0 -> type.isNotBlank()
                     1 -> type == "VIRTUAL" || address.isNotBlank() || selectedDevice != null
@@ -270,12 +338,24 @@ private fun WizardContent(
     onAddress: (String) -> Unit,
     onPort: (String) -> Unit,
     onBaudRate: (String) -> Unit,
+    bleServiceUuid: String,
+    bleCharacteristicUuid: String,
+    bleBridgeCommand: String,
+    bleAutoDiscover: Boolean,
+    bleHandshake: Boolean,
+    onBleServiceUuid: (String) -> Unit,
+    onBleCharacteristicUuid: (String) -> Unit,
+    onBleBridgeCommand: (String) -> Unit,
+    onBleAutoDiscover: (Boolean) -> Unit,
+    onBleHandshake: (Boolean) -> Unit,
     onScan: () -> Unit,
     onSelect: (DiscoveredPrinter) -> Unit,
     onAdvancedToggle: () -> Unit,
     onCharsPerLine: (String) -> Unit,
     onPaperDots: (String) -> Unit,
     onPrint: () -> Unit,
+    onTestConnection: () -> Unit,
+    onDiagnostics: () -> Unit,
     canContinue: Boolean,
     onBack: () -> Unit,
     onNext: () -> Unit
@@ -305,6 +385,16 @@ private fun WizardContent(
                         onAddress = onAddress,
                         onPort = onPort,
                         onBaudRate = onBaudRate,
+                        bleServiceUuid = bleServiceUuid,
+                        bleCharacteristicUuid = bleCharacteristicUuid,
+                        bleBridgeCommand = bleBridgeCommand,
+                        bleAutoDiscover = bleAutoDiscover,
+                        bleHandshake = bleHandshake,
+                        onBleServiceUuid = onBleServiceUuid,
+                        onBleCharacteristicUuid = onBleCharacteristicUuid,
+                        onBleBridgeCommand = onBleBridgeCommand,
+                        onBleAutoDiscover = onBleAutoDiscover,
+                        onBleHandshake = onBleHandshake,
                         onScan = onScan,
                         onSelect = onSelect
                     )
@@ -316,7 +406,12 @@ private fun WizardContent(
                             port = port.toIntOrNull() ?: 9100,
                             characterPerLine = charsPerLine.toIntOrNull() ?: 32,
                             paperWidthDots = paperDots.toIntOrNull() ?: 384,
-                            baudRate = baudRate.toIntOrNull() ?: 9600
+                            baudRate = baudRate.toIntOrNull() ?: 9600,
+                            bleServiceUuid = bleServiceUuid,
+                            bleWriteCharacteristicUuid = bleCharacteristicUuid,
+                            bleAutoDiscover = bleAutoDiscover,
+                            bleHandshakeEnabled = bleHandshake,
+                            bleBridgeCommand = bleBridgeCommand.ifBlank { null }
                         ),
                         advancedOpen = advancedOpen,
                         charsPerLine = charsPerLine,
@@ -324,7 +419,9 @@ private fun WizardContent(
                         onAdvancedToggle = onAdvancedToggle,
                         onCharsPerLine = onCharsPerLine,
                         onPaperDots = onPaperDots,
-                        onPrint = onPrint
+                        onPrint = onPrint,
+                        onTestConnection = onTestConnection,
+                        onDiagnostics = onDiagnostics
                     )
                 }
             }
@@ -414,6 +511,16 @@ private fun DeviceStep(
     onAddress: (String) -> Unit,
     onPort: (String) -> Unit,
     onBaudRate: (String) -> Unit,
+    bleServiceUuid: String,
+    bleCharacteristicUuid: String,
+    bleBridgeCommand: String,
+    bleAutoDiscover: Boolean,
+    bleHandshake: Boolean,
+    onBleServiceUuid: (String) -> Unit,
+    onBleCharacteristicUuid: (String) -> Unit,
+    onBleBridgeCommand: (String) -> Unit,
+    onBleAutoDiscover: (Boolean) -> Unit,
+    onBleHandshake: (Boolean) -> Unit,
     onScan: () -> Unit,
     onSelect: (DiscoveredPrinter) -> Unit
 ) {
@@ -457,6 +564,24 @@ private fun DeviceStep(
                 OutlinedTextField(address, onAddress, label = { Text("Manual Address / Port") }, modifier = Modifier.fillMaxWidth())
                 if (type == "BLUETOOTH" || type == "SERIAL" || type == "USB") {
                     OutlinedTextField(baudRate, onBaudRate, label = { Text("Baud Rate") }, modifier = Modifier.fillMaxWidth())
+                }
+                if (type == "BLUETOOTH_LE") {
+                    Text("BLE Settings", fontWeight = FontWeight.SemiBold)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FilterChip(
+                            selected = bleAutoDiscover,
+                            onClick = { onBleAutoDiscover(!bleAutoDiscover) },
+                            label = { Text("Auto Discover") }
+                        )
+                        FilterChip(
+                            selected = bleHandshake,
+                            onClick = { onBleHandshake(!bleHandshake) },
+                            label = { Text("Handshake") }
+                        )
+                    }
+                    OutlinedTextField(bleServiceUuid, onBleServiceUuid, label = { Text("Service UUID") }, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(bleCharacteristicUuid, onBleCharacteristicUuid, label = { Text("Write Characteristic UUID") }, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(bleBridgeCommand, onBleBridgeCommand, label = { Text("Windows/macOS Bridge Command") }, modifier = Modifier.fillMaxWidth())
                 }
             }
         }
@@ -509,7 +634,9 @@ private fun PrintStep(
     onAdvancedToggle: () -> Unit,
     onCharsPerLine: (String) -> Unit,
     onPaperDots: (String) -> Unit,
-    onPrint: () -> Unit
+    onPrint: () -> Unit,
+    onTestConnection: () -> Unit,
+    onDiagnostics: () -> Unit
 ) {
     Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text("Review and Print", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
@@ -529,6 +656,14 @@ private fun PrintStep(
 
         Button(onClick = onPrint, modifier = Modifier.fillMaxWidth()) {
             Text("Print Test Receipt")
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+            OutlinedButton(onClick = onTestConnection, modifier = Modifier.weight(1f)) {
+                Text("Test Connection")
+            }
+            OutlinedButton(onClick = onDiagnostics, modifier = Modifier.weight(1f)) {
+                Text("Diagnostics")
+            }
         }
     }
 }

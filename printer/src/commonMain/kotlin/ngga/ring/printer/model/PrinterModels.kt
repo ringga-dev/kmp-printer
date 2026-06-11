@@ -27,6 +27,8 @@ data class PrinterConfig(
     val sendChunkDelayMs: Long = 20,
     val bleServiceUuid: String = "0000ff00-0000-1000-8000-00805f9b34fb",
     val bleWriteCharacteristicUuid: String = "0000ff01-0000-1000-8000-00805f9b34fb",
+    val bleAutoDiscover: Boolean = true,
+    val bleHandshakeEnabled: Boolean = true,
     val bleChunkSize: Int = 20,
     val bleCommandDelayMs: Long = 120,
     val bleBridgeCommand: String? = null,

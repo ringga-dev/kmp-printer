@@ -124,7 +124,10 @@ class LinuxBleBackend : BaseJvmBleBackend(JvmOperatingSystem.LINUX) {
         return try {
             val session = BluetoothCtlGattSession(
                 address = address,
+                serviceUuid = config.bleServiceUuid,
                 characteristicUuid = config.bleWriteCharacteristicUuid,
+                autoDiscover = config.bleAutoDiscover,
+                handshakeEnabled = config.bleHandshakeEnabled,
                 chunkSize = config.bleChunkSize.coerceIn(1, 512),
                 commandDelayMs = config.bleCommandDelayMs.coerceAtLeast(20)
             )
@@ -342,7 +345,10 @@ private object JvmCommand {
 
 private class BluetoothCtlGattSession(
     private val address: String,
+    private val serviceUuid: String,
     private val characteristicUuid: String,
+    private val autoDiscover: Boolean,
+    private val handshakeEnabled: Boolean,
     private val chunkSize: Int,
     private val commandDelayMs: Long
 ) : JvmBleSession {
@@ -357,7 +363,13 @@ private class BluetoothCtlGattSession(
 
         sendCommand("connect $address")
         sendCommand("menu gatt")
+        if (autoDiscover) {
+            sendCommand("list-attributes")
+        }
         sendCommand("select-attribute $characteristicUuid")
+        if (handshakeEnabled) {
+            write(byteArrayOf(0x1B, 0x40))
+        }
         return process?.isAlive == true
     }
 
@@ -412,10 +424,10 @@ private object JvmBleBridgeProcess {
                 "--connect",
                 address,
                 "--service",
-                config.bleServiceUuid,
+                if (config.bleAutoDiscover) "auto" else config.bleServiceUuid,
                 "--characteristic",
-                config.bleWriteCharacteristicUuid
-            )
+                if (config.bleAutoDiscover) "auto" else config.bleWriteCharacteristicUuid
+            ) + if (config.bleHandshakeEnabled) listOf("--handshake") else emptyList()
             val process = ProcessBuilder(args)
                 .redirectErrorStream(true)
                 .start()

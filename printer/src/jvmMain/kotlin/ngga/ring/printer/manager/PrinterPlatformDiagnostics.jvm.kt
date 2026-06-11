@@ -4,6 +4,7 @@ import ngga.ring.printer.model.PrinterConnectionType
 import ngga.ring.printer.model.PrinterBleDiagnostic
 import ngga.ring.printer.model.PrinterConfig
 import ngga.ring.printer.model.PrinterPlatformReport
+import ngga.ring.printer.model.PrinterSerialDiagnostic
 import ngga.ring.printer.model.PrinterTransportCapability
 import ngga.ring.printer.model.PrinterUsbDiagnostic
 
@@ -86,5 +87,9 @@ actual class PrinterPlatformDiagnostics actual constructor() {
 
     actual fun diagnoseBle(config: PrinterConfig): PrinterBleDiagnostic {
         return bleService.diagnose(config)
+    }
+
+    actual fun diagnoseSerial(config: PrinterConfig): PrinterSerialDiagnostic {
+        return portService.diagnoseSerial(config)
     }
 }

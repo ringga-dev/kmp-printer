@@ -3,8 +3,9 @@ import Foundation
 
 struct Options {
     let address: String
-    let service: CBUUID
-    let characteristic: CBUUID
+    let service: CBUUID?
+    let characteristic: CBUUID?
+    let handshake: Bool
 
     static func parse(_ args: [String]) -> Options? {
         if args.contains("--version") {
@@ -18,7 +19,12 @@ struct Options {
         else {
             return nil
         }
-        return Options(address: address, service: CBUUID(string: service), characteristic: CBUUID(string: characteristic))
+        return Options(
+            address: address,
+            service: service.lowercased() == "auto" ? nil : CBUUID(string: service),
+            characteristic: characteristic.lowercased() == "auto" ? nil : CBUUID(string: characteristic),
+            handshake: args.contains("--handshake")
+        )
     }
 
     private static func value(after key: String, in args: [String]) -> String? {
@@ -67,7 +73,7 @@ final class BleBridge: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate 
 
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         guard central.state == .poweredOn else { return }
-        central.scanForPeripherals(withServices: [options.service], options: nil)
+        central.scanForPeripherals(withServices: options.service.map { [$0] }, options: nil)
     }
 
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
@@ -82,18 +88,29 @@ final class BleBridge: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate 
     }
 
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
-        peripheral.discoverServices([options.service])
+        peripheral.discoverServices(options.service.map { [$0] })
     }
 
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
-        guard let service = peripheral.services?.first(where: { $0.uuid == options.service }) else { return }
-        peripheral.discoverCharacteristics([options.characteristic], for: service)
+        let services = options.service == nil ? peripheral.services ?? [] : peripheral.services?.filter { $0.uuid == options.service } ?? []
+        for service in services {
+            peripheral.discoverCharacteristics(options.characteristic.map { [$0] }, for: service)
+        }
     }
 
     func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
-        writable = service.characteristics?.first(where: { $0.uuid == options.characteristic })
+        writable = service.characteristics?.first(where: { characteristic in
+            let canWrite = characteristic.properties.contains(.write) || characteristic.properties.contains(.writeWithoutResponse)
+            if let target = options.characteristic {
+                return canWrite && characteristic.uuid == target
+            }
+            return canWrite
+        })
         ready = writable != nil
         if ready {
+            if options.handshake, let peripheral, let writable {
+                peripheral.writeValue(Data([0x1B, 0x40]), for: writable, type: writable.properties.contains(.writeWithoutResponse) ? .withoutResponse : .withResponse)
+            }
             CFRunLoopStop(CFRunLoopGetCurrent())
         }
     }

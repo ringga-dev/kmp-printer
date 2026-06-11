@@ -6,6 +6,8 @@ import ngga.ring.printer.model.PrinterBleFailureReason
 import ngga.ring.printer.model.PrinterConfig
 import ngga.ring.printer.model.PrinterConnectionType
 import ngga.ring.printer.model.PrinterPlatformReport
+import ngga.ring.printer.model.PrinterSerialDiagnostic
+import ngga.ring.printer.model.PrinterSerialFailureReason
 import ngga.ring.printer.model.PrinterTransportCapability
 import ngga.ring.printer.model.PrinterUsbDiagnostic
 import ngga.ring.printer.model.PrinterUsbFailureReason
@@ -56,6 +58,17 @@ actual class PrinterPlatformDiagnostics actual constructor() {
             failureReason = PrinterBleFailureReason.UNKNOWN,
             message = "Android BLE diagnostics require runtime Bluetooth adapter/device inspection.",
             suggestedFix = troubleshootingHint(PrinterConnectionType.BLUETOOTH_LE)
+        )
+    }
+
+    actual fun diagnoseSerial(config: PrinterConfig): PrinterSerialDiagnostic {
+        return PrinterSerialDiagnostic(
+            portFound = false,
+            canOpen = false,
+            canWrite = false,
+            failureReason = PrinterSerialFailureReason.UNSUPPORTED_PLATFORM,
+            message = "Android Bluetooth Classic uses Android BluetoothSocket flow, not JVM serial-port diagnostics.",
+            suggestedFix = troubleshootingHint(PrinterConnectionType.BLUETOOTH)
         )
     }
 

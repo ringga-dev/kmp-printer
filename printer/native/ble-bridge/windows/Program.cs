@@ -52,7 +52,7 @@ internal static class Program
     }
 }
 
-internal sealed record Options(ulong Address, Guid ServiceUuid, Guid CharacteristicUuid)
+internal sealed record Options(ulong Address, Guid? ServiceUuid, Guid? CharacteristicUuid, bool Handshake)
 {
     public static Options? Parse(string[] args)
     {
@@ -60,8 +60,8 @@ internal sealed record Options(ulong Address, Guid ServiceUuid, Guid Characteris
         string? service = ValueAfter(args, "--service");
         string? characteristic = ValueAfter(args, "--characteristic");
         if (address == null || service == null || characteristic == null) return null;
-        if (!Guid.TryParse(service, out var serviceUuid)) return null;
-        if (!Guid.TryParse(characteristic, out var characteristicUuid)) return null;
+        Guid? serviceUuid = service.Equals("auto", StringComparison.OrdinalIgnoreCase) ? null : Guid.Parse(service);
+        Guid? characteristicUuid = characteristic.Equals("auto", StringComparison.OrdinalIgnoreCase) ? null : Guid.Parse(characteristic);
 
         var normalizedAddress = address.Replace(":", "").Replace("-", "");
         if (!ulong.TryParse(normalizedAddress, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var bluetoothAddress))
@@ -69,7 +69,7 @@ internal sealed record Options(ulong Address, Guid ServiceUuid, Guid Characteris
             return null;
         }
 
-        return new Options(bluetoothAddress, serviceUuid, characteristicUuid);
+        return new Options(bluetoothAddress, serviceUuid, characteristicUuid, args.Contains("--handshake"));
     }
 
     private static string? ValueAfter(string[] args, string key)
@@ -97,23 +97,37 @@ internal sealed class BleSession : IAsyncDisposable
         var device = await BluetoothLEDevice.FromBluetoothAddressAsync(options.Address);
         if (device == null) return null;
 
-        var servicesResult = await device.GetGattServicesForUuidAsync(options.ServiceUuid, BluetoothCacheMode.Uncached);
+        var servicesResult = options.ServiceUuid == null
+            ? await device.GetGattServicesAsync(BluetoothCacheMode.Uncached)
+            : await device.GetGattServicesForUuidAsync(options.ServiceUuid.Value, BluetoothCacheMode.Uncached);
         if (servicesResult.Status != GattCommunicationStatus.Success || servicesResult.Services.Count == 0)
         {
             device.Dispose();
             return null;
         }
 
-        var service = servicesResult.Services[0];
-        var characteristicsResult = await service.GetCharacteristicsForUuidAsync(options.CharacteristicUuid, BluetoothCacheMode.Uncached);
-        if (characteristicsResult.Status != GattCommunicationStatus.Success || characteristicsResult.Characteristics.Count == 0)
+        foreach (var service in servicesResult.Services)
         {
-            service.Dispose();
-            device.Dispose();
-            return null;
+            var characteristicsResult = options.CharacteristicUuid == null
+                ? await service.GetCharacteristicsAsync(BluetoothCacheMode.Uncached)
+                : await service.GetCharacteristicsForUuidAsync(options.CharacteristicUuid.Value, BluetoothCacheMode.Uncached);
+            if (characteristicsResult.Status != GattCommunicationStatus.Success) continue;
+
+            var characteristic = characteristicsResult.Characteristics.FirstOrDefault(c =>
+                c.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Write) ||
+                c.CharacteristicProperties.HasFlag(GattCharacteristicProperties.WriteWithoutResponse));
+            if (characteristic == null) continue;
+
+            var session = new BleSession(device, service, characteristic);
+            if (options.Handshake)
+            {
+                await session.Write(new byte[] { 0x1B, 0x40 });
+            }
+            return session;
         }
 
-        return new BleSession(device, service, characteristicsResult.Characteristics[0]);
+        device.Dispose();
+        return null;
     }
 
     public async Task<bool> Write(byte[] payload)

@@ -5,6 +5,8 @@ import ngga.ring.printer.model.PrinterBleDiagnostic
 import ngga.ring.printer.model.PrinterBleFailureReason
 import ngga.ring.printer.model.PrinterConfig
 import ngga.ring.printer.model.PrinterPlatformReport
+import ngga.ring.printer.model.PrinterSerialDiagnostic
+import ngga.ring.printer.model.PrinterSerialFailureReason
 import ngga.ring.printer.model.PrinterTransportCapability
 import ngga.ring.printer.model.PrinterUsbDiagnostic
 import ngga.ring.printer.model.PrinterUsbFailureReason
@@ -53,6 +55,17 @@ actual class PrinterPlatformDiagnostics actual constructor() {
             failureReason = PrinterBleFailureReason.UNKNOWN,
             message = "Browser BLE diagnostics are handled by Web Bluetooth permission prompts.",
             suggestedFix = troubleshootingHint(PrinterConnectionType.BLUETOOTH_LE)
+        )
+    }
+
+    actual fun diagnoseSerial(config: PrinterConfig): PrinterSerialDiagnostic {
+        return PrinterSerialDiagnostic(
+            portFound = false,
+            canOpen = false,
+            canWrite = false,
+            failureReason = PrinterSerialFailureReason.UNSUPPORTED_PLATFORM,
+            message = "Browser targets cannot inspect OS Bluetooth Classic SPP serial ports.",
+            suggestedFix = troubleshootingHint(PrinterConnectionType.BLUETOOTH)
         )
     }
 

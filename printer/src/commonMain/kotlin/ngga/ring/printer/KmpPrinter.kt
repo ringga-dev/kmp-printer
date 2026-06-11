@@ -88,6 +88,10 @@ class KmpPrinter(
         return diagnosticsUseCase.diagnoseBle(config)
     }
 
+    fun diagnoseSerial(config: PrinterConfig): PrinterSerialDiagnostic {
+        return diagnosticsUseCase.diagnoseSerial(config)
+    }
+
     suspend fun testConnection(config: PrinterConfig): PrintStatus {
         return repository.testConnection(config)
     }
