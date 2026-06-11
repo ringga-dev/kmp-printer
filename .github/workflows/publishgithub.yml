@@ -1,17 +1,17 @@
-name: Unified Library Publishing (Maven & Releases)
+name: Unified Library Publishing (GitHub Maven & Releases)
 
 on:
   push:
     branches:
       - master
     tags:
-      - 'v*'  # Trigger on tags for official releases
+      - 'v*'
 
 permissions:
   contents: write
 
 jobs:
-  # 0. Check & Lint (Quality Gate)
+  # 0. Check & Lint
   check:
     name: Test & Lint
     runs-on: ubuntu-latest
@@ -39,7 +39,7 @@ jobs:
       - name: Get Version from properties
         id: get_version
         run: |
-          VERSION=$(grep 'LIB_VERSION=' gradle.properties | cut -d'=' -f2)
+          VERSION=$(grep 'LIB_VERSION=' gradle.properties | cut -d'=' -f2 | tr -d '\r' | xargs)
           echo "LIB_VERSION=$VERSION" >> $GITHUB_OUTPUT
 
   # 2. Build Android AAR
@@ -90,7 +90,7 @@ jobs:
           name: kmp_printer-xcframework
           path: KmpPrinter.xcframework.zip
 
-  # 4. Build JVM JAR (Desktop)
+  # 4. Build JVM JAR
   build-jvm:
     name: Build JVM
     needs: setup
@@ -112,113 +112,108 @@ jobs:
           name: kmp_printer-jvm
           path: printer/build/libs/printer-jvm-*.jar
 
-  # 5. GitHub Channel: Maven Repo Branch
-  publish-github-maven:
-    name: Publish to GitHub Repo
+  # 6. Deploy to GitHub Maven (maven-repo branch)
+  deploy-github-maven:
+    name: Deploy to GitHub Maven
     needs: setup
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: master
       - uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
           cache: 'gradle'
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
-      - name: Publish to Local Folder
-        run: ./gradlew :printer:publishAllPublicationsToLocalRepoRepository --no-daemon
-      - name: Deploy to maven-repo branch
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./printer/build/repo
-          publish_branch: maven-repo
-          force_orphan: false
-          user_name: 'github-actions[bot]'
-          user_email: 'github-actions[bot]@users.noreply.github.com'
-          commit_message: "Publish version ${{ needs.setup.outputs.lib_version }}"
-
-  # 6. Sonatype Central Channel: Bundle Preparation
-  publish-sonatype-bundle:
-    name: Create Sonatype Bundle
-    needs: setup
-    runs-on: ubuntu-latest
-    continue-on-error: true
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: 'gradle'
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-      - name: Build Local Deployment
+      
+      - name: Generate Maven Repo
         env:
-          ORG_GRADLE_PROJECT_signingKey: ${{ secrets.GPG_SIGNING_KEY }}
-          ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.GPG_PASSWORD }}
-        run: ./gradlew :printer:publishAllPublicationsToLocalRepoRepository --no-daemon
-      - name: Create Bundle ZIP
+          GPG_SIGNING_KEY: ${{ secrets.GPG_SIGNING_KEY }}
+          GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
         run: |
+          ./gradlew clean --no-daemon
+          ./gradlew :printer:publishAllPublicationsToLocalRepoRepository --no-daemon
+      
+      - name: Create Manual Bundle for Sonatype
+        run: |
+          BUNDLE_NAME="sonatype-bundle-${{ needs.setup.outputs.lib_version }}.zip"
           cd printer/build/repo
-          zip -r ../../SonatypeCentralBundle.zip .
-      - name: Upload Bundle
+          zip -r -X "../../../$BUNDLE_NAME" .
+          zip -d "../../../$BUNDLE_NAME" "__MACOSX*" "*.DS_Store*" || true
+      
+      - name: Deploy to maven-repo branch
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: maven-repo
+          folder: printer/build/repo
+          target-folder: .
+          clean: false # Penting: Jangan hapus versi lama
+          commit-message: "Publish v${{ needs.setup.outputs.lib_version }} to GitHub Maven"
+
+      - name: Upload Sonatype Bundle
         uses: actions/upload-artifact@v4
         with:
           name: sonatype-central-bundle
-          path: SonatypeCentralBundle.zip
+          path: sonatype-bundle-${{ needs.setup.outputs.lib_version }}.zip
 
-  # 7. Final: Create GitHub Release (COMPLETELY AUTOMATIC)
+  # 7. Create GitHub Release
   create-release:
     name: Create GitHub Release
-    needs: [setup, build-android, build-ios, build-jvm, publish-sonatype-bundle]
+    needs: [setup, build-android, build-ios, build-jvm, deploy-github-maven]
     runs-on: ubuntu-latest
+    if: always() && needs.setup.result == 'success' && needs.build-android.result == 'success' && needs.build-ios.result == 'success' && needs.build-jvm.result == 'success'
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           path: release_artifacts
-
       - name: Auto-Tag and Create Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ needs.setup.outputs.lib_version }}
           name: "v${{ needs.setup.outputs.lib_version }}"
           files: |
-            release_artifacts/kmp_printer-aar/*
-            release_artifacts/kmp_printer-xcframework/*
-            release_artifacts/kmp_printer-jvm/*
-            release_artifacts/sonatype-central-bundle/*
+            release_artifacts/kmp_printer-aar/**/*
+            release_artifacts/kmp_printer-xcframework/**/*
+            release_artifacts/kmp_printer-jvm/**/*
+            release_artifacts/sonatype-central-bundle/**/*
           body: |
             ## 🚀 KmpPrinter v${{ needs.setup.outputs.lib_version }}
             
-            KmpPrinter: Professional Kotlin Multiplatform Thermal Printing Library for ESC/POS. 
-            Generated automatically from `master`.
+            KmpPrinter: Professional Kotlin Multiplatform Thermal Printing Library for ESC/POS.
 
-            ### 📦 Compiled Assets
-            - **Android**: `printer-release.aar`
-            - **iOS**: `KmpPrinter.xcframework.zip`
-            - **JVM**: Desktop JAR file
-            - **Bundle**: Sonatype Central (Manual Upload)
-
-            ### 🛠️ Integration (GitHub Maven)
+            🛠️ **Integrasi (GitHub Maven)**
+            Tambahkan repository di `settings.gradle.kts`:
             ```kotlin
-            maven { url = uri("https://raw.githubusercontent.com/ringga-dev/Printer-ESC-POS/maven-repo") }
+            repositories {
+                maven { url = uri("https://raw.githubusercontent.com/ringga-dev/kmp-printer/maven-repo") }
+            }
             ```
             
+            Tambahkan dependency di modul Anda:
             ```kotlin
-            implementation("io.github.ringga-dev:kmp_printer:${{ needs.setup.outputs.lib_version }}")
+            dependencies {
+                implementation("io.github.ringga-dev:kmp_printer:${{ needs.setup.outputs.lib_version }}")
+            }
             ```
+
+            📦 **Compiled Assets**
+            - Android: `printer-release.aar`
+            - iOS: `KmpPrinter.xcframework.zip`
+            - Bundle: `sonatype-bundle-${{ needs.setup.outputs.lib_version }}.zip` (Manual Upload)
           draft: false
           prerelease: false
           make_latest: true
           generate_release_notes: true
-          # Crucial: Allow creating/updating the tag if it matches the current setup
           allowUpdates: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

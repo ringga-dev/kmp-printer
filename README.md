@@ -1,30 +1,36 @@
 # KmpPrinter
 
-KmpPrinter is a Kotlin Multiplatform ESC/POS thermal printing library for Android, iOS, JVM/Desktop, JavaScript, and WASM targets.
+KmpPrinter is a Kotlin Multiplatform ESC/POS thermal printing library for Android, iOS, JVM/Desktop, and Web targets. It provides a single API for printer discovery, connection management, receipt building, raw ESC/POS output, image printing, barcodes, QR codes, and printer status checks.
 
-Current source version: `2.2.0`.
+The source version configured in this repository is `2.2.0`.
 
-## Connection Support
+## Features
 
-| Platform | Bluetooth Classic | BLE | USB | Network TCP |
-| --- | ---: | ---: | ---: | ---: |
-| Android | Yes | Yes | Yes | Yes |
-| iOS | No | Yes | No | Yes |
-| JVM/Desktop | Serial/SPP only | No native BLE | Yes | Yes |
-| Web/WASM | Browser dependent | Browser dependent | Browser dependent | Browser dependent |
+- Kotlin Multiplatform support for Android, iOS, JVM/Desktop, JS, and WASM.
+- ESC/POS receipt builder with text styling, alignment, tables, dividers, images, barcodes, QR codes, cash drawer commands, and paper cutting.
+- Bluetooth, BLE, USB, TCP/network, and virtual printer connectors depending on platform support.
+- Flow-based printer discovery and print status updates.
+- Real-time status querying for compatible printers.
+- Built-in concurrency protection and chunked sending to reduce data corruption and printer buffer overflow.
+- Preview block generation for UI receipt previews.
 
-Supported `connectionType` values:
+## Platform Support
 
-- `BLUETOOTH`
-- `BLUETOOTH_LE`
-- `USB`
-- `NETWORK`
-- `SERIAL`
-- `VIRTUAL`
+| Platform | Bluetooth Classic | BLE | USB | Network TCP | Status Query |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Android | Yes | Yes | Yes | Yes | Yes |
+| iOS | No | Yes | No | Yes | Yes |
+| JVM/Desktop | No | No | Yes | Yes | Limited |
+| Web | Yes | Yes | Yes | Yes | Browser dependent |
+
+Support still depends on the printer firmware, browser APIs, OS permissions, and hardware transport availability.
 
 ## Installation
 
+Add the Maven repository:
+
 ```kotlin
+// settings.gradle.kts
 dependencyResolutionManagement {
     repositories {
         google()
@@ -36,7 +42,10 @@ dependencyResolutionManagement {
 }
 ```
 
+Add the dependency:
+
 ```kotlin
+// build.gradle.kts
 kotlin {
     sourceSets {
         commonMain.dependencies {
@@ -46,15 +55,15 @@ kotlin {
 }
 ```
 
-The dependency version is synchronized from `LIB_VERSION` in `gradle.properties` by running:
-
-```bash
-./gradlew syncDocumentationVersion
-```
+This dependency version is synchronized from `LIB_VERSION` in `gradle.properties` by running `./gradlew syncDocumentationVersion`.
 
 ## Quick Start
 
 ```kotlin
+import kotlinx.coroutines.flow.collect
+import ngga.ring.printer.KmpPrinter
+import ngga.ring.printer.model.PrinterConfig
+
 val printer = KmpPrinter()
 
 val config = PrinterConfig(
@@ -63,17 +72,19 @@ val config = PrinterConfig(
     address = "192.168.1.50",
     port = 9100,
     characterPerLine = 32,
+    paperWidth = 58,
     paperWidthDots = 384
 )
 
 printer.print(config) {
-    initialize()
     alignCenter()
     bold(true)
     line("STORE RECEIPT")
     bold(false)
     divider()
     tableRow(listOf("Coffee", "1", "$3.00"), listOf(2, 1, 1))
+    tableRow(listOf("Tax", "", "$0.30"), listOf(2, 1, 1))
+    divider()
     qrCodeNative("https://example.com/order/123", center = true)
     feed(3)
     cut()
@@ -82,43 +93,7 @@ printer.print(config) {
 }
 ```
 
-## JVM Bluetooth Classic
-
-JVM/Desktop does not have a reliable cross-platform native Bluetooth API. KmpPrinter supports Bluetooth Classic on JVM through the operating system's Serial Port Profile.
-
-Recommended setup:
-
-1. Pair the printer in the operating system Bluetooth settings.
-2. Make sure the OS exposes the printer as a serial port.
-3. Use that serial port as `PrinterConfig.address`.
-
-Windows example:
-
-```kotlin
-val config = PrinterConfig(
-    name = "Bluetooth Printer",
-    connectionType = "BLUETOOTH",
-    address = "COM5",
-    baudRate = 9600
-)
-```
-
-Linux example:
-
-```kotlin
-val config = PrinterConfig(
-    name = "Bluetooth Printer",
-    connectionType = "BLUETOOTH",
-    address = "/dev/rfcomm0",
-    baudRate = 9600
-)
-```
-
-If the printer uses a different baud rate, set `baudRate` to the value required by the device, such as `19200`, `38400`, or `115200`.
-
-Native JVM BLE is not implemented. BLE requires separate OS-specific implementations for Windows, Linux, and macOS.
-
-## PrinterConfig
+## Printer Configuration
 
 ```kotlin
 data class PrinterConfig(
@@ -134,14 +109,39 @@ data class PrinterConfig(
     val charsetName: String = "UTF-8",
     val escPosCodePage: Byte = 0x00,
     val connectionTimeoutMs: Int = 5000,
-    val readTimeoutMs: Int = 2000,
-    val baudRate: Int = 9600
+    val readTimeoutMs: Int = 2000
 )
 ```
 
-## Platform Notes
+Common `connectionType` values are `BLUETOOTH`, `BLE`, `USB`, `NETWORK`, and `VIRTUAL`.
 
-Android needs runtime Bluetooth permissions on Android 12 and newer:
+## Discovery
+
+```kotlin
+printer.discovery("NETWORK") { log ->
+    println(log)
+}.collect { devices ->
+    devices.forEach { device ->
+        println("${device.name} ${device.address}:${device.port}")
+    }
+}
+```
+
+## Status Monitoring
+
+```kotlin
+printer.monitorStatus(config, intervalMs = 2000).collect { status ->
+    if (status.isPaperOut) {
+        println("Printer is out of paper")
+    }
+}
+```
+
+Status monitoring uses ESC/POS `DLE EOT` queries and only works when the connector and printer firmware support reading responses.
+
+## Platform Setup
+
+Android applications usually need:
 
 ```xml
 <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
@@ -150,12 +150,48 @@ Android needs runtime Bluetooth permissions on Android 12 and newer:
 <uses-permission android:name="android.permission.INTERNET" />
 ```
 
-iOS BLE requires:
+USB printing uses Android's USB host permission flow for the selected device. It is not declared as a normal manifest permission.
+
+iOS applications that use BLE need:
 
 ```xml
 <key>NSBluetoothAlwaysUsageDescription</key>
 <string>This app uses Bluetooth to connect to receipt printers.</string>
 ```
+
+Web printing requires a secure context and a user gesture before the browser can show Bluetooth, USB, or serial device pickers.
+
+## Development
+
+Run the version sync task after changing `LIB_VERSION` in `gradle.properties`:
+
+```bash
+./gradlew syncDocumentationVersion
+```
+
+Use the Gradle wrapper for builds:
+
+```bash
+./gradlew build
+```
+
+## Changelog
+
+Current source version: `2.2.0`.
+
+Recent highlights:
+
+- Multiplatform ESC/POS support for Android, iOS, JVM/Desktop, JS, and WASM.
+- Hardened connector sending with mutex protection and chunked transfer.
+- Receipt DSL for text, tables, images, barcodes, QR codes, cash drawer, and cutter commands.
+- Printer discovery, preview blocks, virtual printer support, and status monitoring for compatible hardware.
+
+## Contributing
+
+- Keep public API changes intentional and documented here.
+- Prefer shared `commonMain` code when behavior is platform independent.
+- Keep platform-specific transport code inside the matching source set.
+- Test affected targets before publishing.
 
 ## License
 

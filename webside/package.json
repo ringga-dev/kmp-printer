@@ -1,0 +1,25 @@
+{
+  "name": "webside",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "@nuxt/content": "^3.13.0",
+    "@nuxt/image": "^2.0.0",
+    "@nuxt/scripts": "^1.0.6",
+    "@nuxt/ui": "^4.7.1",
+    "@unhead/vue": "^2.1.13",
+    "better-sqlite3": "^12.9.0",
+    "nuxt": "^4.4.4",
+    "tailwindcss": "^4.2.4",
+    "typescript": "^6.0.3",
+    "vue": "^3.5.33",
+    "vue-router": "^5.0.6"
+  }
+}

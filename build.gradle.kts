@@ -8,3 +8,43 @@ plugins {
     alias(libs.plugins.composeCompiler) apply false
     alias(libs.plugins.kotlinMultiplatform) apply false
 }
+
+tasks.register("syncDocumentationVersion") {
+    group = "documentation"
+    description = "Updates documentation dependency snippets from LIB_VERSION in gradle.properties."
+
+    val libraryVersion = providers.gradleProperty("LIB_VERSION")
+    val documentationFiles = listOf(
+        "README.md"
+    ).map { layout.projectDirectory.file(it) }
+
+    inputs.property("libraryVersion", libraryVersion)
+    inputs.files(documentationFiles)
+    outputs.files(documentationFiles)
+
+    doLast {
+        val version = libraryVersion.get()
+
+        documentationFiles.forEach { regularFile ->
+            val file = regularFile.asFile
+            val original = file.readText()
+            val updated = original
+                .replace(
+                    Regex("""io\.github\.ringga-dev:kmp_printer:[^")`\s]+"""),
+                    "io.github.ringga-dev:kmp_printer:$version"
+                )
+                .replace(
+                    Regex("""source version configured in this repository is `[^`]+`"""),
+                    "source version configured in this repository is `$version`"
+                )
+                .replace(
+                    Regex("""source tree is configured as `[^`]+`"""),
+                    "source tree is configured as `$version`"
+                )
+
+            if (updated != original) {
+                file.writeText(updated)
+            }
+        }
+    }
+}

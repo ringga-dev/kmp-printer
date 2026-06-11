@@ -3,6 +3,7 @@ package ngga.ring.printer.manager
 import android.annotation.SuppressLint
 import android.bluetooth.*
 import android.content.Context
+import android.os.Build
 import kotlinx.coroutines.*
 import ngga.ring.printer.model.PrinterConfig
 import java.util.*
@@ -77,10 +78,16 @@ class AndroidBleConnector(private val context: Context) : BasePrinterConnector()
         val mtu = 20 // Safe default
         
         data.toList().chunked(mtu).forEach { chunk ->
-            char.value = chunk.toByteArray()
-            char.writeType = BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE
-            val success = gatt.writeCharacteristic(char)
-            if (!success) return@withContext false
+            val chunkArray = chunk.toByteArray()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                gatt.writeCharacteristic(char, chunkArray, BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE)
+            } else {
+                @Suppress("DEPRECATION")
+                char.value = chunkArray
+                char.writeType = BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE
+                @Suppress("DEPRECATION")
+                gatt.writeCharacteristic(char)
+            }
             delay(10) // Small delay between chunks
         }
         

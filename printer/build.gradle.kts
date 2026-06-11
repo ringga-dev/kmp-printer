@@ -5,12 +5,10 @@ plugins {
     id("com.android.library")
     id("maven-publish")
     id("signing")
-    // Dokka for professional Javadoc required by Maven Central
-    id("org.jetbrains.dokka") version "1.9.20"
 }
 
-group = project.property("LIB_GROUP").toString()
-version = project.property("LIB_VERSION").toString()
+group = project.findProperty("LIB_GROUP")?.toString() ?: "io.github.ringga-dev"
+version = project.findProperty("LIB_VERSION")?.toString() ?: "1.0.0"
 
 kotlin {
     androidTarget {
@@ -37,12 +35,10 @@ kotlin {
 
     wasmJs {
         browser()
-        binaries.executable()
     }
 
     js(IR) {
         browser()
-        binaries.executable()
     }
     
     targets.all {
@@ -99,42 +95,23 @@ android {
     }
 }
 
-// Requirements for Maven Central: Sources Jar
-val kmpSourcesJar by tasks.registering(Jar::class) {
-    archiveClassifier.set("sources")
-    from(kotlin.sourceSets.getByName("commonMain").kotlin)
-}
-
-// Requirements for Maven Central: Javadoc Jar (using Dokka)
-tasks.named("dokkaHtml") {
-    // Temporarily disabled due to internal bug: "not array: KClass<out Annotation>"
-    // This is a known incompatibility in current Kotlin/Dokka versions.
-    enabled = false 
-}
-
-val kmpJavadocJar by tasks.registering(Jar::class) {
-    archiveClassifier.set("javadoc")
-    // If dokkaHtml is disabled or fails, this JAR will just be empty
-    if (tasks.findByName("dokkaHtml")?.enabled == true) {
-        from(tasks.named("dokkaHtml"))
-    }
-}
-
 publishing {
     publications {
-        // The Multiplatform plugin automatically creates publications for each target.
-        // We just need to configure them to include standard pom metadata.
         withType<MavenPublication> {
-            // artifactId is handled by KMP automatically.
-            // groupId and version are already set at the top level
-            
-            // Note: KMP automatically handles sources JAR for most targets.
-            // If you need Javadoc, it should be configured specifically.
+            val javadocJarTaskName = "javadocJarFor${name.replaceFirstChar { it.uppercase() }}"
+            val javadocJar = tasks.register<Jar>(javadocJarTaskName) {
+                archiveClassifier.set("javadoc")
+                archiveBaseName.set("printer-${name.lowercase()}")
+                archiveVersion.set(version.toString())
+                // Menambahkan isi ke Javadoc agar tidak 0 bytes (mencegah Error 500 Sonatype)
+                from(project.rootDir.resolve("README.md"))
+            }
+            artifact(javadocJar)
 
             pom {
                 name.set("KmpPrinter")
                 description.set("KmpPrinter: Professional Kotlin Multiplatform Thermal Printing Library for ESC/POS.")
-                url.set("https://github.com/ringga-dev/Printer-ESC-POS")
+                url.set("https://github.com/ringga-dev/kmp-printer")
                 licenses {
                     license {
                         name.set("MIT License")
@@ -145,13 +122,13 @@ publishing {
                     developer {
                         id.set("ringga")
                         name.set("Ringga")
-                        email.set("ringga@dev.com")
+                        email.set("ringgadev@gmail.com")
                     }
                 }
                 scm {
-                    connection.set("scm:git:git://github.com/ringga-dev/Printer-ESC-POS.git")
-                    developerConnection.set("scm:git:ssh://github.com/ringga-dev/Printer-ESC-POS.git")
-                    url.set("https://github.com/ringga-dev/Printer-ESC-POS")
+                    connection.set("scm:git:git://github.com/ringga-dev/kmp-printer.git")
+                    developerConnection.set("scm:git:ssh://github.com/ringga-dev/kmp-printer.git")
+                    url.set("https://github.com/ringga-dev/kmp-printer")
                 }
             }
         }
@@ -166,10 +143,13 @@ publishing {
 }
 
 signing {
-    val signingKey = System.getenv("ORG_GRADLE_PROJECT_signingKey")
-    val signingPassword = System.getenv("ORG_GRADLE_PROJECT_signingPassword")
+    val signingKey = System.getenv("GPG_SIGNING_KEY") ?: (project.findProperty("signingKey") as? String)
+    val signingPassword = System.getenv("GPG_PASSWORD") ?: (project.findProperty("signingPassword") as? String)
+    
     if (signingKey != null && signingPassword != null) {
         useInMemoryPgpKeys(signingKey, signingPassword)
         sign(publishing.publications)
+    } else {
+        println("WARNING: GPG Signing is SKIPPED because keys are missing!")
     }
 }
