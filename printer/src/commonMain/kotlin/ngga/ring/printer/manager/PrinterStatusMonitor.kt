@@ -47,7 +47,14 @@ class PrinterStatusMonitor {
 
             for (type in 1..4) {
                 val command = byteArrayOf(0x10, 0x04, type.toByte())
-                connector.sendData(command)
+                if (!connector.sendData(command)) {
+                    return PrinterStatus(
+                        isOnline = connector.isConnected(),
+                        isError = true,
+                        isStatusSupported = false,
+                        message = "Transport could not send ESC/POS status query."
+                    )
+                }
                 delay(100) // Wait for printer response
 
                 val response = connector.readData(1, 500)
@@ -56,9 +63,22 @@ class PrinterStatusMonitor {
                 }
             }
 
+            if (statusBytes.isEmpty()) {
+                return PrinterStatus(
+                    isOnline = connector.isConnected(),
+                    isStatusSupported = false,
+                    message = "No status bytes returned. This transport or printer driver may not support readback."
+                )
+            }
+
             return parseStatus(statusBytes)
         } catch (e: Exception) {
-            return PrinterStatus(isOnline = false, isError = true)
+            return PrinterStatus(
+                isOnline = false,
+                isError = true,
+                isStatusSupported = false,
+                message = e.message ?: "Status query failed."
+            )
         }
     }
 

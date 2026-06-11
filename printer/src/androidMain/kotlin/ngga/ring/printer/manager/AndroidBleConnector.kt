@@ -63,6 +63,7 @@ class AndroidBleConnector(private val context: Context) : BasePrinterConnector()
                 }
             }
             
+            @Suppress("DEPRECATION")
             bluetoothGatt = device.connectGatt(context, false, callback)
         }
         

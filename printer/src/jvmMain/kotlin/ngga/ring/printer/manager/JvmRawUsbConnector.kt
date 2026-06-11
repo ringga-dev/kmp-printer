@@ -38,7 +38,8 @@ data class JvmUsbDeviceInfo(
 
 data class JvmUsbEndpoint(
     val interfaceNumber: Int,
-    val endpointAddress: Byte
+    val outEndpointAddress: Byte,
+    val inEndpointAddress: Byte? = null
 )
 
 interface JvmUsbBackend {
@@ -51,6 +52,7 @@ interface JvmUsbBackend {
 
 interface JvmUsbSession {
     fun write(data: ByteArray, timeoutMs: Int): Boolean
+    fun read(count: Int, timeoutMs: Int): ByteArray?
     fun close()
 }
 
@@ -76,7 +78,7 @@ abstract class BaseLibUsbBackend(
                     busNumber = LibUsb.getBusNumber(device) and 0xFF,
                     deviceAddress = LibUsb.getDeviceAddress(device) and 0xFF,
                     isPrinterClass = descriptor.bDeviceClass().toInt() == USB_CLASS_PRINTER ||
-                        findBulkOutEndpoint(device)?.isPrinterInterface == true
+                        findBulkEndpoints(device)?.isPrinterInterface == true
                 )
 
                 if (info.isPrinterClass) info else null
@@ -115,11 +117,15 @@ abstract class BaseLibUsbBackend(
 
                 if (!target.matches(vendorId, productId, busNumber, deviceAddress)) continue
 
-                val endpoint = findBulkOutEndpoint(device) ?: continue
+                val endpoint = findBulkEndpoints(device) ?: continue
                 if (LibUsb.open(device, selectedHandle) != LibUsb.SUCCESS) continue
 
                 selectedDevice = device
-                selectedEndpoint = JvmUsbEndpoint(endpoint.interfaceNumber, endpoint.endpointAddress)
+                selectedEndpoint = JvmUsbEndpoint(
+                    interfaceNumber = endpoint.interfaceNumber,
+                    outEndpointAddress = endpoint.outEndpointAddress,
+                    inEndpointAddress = endpoint.inEndpointAddress
+                )
                 break
             }
         } finally {
@@ -190,7 +196,7 @@ abstract class BaseLibUsbBackend(
                 if (!target.matches(vendorId, productId, busNumber, deviceAddress)) continue
                 found = true
 
-                val candidate = findBulkOutEndpoint(device)
+                val candidate = findBulkEndpoints(device)
                 if (candidate == null) {
                     return diagnostic(
                         deviceFound = true,
@@ -200,7 +206,11 @@ abstract class BaseLibUsbBackend(
                     )
                 }
 
-                endpoint = JvmUsbEndpoint(candidate.interfaceNumber, candidate.endpointAddress)
+                endpoint = JvmUsbEndpoint(
+                    interfaceNumber = candidate.interfaceNumber,
+                    outEndpointAddress = candidate.outEndpointAddress,
+                    inEndpointAddress = candidate.inEndpointAddress
+                )
                 openResult = LibUsb.open(device, handle)
                 if (openResult != LibUsb.SUCCESS) {
                     return diagnostic(
@@ -255,7 +265,7 @@ abstract class BaseLibUsbBackend(
         )
     }
 
-    private fun findBulkOutEndpoint(device: Device): UsbEndpointCandidate? {
+    private fun findBulkEndpoints(device: Device): UsbEndpointCandidate? {
         val descriptor = DeviceDescriptor()
         if (LibUsb.getDeviceDescriptor(device, descriptor) != LibUsb.SUCCESS) return null
 
@@ -268,7 +278,7 @@ abstract class BaseLibUsbBackend(
                 for (usbInterface in interfaces) {
                     val altSettings = usbInterface.altsetting() ?: continue
                     for (alt in altSettings) {
-                        val candidate = findBulkOutEndpoint(alt)
+                        val candidate = findBulkEndpoints(alt)
                         if (candidate != null) return candidate
                     }
                 }
@@ -279,18 +289,24 @@ abstract class BaseLibUsbBackend(
         return null
     }
 
-    private fun findBulkOutEndpoint(descriptor: InterfaceDescriptor): UsbEndpointCandidate? {
+    private fun findBulkEndpoints(descriptor: InterfaceDescriptor): UsbEndpointCandidate? {
         val endpoints = descriptor.endpoint() ?: return null
+        var outEndpoint: Byte? = null
+        var inEndpoint: Byte? = null
         for (endpoint in endpoints) {
             if (endpoint.isBulkOut()) {
-                return UsbEndpointCandidate(
-                    interfaceNumber = descriptor.bInterfaceNumber().toInt() and 0xFF,
-                    endpointAddress = endpoint.bEndpointAddress(),
-                    isPrinterInterface = descriptor.bInterfaceClass().toInt() == USB_CLASS_PRINTER
-                )
+                outEndpoint = endpoint.bEndpointAddress()
+            } else if (endpoint.isBulkIn()) {
+                inEndpoint = endpoint.bEndpointAddress()
             }
         }
-        return null
+        val out = outEndpoint ?: return null
+        return UsbEndpointCandidate(
+            interfaceNumber = descriptor.bInterfaceNumber().toInt() and 0xFF,
+            outEndpointAddress = out,
+            inEndpointAddress = inEndpoint,
+            isPrinterInterface = descriptor.bInterfaceClass().toInt() == USB_CLASS_PRINTER
+        )
     }
 
     private fun detachKernelDriverIfNeeded(handle: DeviceHandle, interfaceNumber: Int) {
@@ -369,9 +385,16 @@ abstract class BaseLibUsbBackend(
         return transferType == LibUsb.TRANSFER_TYPE_BULK.toInt() && direction == LibUsb.ENDPOINT_OUT.toInt()
     }
 
+    private fun EndpointDescriptor.isBulkIn(): Boolean {
+        val transferType = bmAttributes().toInt() and LibUsb.TRANSFER_TYPE_MASK.toInt()
+        val direction = bEndpointAddress().toInt() and LibUsb.ENDPOINT_DIR_MASK.toInt()
+        return transferType == LibUsb.TRANSFER_TYPE_BULK.toInt() && direction == LibUsb.ENDPOINT_IN.toInt()
+    }
+
     private data class UsbEndpointCandidate(
         val interfaceNumber: Int,
-        val endpointAddress: Byte,
+        val outEndpointAddress: Byte,
+        val inEndpointAddress: Byte?,
         val isPrinterInterface: Boolean
     )
 }
@@ -444,7 +467,9 @@ class JvmRawUsbConnector(
         session?.write(data, 3000) ?: false
     }
 
-    override suspend fun readData(count: Int, timeout: Long): ByteArray? = null
+    override suspend fun readData(count: Int, timeout: Long): ByteArray? = withContext(Dispatchers.IO) {
+        session?.read(count, timeout.toInt().coerceAtLeast(1))
+    }
 
     override suspend fun disconnect() {
         session?.close()
@@ -467,12 +492,32 @@ private class LibUsbSession(
         val transferred = IntBuffer.allocate(1)
         val result = LibUsb.bulkTransfer(
             handle,
-            endpoint.endpointAddress,
+            endpoint.outEndpointAddress,
             buffer,
             transferred,
             timeoutMs.toLong()
         )
         return result == LibUsb.SUCCESS && transferred.get(0) == data.size
+    }
+
+    override fun read(count: Int, timeoutMs: Int): ByteArray? {
+        val inEndpoint = endpoint.inEndpointAddress ?: return null
+        val buffer = ByteBuffer.allocateDirect(count.coerceAtLeast(1))
+        val transferred = IntBuffer.allocate(1)
+        val result = LibUsb.bulkTransfer(
+            handle,
+            inEndpoint,
+            buffer,
+            transferred,
+            timeoutMs.toLong()
+        )
+        val size = transferred.get(0)
+        if (result != LibUsb.SUCCESS || size <= 0) return null
+
+        val data = ByteArray(size)
+        buffer.rewind()
+        buffer.get(data)
+        return data
     }
 
     override fun close() {

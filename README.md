@@ -20,10 +20,10 @@ The source version configured in this repository is `2.2.0`.
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Android | Yes | Yes | Yes | Yes | Yes |
 | iOS | No | Yes | No | Yes | Yes |
-| JVM/Desktop | No | No | Yes | Yes | Limited |
+| JVM/Desktop | Yes, OS serial/queue | Yes, helper/BlueZ | Yes, raw USB/serial/queue | Yes | Transport dependent |
 | Web | Yes | Yes | Yes | Yes | Browser dependent |
 
-Support still depends on the printer firmware, browser APIs, OS permissions, and hardware transport availability.
+Support still depends on the printer firmware, browser APIs, OS permissions, drivers, and hardware transport availability. See [Printer OS Setup Guide](./docs/PRINTER_OS_SETUP.md) for Windows, Linux, macOS, USB, Bluetooth Classic, BLE, and hardware integration test setup.
 
 ## Installation
 
@@ -113,7 +113,7 @@ data class PrinterConfig(
 )
 ```
 
-Common `connectionType` values are `BLUETOOTH`, `BLE`, `USB`, `NETWORK`, and `VIRTUAL`.
+Common `connectionType` values are `BLUETOOTH`, `BLUETOOTH_LE`, `USB`, `NETWORK`, `SERIAL`, and `VIRTUAL`. `PrinterConfigs` provides transport-specific factory helpers when direct `PrinterConfig` construction becomes too verbose.
 
 ## Discovery
 

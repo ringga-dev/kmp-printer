@@ -45,7 +45,9 @@ data class PrinterStatus(
     val isPaperOut: Boolean = false,
     val isPaperNearEnd: Boolean = false,
     val isError: Boolean = false,
-    val rawBytes: ByteArray? = null
+    val rawBytes: ByteArray? = null,
+    val isStatusSupported: Boolean = true,
+    val message: String = ""
 )
 
 /**

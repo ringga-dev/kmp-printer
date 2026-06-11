@@ -138,7 +138,7 @@ fun DiscoveryCard(device: DiscoveredPrinter, isSelected: Boolean, onClick: () ->
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = device.address ?: "Auto-assigned",
+                    text = device.address,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

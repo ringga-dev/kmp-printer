@@ -1,3 +1,5 @@
+@file:OptIn(kotlin.js.ExperimentalWasmJsInterop::class)
+
 package ngga.ring.printer.manager
 
 import ngga.ring.printer.model.PrinterConfig

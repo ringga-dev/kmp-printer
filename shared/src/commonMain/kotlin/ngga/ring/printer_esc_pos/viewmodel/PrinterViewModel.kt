@@ -185,7 +185,7 @@ class PrinterViewModel : ViewModel() {
             name = discovered.name,
             connectionType = discovered.connectionType,
             address = discovered.address,
-            port = discovered.port ?: 9100
+            port = discovered.port
         )
     }
 
