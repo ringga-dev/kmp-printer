@@ -48,7 +48,10 @@ actual class PrinterPlatformDiagnostics actual constructor() {
                     isSupported = true,
                     isNative = false,
                     supportsDiscovery = true,
-                    notes = listOf("Bluetooth Classic uses OS-assigned serial ports or installed printer queues.")
+                    notes = listOf(
+                        "Bluetooth Classic now ranks OS-specific targets first: outgoing COM on Windows, rfcomm or tty on Linux, and /dev/cu.* on macOS.",
+                        "If no serial port is exposed, the JVM falls back to the installed printer queue."
+                    )
                 ),
                 PrinterTransportCapability(
                     connectionType = PrinterConnectionType.BLUETOOTH_LE,

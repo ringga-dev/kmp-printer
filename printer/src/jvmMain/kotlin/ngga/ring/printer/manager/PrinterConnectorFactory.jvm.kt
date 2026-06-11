@@ -93,12 +93,7 @@ actual class PrinterConnectorFactory {
                     JvmPrintServiceConnector()
                 )
             )
-            PrinterConnectionType.BLUETOOTH -> JvmCompositeConnector(
-                listOf(
-                    JvmSerialConnector(),
-                    JvmPrintServiceConnector()
-                )
-            )
+            PrinterConnectionType.BLUETOOTH -> JvmBluetoothClassicConnector()
             PrinterConnectionType.BLUETOOTH_LE -> JvmCompositeConnector(
                 listOf(
                     JvmBleConnector(),
@@ -184,7 +179,7 @@ actual class PrinterConnectorFactory {
                 onLog("JVM: ${portService.connectionHint(normalizedType)}")
                 when (normalizedType) {
                     PrinterConnectionType.USB -> onLog("JVM: Raw USB native is enabled. ${portService.rawUsbHint()}")
-                    PrinterConnectionType.BLUETOOTH -> onLog("JVM: Bluetooth Classic uses OS paired serial ports.")
+                    PrinterConnectionType.BLUETOOTH -> onLog("JVM: Bluetooth Classic uses OS paired serial ports or printer queues; use the outgoing COM/rfcomm/cu device, not the Bluetooth MAC address.")
                     PrinterConnectionType.BLUETOOTH_LE -> onLog("JVM: ${portService.bleHint()} Serial-like BLE ports are still scanned as fallback.")
                     else -> Unit
                 }
@@ -214,7 +209,7 @@ actual class PrinterConnectorFactory {
                 }
 
                 if (normalizedType == PrinterConnectionType.BLUETOOTH && ports.isEmpty()) {
-                    onLog("JVM: No Bluetooth serial port detected. Pair the printer as Bluetooth Classic/SPP, then use the OS assigned COM/rfcomm port.")
+                    onLog("JVM: No Bluetooth serial port detected. Pair the printer as Bluetooth Classic/SPP, then use the OS assigned outgoing COM/rfcomm/cu port.")
                 }
                 onLog("JVM: Found ${portService.listSerialPorts().size} total serial ports")
             }

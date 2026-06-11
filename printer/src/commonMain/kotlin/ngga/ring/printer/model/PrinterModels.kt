@@ -32,6 +32,8 @@ data class PrinterConfig(
     val bleChunkSize: Int = 20,
     val bleCommandDelayMs: Long = 120,
     val bleBridgeCommand: String? = null,
+    val bluetoothClassicAutoBind: Boolean = true,
+    val bluetoothClassicRfcommDevice: String = "/dev/rfcomm0",
 )
 
 /**

@@ -16,7 +16,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ngga.ring.printer.model.DiscoveredPrinter
 import ngga.ring.printer.model.PrinterConfig
-import ngga.ring.printer_esc_pos.ui.components.GlassCard
 import ngga.ring.printer_esc_pos.viewmodel.PrinterViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -44,24 +43,22 @@ fun DiscoveryScreen(viewModel: PrinterViewModel) {
         Spacer(Modifier.height(32.dp))
         
         // Mode Selector Card
-        GlassCard(modifier = Modifier.fillMaxWidth()) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(4.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                val modes = mutableListOf("BLUETOOTH", "USB", "NETWORK")
-                if (showVirtual) modes.add("VIRTUAL")
-                
-                modes.forEach { m ->
-                    FilterChip(
-                        selected = mode == m,
-                        onClick = { viewModel.setDiscoveryMode(m) },
-                        label = { Text(m, fontSize = 11.sp) },
-                        leadingIcon = {
-                            if (mode == m) Icon(Icons.Default.Check, null, Modifier.size(14.dp))
-                        }
-                    )
-                }
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            val modes = mutableListOf("BLUETOOTH", "USB", "NETWORK")
+            if (showVirtual) modes.add("VIRTUAL")
+
+            modes.forEach { m ->
+                FilterChip(
+                    selected = mode == m,
+                    onClick = { viewModel.setDiscoveryMode(m) },
+                    label = { Text(m, fontSize = 11.sp) },
+                    leadingIcon = {
+                        if (mode == m) Icon(Icons.Default.Check, null, Modifier.size(14.dp))
+                    }
+                )
             }
         }
 

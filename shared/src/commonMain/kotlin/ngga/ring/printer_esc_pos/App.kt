@@ -88,6 +88,8 @@ private fun PrinterWizardApp() {
     var bleBridgeCommand by remember { mutableStateOf("") }
     var bleAutoDiscover by remember { mutableStateOf(true) }
     var bleHandshake by remember { mutableStateOf(true) }
+    var bluetoothClassicAutoBind by remember { mutableStateOf(true) }
+    var bluetoothClassicRfcommDevice by remember { mutableStateOf("/dev/rfcomm0") }
     var devices by remember { mutableStateOf<List<DiscoveredPrinter>>(emptyList()) }
     var selectedDevice by remember { mutableStateOf<DiscoveredPrinter?>(null) }
     var log by remember { mutableStateOf("Choose a connection type to start.") }
@@ -107,7 +109,9 @@ private fun PrinterWizardApp() {
         bleWriteCharacteristicUuid = bleCharacteristicUuid,
         bleAutoDiscover = bleAutoDiscover,
         bleHandshakeEnabled = bleHandshake,
-        bleBridgeCommand = bleBridgeCommand.ifBlank { null }
+        bleBridgeCommand = bleBridgeCommand.ifBlank { null },
+        bluetoothClassicAutoBind = bluetoothClassicAutoBind,
+        bluetoothClassicRfcommDevice = bluetoothClassicRfcommDevice
     )
 
     fun select(device: DiscoveredPrinter) {
@@ -274,11 +278,15 @@ private fun PrinterWizardApp() {
                 bleBridgeCommand = bleBridgeCommand,
                 bleAutoDiscover = bleAutoDiscover,
                 bleHandshake = bleHandshake,
+                bluetoothClassicAutoBind = bluetoothClassicAutoBind,
+                bluetoothClassicRfcommDevice = bluetoothClassicRfcommDevice,
                 onBleServiceUuid = { bleServiceUuid = it },
                 onBleCharacteristicUuid = { bleCharacteristicUuid = it },
                 onBleBridgeCommand = { bleBridgeCommand = it },
                 onBleAutoDiscover = { bleAutoDiscover = it },
                 onBleHandshake = { bleHandshake = it },
+                onBluetoothClassicAutoBind = { bluetoothClassicAutoBind = it },
+                onBluetoothClassicRfcommDevice = { bluetoothClassicRfcommDevice = it },
                 onScan = { scan() },
                 onSelect = { select(it) },
                 onAdvancedToggle = { advancedOpen = !advancedOpen },
@@ -343,11 +351,15 @@ private fun WizardContent(
     bleBridgeCommand: String,
     bleAutoDiscover: Boolean,
     bleHandshake: Boolean,
+    bluetoothClassicAutoBind: Boolean,
+    bluetoothClassicRfcommDevice: String,
     onBleServiceUuid: (String) -> Unit,
     onBleCharacteristicUuid: (String) -> Unit,
     onBleBridgeCommand: (String) -> Unit,
     onBleAutoDiscover: (Boolean) -> Unit,
     onBleHandshake: (Boolean) -> Unit,
+    onBluetoothClassicAutoBind: (Boolean) -> Unit,
+    onBluetoothClassicRfcommDevice: (String) -> Unit,
     onScan: () -> Unit,
     onSelect: (DiscoveredPrinter) -> Unit,
     onAdvancedToggle: () -> Unit,
@@ -390,11 +402,15 @@ private fun WizardContent(
                         bleBridgeCommand = bleBridgeCommand,
                         bleAutoDiscover = bleAutoDiscover,
                         bleHandshake = bleHandshake,
+                        bluetoothClassicAutoBind = bluetoothClassicAutoBind,
+                        bluetoothClassicRfcommDevice = bluetoothClassicRfcommDevice,
                         onBleServiceUuid = onBleServiceUuid,
                         onBleCharacteristicUuid = onBleCharacteristicUuid,
                         onBleBridgeCommand = onBleBridgeCommand,
                         onBleAutoDiscover = onBleAutoDiscover,
                         onBleHandshake = onBleHandshake,
+                        onBluetoothClassicAutoBind = onBluetoothClassicAutoBind,
+                        onBluetoothClassicRfcommDevice = onBluetoothClassicRfcommDevice,
                         onScan = onScan,
                         onSelect = onSelect
                     )
@@ -411,7 +427,9 @@ private fun WizardContent(
                             bleWriteCharacteristicUuid = bleCharacteristicUuid,
                             bleAutoDiscover = bleAutoDiscover,
                             bleHandshakeEnabled = bleHandshake,
-                            bleBridgeCommand = bleBridgeCommand.ifBlank { null }
+                            bleBridgeCommand = bleBridgeCommand.ifBlank { null },
+                            bluetoothClassicAutoBind = bluetoothClassicAutoBind,
+                            bluetoothClassicRfcommDevice = bluetoothClassicRfcommDevice
                         ),
                         advancedOpen = advancedOpen,
                         charsPerLine = charsPerLine,
@@ -516,11 +534,15 @@ private fun DeviceStep(
     bleBridgeCommand: String,
     bleAutoDiscover: Boolean,
     bleHandshake: Boolean,
+    bluetoothClassicAutoBind: Boolean,
+    bluetoothClassicRfcommDevice: String,
     onBleServiceUuid: (String) -> Unit,
     onBleCharacteristicUuid: (String) -> Unit,
     onBleBridgeCommand: (String) -> Unit,
     onBleAutoDiscover: (Boolean) -> Unit,
     onBleHandshake: (Boolean) -> Unit,
+    onBluetoothClassicAutoBind: (Boolean) -> Unit,
+    onBluetoothClassicRfcommDevice: (String) -> Unit,
     onScan: () -> Unit,
     onSelect: (DiscoveredPrinter) -> Unit
 ) {
@@ -564,6 +586,21 @@ private fun DeviceStep(
                 OutlinedTextField(address, onAddress, label = { Text("Manual Address / Port") }, modifier = Modifier.fillMaxWidth())
                 if (type == "BLUETOOTH" || type == "SERIAL" || type == "USB") {
                     OutlinedTextField(baudRate, onBaudRate, label = { Text("Baud Rate") }, modifier = Modifier.fillMaxWidth())
+                }
+                if (type == "BLUETOOTH") {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FilterChip(
+                            selected = bluetoothClassicAutoBind,
+                            onClick = { onBluetoothClassicAutoBind(!bluetoothClassicAutoBind) },
+                            label = { Text("Linux rfcomm Auto Bind") }
+                        )
+                    }
+                    OutlinedTextField(
+                        bluetoothClassicRfcommDevice,
+                        onBluetoothClassicRfcommDevice,
+                        label = { Text("Linux rfcomm Device") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
                 if (type == "BLUETOOTH_LE") {
                     Text("BLE Settings", fontWeight = FontWeight.SemiBold)
