@@ -67,6 +67,8 @@ kotlin {
 
         jvmMain.dependencies {
             implementation("com.fazecast:jSerialComm:2.11.0")
+            implementation("org.usb4java:usb4java:1.3.0")
+            implementation("org.usb4java:libusb4java:1.3.0")
             implementation("net.java.dev.jna:jna:5.14.0")
             implementation("net.java.dev.jna:jna-platform:5.14.0")
             implementation("org.apache.pdfbox:pdfbox:3.0.1")

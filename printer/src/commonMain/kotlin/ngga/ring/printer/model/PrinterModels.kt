@@ -18,6 +18,18 @@ data class PrinterConfig(
     val escPosCodePage: Byte = 0x00,
     val connectionTimeoutMs: Int = 5000,
     val readTimeoutMs: Int = 2000,
+    val baudRate: Int = 9600,
+    val connectAttempts: Int = 2,
+    val sendAttempts: Int = 2,
+    val retryDelayMs: Long = 150,
+    val reconnectOnSendFailure: Boolean = true,
+    val sendChunkSize: Int = 512,
+    val sendChunkDelayMs: Long = 20,
+    val bleServiceUuid: String = "0000ff00-0000-1000-8000-00805f9b34fb",
+    val bleWriteCharacteristicUuid: String = "0000ff01-0000-1000-8000-00805f9b34fb",
+    val bleChunkSize: Int = 20,
+    val bleCommandDelayMs: Long = 120,
+    val bleBridgeCommand: String? = null,
 )
 
 /**

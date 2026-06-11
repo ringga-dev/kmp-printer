@@ -11,6 +11,8 @@ import ngga.ring.printer.model.PrinterConfig
  */
 abstract class BasePrinterConnector : PrinterConnector {
     private val mutex = Mutex()
+    private var chunkSize: Int = 512
+    private var chunkDelayMs: Long = 20
 
     /**
      * Internal implementation for sending raw data. 
@@ -18,14 +20,16 @@ abstract class BasePrinterConnector : PrinterConnector {
      */
     protected abstract suspend fun sendRawData(data: ByteArray): Boolean
 
+    protected fun configureFlowControl(config: PrinterConfig) {
+        chunkSize = config.sendChunkSize.coerceAtLeast(64)
+        chunkDelayMs = config.sendChunkDelayMs.coerceAtLeast(0)
+    }
+
     /**
      * Public sendData with Mutex protection to prevent interleaving bytes 
      * from concurrent print jobs.
      */
     override suspend fun sendData(data: ByteArray): Boolean = mutex.withLock {
-        // We use a small chunk size (e.g. 512 bytes) and a tiny delay 
-        // to prevent buffer overflow on low-end thermal printers.
-        val chunkSize = 512
         var success = true
         
         var offset = 0
@@ -41,7 +45,7 @@ abstract class BasePrinterConnector : PrinterConnector {
             offset += chunkSize
             // Small pause for the printer's mechanical buffer to breathe
             if (offset < data.size) {
-                delay(20) 
+                delay(chunkDelayMs)
             }
         }
         

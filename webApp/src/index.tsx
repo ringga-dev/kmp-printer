@@ -1,12 +1,13 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import { Greeting } from './components/Greeting/Greeting.tsx';
+import React from "react";
+import { createRoot } from "react-dom/client";
 
-const rootElement = document.getElementById('root');
-if (!rootElement) throw new Error('Failed to find the root element');
+function App() {
+  return (
+    <main style={{ fontFamily: "system-ui, sans-serif", padding: 32, lineHeight: 1.5 }}>
+      <h1>KmpPrinter Web Sample</h1>
+      <p>This minimal web sample keeps the repository buildable while the main sample UI lives in Compose Multiplatform.</p>
+    </main>
+  );
+}
 
-ReactDOM.createRoot(rootElement).render(
-  <React.StrictMode>
-    <Greeting />
-  </React.StrictMode>
-);
+createRoot(document.getElementById("root")!).render(<App />);

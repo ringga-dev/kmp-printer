@@ -17,20 +17,21 @@ class JvmSerialConnector : BasePrinterConnector() {
 
     override suspend fun connect(config: PrinterConfig): Boolean = withContext(Dispatchers.IO) {
         try {
+            configureFlowControl(config)
             val portDescriptor = config.address ?: return@withContext false
             val port = SerialPort.getCommPort(portDescriptor)
             
             // Optimized settings for thermal printers
-            port.baudRate = 9600
+            port.baudRate = config.baudRate
             port.numDataBits = 8
             port.numStopBits = SerialPort.ONE_STOP_BIT
             port.parity = SerialPort.NO_PARITY
             
             if (port.openPort()) {
                 port.setComPortTimeouts(
-                    SerialPort.TIMEOUT_READ_BLOCKING, 
+                    SerialPort.TIMEOUT_READ_BLOCKING or SerialPort.TIMEOUT_WRITE_BLOCKING,
                     config.readTimeoutMs, 
-                    0
+                    config.connectionTimeoutMs
                 )
                 serialPort = port
                 inputStream = port.inputStream

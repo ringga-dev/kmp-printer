@@ -3,39 +3,43 @@ package ngga.ring.printer
 import ngga.ring.printer.model.*
 import ngga.ring.printer.util.ConnectionState
 import kotlinx.coroutines.flow.*
-import ngga.ring.printer.manager.*
 import ngga.ring.printer.manager.PrinterPermissionManager
+import ngga.ring.printer.manager.PrinterConnectorFactory
+import ngga.ring.printer.repository.DefaultPrinterRepository
+import ngga.ring.printer.repository.PrinterRepository
+import ngga.ring.printer.usecase.DiscoverPrintersUseCase
+import ngga.ring.printer.usecase.GetPrinterDiagnosticsUseCase
+import ngga.ring.printer.usecase.PrintRawUseCase
+import ngga.ring.printer.usecase.PrintReceiptUseCase
+import ngga.ring.printer.usecase.PrintTestPageUseCase
 import ngga.ring.printer.util.escpos.ESCPosCommandBuilder
 
 /**
  * The "Satu Pintu" (Single Entry Point) for the printer library.
  * This class handles all printer operations using a unified Connector architecture.
  */
-class KmpPrinter {
+class KmpPrinter(
+    val connectorFactory: PrinterConnectorFactory = PrinterConnectorFactory(),
+    private val repository: PrinterRepository = DefaultPrinterRepository(connectorFactory)
+) {
 
-    /**
-     * Platform-aware factory for creating printer connectors.
-     * This handles Bluetooth (BLE/Classic), USB, and Network discovery and creation.
-     */
-    val connectorFactory = PrinterConnectorFactory()
-    
     /**
      * Platform-independent utility for managing printer-related permissions.
      */
     private val permissionManager = PrinterPermissionManager()
-    
-    /**
-     * Managed connector instance.
-     */
-    private var activeConnector: PrinterConnector? = null
-    private var activeConfig: PrinterConfig? = null
 
-    private val _connectionState = MutableStateFlow<ConnectionState>(ConnectionState.Disconnected)
+    val receiptService = ReceiptService()
     
     /**
      * Observe the current connection status of the printer.
      */
-    val connectionState: StateFlow<ConnectionState> = _connectionState.asStateFlow()
+    val connectionState: StateFlow<ConnectionState> = repository.connectionState
+
+    private val printRawUseCase = PrintRawUseCase(repository)
+    private val printReceiptUseCase = PrintReceiptUseCase(printRawUseCase)
+    private val printTestPageUseCase = PrintTestPageUseCase(receiptService, printRawUseCase)
+    private val discoverPrintersUseCase = DiscoverPrintersUseCase(repository)
+    private val diagnosticsUseCase = GetPrinterDiagnosticsUseCase()
 
     /**
      * Checks and requests the necessary permissions for discovery and printing.
@@ -49,8 +53,6 @@ class KmpPrinter {
             permissionManager.requestPermissions(type, onResult)
         }
     }
-
-    val receiptService = ReceiptService()
 
     /**
      * Creates a new CommandBuilder pre-configured for the specific printer.
@@ -67,7 +69,27 @@ class KmpPrinter {
         config: DiscoveryConfig = DiscoveryConfig(),
         onLog: (String) -> Unit = {}
     ): Flow<List<DiscoveredPrinter>> {
-        return connectorFactory.discovery(type, config, onLog)
+        return discoverPrintersUseCase(type, config, onLog)
+    }
+
+    fun platformReport(): PrinterPlatformReport {
+        return diagnosticsUseCase.report()
+    }
+
+    fun troubleshootingHint(connectionType: String): String {
+        return diagnosticsUseCase.troubleshootingHint(connectionType)
+    }
+
+    fun diagnoseUsb(config: PrinterConfig): PrinterUsbDiagnostic {
+        return diagnosticsUseCase.diagnoseUsb(config)
+    }
+
+    fun diagnoseBle(config: PrinterConfig): PrinterBleDiagnostic {
+        return diagnosticsUseCase.diagnoseBle(config)
+    }
+
+    suspend fun testConnection(config: PrinterConfig): PrintStatus {
+        return repository.testConnection(config)
     }
 
     /**
@@ -76,14 +98,7 @@ class KmpPrinter {
     fun printReceipt(
         config: PrinterConfig,
         data: ByteArray,
-    ): Flow<PrintStatus> = flow {
-        emit(PrintStatus.Processing)
-        
-        // Delegate to printRaw and collect its emissions
-        printRaw(config, data).collect { status: PrintStatus ->
-            emit(status)
-        }
-    }
+    ): Flow<PrintStatus> = printReceiptUseCase(config, data)
 
     /**
      * Sends raw ESC/POS bytes to the printer.
@@ -92,60 +107,12 @@ class KmpPrinter {
      * @param config The target printer configuration.
      * @param data The raw byte array to send.
      */
-    fun printRaw(config: PrinterConfig, data: ByteArray): Flow<PrintStatus> = flow {
-        // Fix: Recreate connector if type or address changed
-        val shouldRecreate = activeConnector == null || 
-                activeConfig?.connectionType != config.connectionType ||
-                activeConfig?.address != config.address
-
-        val connector = if (shouldRecreate) {
-            activeConnector?.disconnect()
-            activeConfig = config
-            connectorFactory.create(config).also { activeConnector = it }
-        } else {
-            activeConnector!!
-        }
-        
-        try {
-            if (!connector.isConnected()) {
-                emit(PrintStatus.Connecting)
-                _connectionState.value = ConnectionState.Connecting
-                
-                val success = connector.connect(config)
-                if (!success) {
-                    emit(PrintStatus.Error("Failed to connect to printer"))
-                    _connectionState.value = ConnectionState.Error("Failed to connect to printer")
-                    return@flow
-                }
-            }
-            
-            _connectionState.value = ConnectionState.Connected(config.name, config.address)
-            emit(PrintStatus.Sending)
-            val sent = connector.sendData(data)
-            
-            if (sent) {
-                emit(PrintStatus.Success)
-            } else {
-                emit(PrintStatus.Error("Failed to send data to printer"))
-            }
-
-        } catch (e: Exception) {
-            _connectionState.value = ConnectionState.Error(e.message ?: "Unknown print error")
-            emit(PrintStatus.Error(e.message ?: "Unknown print error"))
-        }
-    }
+    fun printRaw(config: PrinterConfig, data: ByteArray): Flow<PrintStatus> = printRawUseCase(config, data)
 
     /**
      * Prints a professional hardware test page containing styles, barcodes, and QR codes.
      */
-    fun printTestPage(config: PrinterConfig): Flow<PrintStatus> = flow {
-        emit(PrintStatus.Processing)
-        val bytes = receiptService.generateTestPrint(config)
-        
-        printRaw(config, bytes).collect { status: PrintStatus ->
-            emit(status)
-        }
-    }
+    fun printTestPage(config: PrinterConfig): Flow<PrintStatus> = printTestPageUseCase(config)
 
     /**
      * Prints using a DSL-style builder.
@@ -165,46 +132,27 @@ class KmpPrinter {
     }
 
     /**
-     * Real-time status monitor instance.
-     */
-    private val statusMonitor = PrinterStatusMonitor()
-
-    /**
      * Monitors the real-time status of the connected printer.
      * Emits PrinterStatus updates (online, paper out, cover open, etc.).
      *
      * @param config The printer configuration.
      * @param intervalMs Polling interval in milliseconds (default 2000ms).
      */
-    fun monitorStatus(
-        config: PrinterConfig,
-        intervalMs: Long = 2000
-    ): Flow<PrinterStatus> = flow {
-        val connector = activeConnector
-        if (connector == null || !connector.isConnected()) {
-            emit(PrinterStatus(isOnline = false))
-            return@flow
-        }
-        statusMonitor.monitor(connector, intervalMs).collect { status: PrinterStatus ->
-            emit(status)
-        }
+    fun monitorStatus(config: PrinterConfig, intervalMs: Long = 2000): Flow<PrinterStatus> {
+        return repository.monitorStatus(config, intervalMs)
     }
 
     /**
      * Queries the printer status once.
      */
     suspend fun queryStatus(): PrinterStatus {
-        val connector = activeConnector ?: return PrinterStatus(isOnline = false)
-        if (!connector.isConnected()) return PrinterStatus(isOnline = false)
-        return statusMonitor.queryStatus(connector)
+        return repository.queryStatus()
     }
 
     /**
      * Manually disconnects the current active connector.
      */
     suspend fun disconnect() {
-        activeConnector?.disconnect()
-        activeConnector = null
-        _connectionState.value = ConnectionState.Disconnected
+        repository.disconnect()
     }
 }

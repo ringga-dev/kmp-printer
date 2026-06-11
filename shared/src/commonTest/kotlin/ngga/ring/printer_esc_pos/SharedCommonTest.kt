@@ -1,12 +1,11 @@
 package ngga.ring.printer_esc_pos
 
 import kotlin.test.Test
-import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class SharedCommonTest {
-
     @Test
-    fun example() {
-        assertEquals(3, 1 + 2)
+    fun sampleModuleLoads() {
+        assertTrue(true)
     }
 }

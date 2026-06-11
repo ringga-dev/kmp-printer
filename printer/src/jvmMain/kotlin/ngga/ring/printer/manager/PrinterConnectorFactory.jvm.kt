@@ -3,6 +3,7 @@ package ngga.ring.printer.manager
 import ngga.ring.printer.model.PrinterConfig
 import ngga.ring.printer.model.DiscoveredPrinter
 import ngga.ring.printer.model.DiscoveryConfig
+import ngga.ring.printer.model.PrinterConnectionType
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.isActive
@@ -12,7 +13,6 @@ import kotlinx.coroutines.withContext
 import java.net.InetSocketAddress
 import java.net.Socket
 import java.util.Collections
-import com.fazecast.jSerialComm.SerialPort
 
 /**
  * JVM Implementation for Network (TCP) printers.
@@ -22,10 +22,13 @@ class JvmNetworkConnector : BasePrinterConnector() {
 
     override suspend fun connect(config: PrinterConfig): Boolean = withContext(Dispatchers.IO) {
         try {
+            configureFlowControl(config)
             socket = Socket()
+            socket?.tcpNoDelay = true
+            socket?.keepAlive = true
             socket?.connect(InetSocketAddress(config.address ?: "127.0.0.1", config.port), config.connectionTimeoutMs)
             socket?.soTimeout = config.readTimeoutMs
-            socket?.isConnected ?: false
+            isConnected()
         } catch (e: Exception) {
             println("PrinterJVM: Network connection failed: ${e.message}")
             false
@@ -34,8 +37,10 @@ class JvmNetworkConnector : BasePrinterConnector() {
 
     override suspend fun sendRawData(data: ByteArray): Boolean = withContext(Dispatchers.IO) {
         try {
-            socket?.outputStream?.write(data)
-            socket?.outputStream?.flush()
+            val current = socket ?: return@withContext false
+            if (!isConnected()) return@withContext false
+            current.outputStream.write(data)
+            current.outputStream.flush()
             true
         } catch (e: Exception) {
             false
@@ -67,17 +72,41 @@ class JvmNetworkConnector : BasePrinterConnector() {
         } catch (e: Exception) {}
     }
 
-    override fun isConnected(): Boolean = socket?.isConnected ?: false
+    override fun isConnected(): Boolean {
+        val current = socket ?: return false
+        return current.isConnected && !current.isClosed && !current.isOutputShutdown
+    }
 }
 
 actual class PrinterConnectorFactory {
     actual constructor()
+    private val portService = JvmPrinterPortService()
 
     actual fun create(config: PrinterConfig): PrinterConnector {
-        return when (config.connectionType) {
-            "NETWORK" -> JvmNetworkConnector()
-            "USB", "BLUETOOTH", "SERIAL", "BLUETOOTH_LE" -> JvmSerialConnector()
-            "VIRTUAL" -> VirtualPrinterConnector()
+        return when (PrinterConnectionType.normalize(config.connectionType)) {
+            PrinterConnectionType.NETWORK -> JvmNetworkConnector()
+            PrinterConnectionType.SERIAL -> JvmSerialConnector()
+            PrinterConnectionType.USB -> JvmCompositeConnector(
+                listOf(
+                    JvmRawUsbConnector(),
+                    JvmSerialConnector(),
+                    JvmPrintServiceConnector()
+                )
+            )
+            PrinterConnectionType.BLUETOOTH -> JvmCompositeConnector(
+                listOf(
+                    JvmSerialConnector(),
+                    JvmPrintServiceConnector()
+                )
+            )
+            PrinterConnectionType.BLUETOOTH_LE -> JvmCompositeConnector(
+                listOf(
+                    JvmBleConnector(),
+                    JvmSerialConnector(),
+                    JvmUnsupportedNativeConnector("Native JVM BLE backend is not available for this OS yet.")
+                )
+            )
+            PrinterConnectionType.VIRTUAL -> VirtualPrinterConnector()
             else -> object : PrinterConnector {
                 override suspend fun connect(config: PrinterConfig) = false
                 override suspend fun sendData(data: ByteArray) = false
@@ -93,14 +122,21 @@ actual class PrinterConnectorFactory {
         config: DiscoveryConfig,
         onLog: (String) -> Unit
     ): Flow<List<DiscoveredPrinter>> = callbackFlow {
+        val normalizedType = PrinterConnectionType.normalize(type)
         val discoveredDevices = Collections.synchronizedSet(mutableSetOf<DiscoveredPrinter>())
 
         if (config.showVirtualDevices) {
-            discoveredDevices.add(DiscoveredPrinter("[VIRTUAL] $type JVM Printer", type, if(type == "NETWORK") "192.168.1.103" else "COM1-VIRTUAL"))
+            discoveredDevices.add(
+                DiscoveredPrinter(
+                    "[VIRTUAL] $normalizedType JVM Printer",
+                    PrinterConnectionType.VIRTUAL,
+                    if (normalizedType == PrinterConnectionType.NETWORK) "192.168.1.103" else "COM1-VIRTUAL"
+                )
+            )
             trySend(discoveredDevices.toList())
         }
 
-        if (type == "NETWORK") {
+        if (normalizedType == PrinterConnectionType.NETWORK) {
             val socket = java.net.DatagramSocket().apply {
                 broadcast = true
                 soTimeout = config.networkScanTimeoutMs
@@ -123,7 +159,14 @@ actual class PrinterConnectorFactory {
                         try {
                             socket.receive(receivePacket)
                             val address = receivePacket.address.hostAddress
-                            discoveredDevices.add(DiscoveredPrinter("Printer ($address)", "NETWORK", address, 9100))
+                            discoveredDevices.add(
+                                DiscoveredPrinter(
+                                    "Printer ($address)",
+                                    PrinterConnectionType.NETWORK,
+                                    address,
+                                    9100
+                                )
+                            )
                             trySend(discoveredDevices.toList())
                         } catch (e: java.net.SocketTimeoutException) {
                             break
@@ -135,24 +178,45 @@ actual class PrinterConnectorFactory {
                     socket.close()
                 }
             }
-        } else if (type == "USB" || type == "BLUETOOTH" || type == "SERIAL" || type == "BLUETOOTH_LE") {
+        } else if (PrinterConnectionType.usesSerialPortOnJvm(normalizedType)) {
             launch(Dispatchers.IO) {
-                onLog("JVM: Scanning Serial Ports...")
-                val ports = SerialPort.getCommPorts()
-                ports.forEach { port ->
-                    val name = port.descriptivePortName ?: port.systemPortName
-                    val address = port.systemPortName
-                    
-                    // Basic filtering to find printers
-                    val lowerName = name.lowercase()
-                    val isPrinter = lowerName.contains("printer") || lowerName.contains("esc") || lowerName.contains("pos")
-                    
-                    if (isPrinter || type == "SERIAL" || type == "USB") {
-                        discoveredDevices.add(DiscoveredPrinter(name, type, address))
+                onLog("JVM: ${portService.currentOs()} backend scanning serial-backed ports for $normalizedType...")
+                onLog("JVM: ${portService.connectionHint(normalizedType)}")
+                when (normalizedType) {
+                    PrinterConnectionType.USB -> onLog("JVM: Raw USB native is enabled. ${portService.rawUsbHint()}")
+                    PrinterConnectionType.BLUETOOTH -> onLog("JVM: Bluetooth Classic uses OS paired serial ports.")
+                    PrinterConnectionType.BLUETOOTH_LE -> onLog("JVM: ${portService.bleHint()} Serial-like BLE ports are still scanned as fallback.")
+                    else -> Unit
+                }
+
+                if (normalizedType == PrinterConnectionType.USB) {
+                    val rawUsbDevices = portService.discoverRawUsbPrinters()
+                    rawUsbDevices.forEach { printer ->
+                        discoveredDevices.add(printer)
                         trySend(discoveredDevices.toList())
                     }
+                    onLog("JVM: Found ${rawUsbDevices.size} raw USB printer devices")
                 }
-                onLog("JVM: Found ${ports.size} total ports")
+
+                val ports = portService.discoverSerialBackedPrinters(normalizedType)
+                ports.forEach { printer ->
+                    discoveredDevices.add(printer)
+                    trySend(discoveredDevices.toList())
+                }
+
+                if (normalizedType == PrinterConnectionType.USB || normalizedType == PrinterConnectionType.BLUETOOTH) {
+                    val queues = portService.discoverPrintQueuePrinters(normalizedType)
+                    queues.forEach { printer ->
+                        discoveredDevices.add(printer)
+                        trySend(discoveredDevices.toList())
+                    }
+                    onLog("JVM: Found ${queues.size} OS printer queues for $normalizedType")
+                }
+
+                if (normalizedType == PrinterConnectionType.BLUETOOTH && ports.isEmpty()) {
+                    onLog("JVM: No Bluetooth serial port detected. Pair the printer as Bluetooth Classic/SPP, then use the OS assigned COM/rfcomm port.")
+                }
+                onLog("JVM: Found ${portService.listSerialPorts().size} total serial ports")
             }
         }
 
@@ -160,4 +224,5 @@ actual class PrinterConnectorFactory {
             // Cleanup if needed
         }
     }.flowOn(Dispatchers.IO)
+
 }
