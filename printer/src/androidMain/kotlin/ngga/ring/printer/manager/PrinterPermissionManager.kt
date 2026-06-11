@@ -5,14 +5,16 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import ngga.ring.printer.model.PrinterConnectionType
 
 actual class PrinterPermissionManager {
     actual constructor()
 
     actual fun hasPermissions(connectionType: String): Boolean {
         val context = PrinterInitializer.getContext()
-        return when (connectionType) {
-            "BLUETOOTH" -> {
+        return when (PrinterConnectionType.normalize(connectionType)) {
+            PrinterConnectionType.BLUETOOTH,
+            PrinterConnectionType.BLUETOOTH_LE -> {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     check(context, Manifest.permission.BLUETOOTH_SCAN) &&
                     check(context, Manifest.permission.BLUETOOTH_CONNECT) &&
@@ -23,8 +25,8 @@ actual class PrinterPermissionManager {
                     check(context, Manifest.permission.ACCESS_FINE_LOCATION)
                 }
             }
-            "NETWORK" -> true
-            "USB" -> true
+            PrinterConnectionType.NETWORK -> true
+            PrinterConnectionType.USB -> true
             else -> true
         }
     }
@@ -46,8 +48,9 @@ actual class PrinterPermissionManager {
 
         permissionCallback = onResult
 
-        val permissions = when (connectionType) {
-            "BLUETOOTH" -> {
+        val permissions = when (PrinterConnectionType.normalize(connectionType)) {
+            PrinterConnectionType.BLUETOOTH,
+            PrinterConnectionType.BLUETOOTH_LE -> {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     arrayOf(
                         Manifest.permission.BLUETOOTH_SCAN, 

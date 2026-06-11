@@ -9,6 +9,7 @@ import android.hardware.usb.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import ngga.ring.printer.model.PrinterConfig
+import ngga.ring.printer.util.PrinterLogger
 
 /**
  * Android Implementation for USB OTG Printing.
@@ -24,6 +25,7 @@ class AndroidUsbConnector : BasePrinterConnector() {
     private val ACTION_USB_PERMISSION = "ngga.ring.printer.USB_PERMISSION"
 
     override suspend fun connect(config: PrinterConfig): Boolean = withContext(Dispatchers.IO) {
+        configureFlowControl(config)
         val context = PrinterInitializer.getContext()
         usbManager = context.getSystemService(Context.USB_SERVICE) as UsbManager
         
@@ -86,7 +88,11 @@ class AndroidUsbConnector : BasePrinterConnector() {
         val endpoint = usbEndpointOut ?: return@withContext false
         
         val result = connection.bulkTransfer(endpoint, data, data.size, 5000)
-        result >= 0
+        val success = result >= 0
+        if (!success) {
+            PrinterLogger.warn(TAG, "USB bulk transfer failed with result $result")
+        }
+        success
     }
 
     override suspend fun readData(count: Int, timeout: Long): ByteArray? = withContext(Dispatchers.IO) {
@@ -99,8 +105,12 @@ class AndroidUsbConnector : BasePrinterConnector() {
     }
 
     override suspend fun disconnect() = withContext(Dispatchers.IO) {
-        usbConnection?.releaseInterface(usbInterface)
-        usbConnection?.close()
+        try {
+            usbConnection?.releaseInterface(usbInterface)
+            usbConnection?.close()
+        } catch (e: Exception) {
+            PrinterLogger.warn(TAG, "USB disconnect failed", e)
+        }
         usbConnection = null
         usbInterface = null
         usbEndpointOut = null
@@ -108,5 +118,9 @@ class AndroidUsbConnector : BasePrinterConnector() {
         usbDevice = null
     }
 
-    override fun isConnected(): Boolean = usbConnection != null
+    override fun isConnected(): Boolean = usbConnection != null && usbEndpointOut != null
+
+    private companion object {
+        const val TAG = "AndroidUsbConnector"
+    }
 }

@@ -31,6 +31,7 @@ class IosBluetoothConnector : BasePrinterConnector() {
 
     override suspend fun connect(config: PrinterConfig): Boolean =
         suspendCancellableCoroutine { cont ->
+            configureFlowControl(config)
             if (config.address == null) {
                 cont.resume(false)
                 return@suspendCancellableCoroutine
@@ -193,6 +194,7 @@ class IosNetworkConnector : BasePrinterConnector() {
     private var isConnected = false
 
     override suspend fun connect(config: PrinterConfig): Boolean = withContext(Dispatchers.Default) {
+        configureFlowControl(config)
         val host = config.address ?: return@withContext false
         val port = config.port
         
@@ -252,14 +254,14 @@ class IosNetworkConnector : BasePrinterConnector() {
 }
 
 @OptIn(ExperimentalForeignApi::class)
-actual class PrinterConnectorFactory {
+actual class PrinterConnectorFactory : PrinterConnectorProvider {
     actual constructor()
 
-    actual fun create(config: PrinterConfig): PrinterConnector {
-        return when (config.connectionType) {
-            "BLUETOOTH", "BLUETOOTH_LE" -> IosBluetoothConnector()
-            "NETWORK" -> IosNetworkConnector()
-            "VIRTUAL" -> VirtualPrinterConnector()
+    actual override fun create(config: PrinterConfig): PrinterConnector {
+        return when (PrinterConnectionType.normalize(config.connectionType)) {
+            PrinterConnectionType.BLUETOOTH, PrinterConnectionType.BLUETOOTH_LE -> IosBluetoothConnector()
+            PrinterConnectionType.NETWORK -> IosNetworkConnector()
+            PrinterConnectionType.VIRTUAL -> VirtualPrinterConnector()
             else -> object : PrinterConnector {
                 override suspend fun connect(config: PrinterConfig) = false
                 override suspend fun sendData(data: ByteArray) = false
@@ -270,26 +272,27 @@ actual class PrinterConnectorFactory {
         }
     }
 
-    actual fun discovery(
+    actual override fun discovery(
         type: String,
         config: DiscoveryConfig,
         onLog: (String) -> Unit
     ): Flow<List<DiscoveredPrinter>> = callbackFlow {
-        onLog("Scanning for $type...")
+        val normalizedType = PrinterConnectionType.normalize(type)
+        onLog("Scanning for $normalizedType...")
         val discoveredDevices = mutableListOf<DiscoveredPrinter>()
 
         if (config.showVirtualDevices) {
             discoveredDevices.add(
                 DiscoveredPrinter(
                     "[VIRTUAL] $type iOS Printer",
-                    type,
-                    if (type == "NETWORK") "192.168.1.102" else "UUID-IOS-TEST-1234"
+                    normalizedType,
+                    if (normalizedType == PrinterConnectionType.NETWORK) "192.168.1.102" else "UUID-IOS-TEST-1234"
                 )
             )
             trySend(discoveredDevices.toList())
         }
 
-        if (type == "BLUETOOTH" || type == "BLUETOOTH_LE") {
+        if (normalizedType == PrinterConnectionType.BLUETOOTH || normalizedType == PrinterConnectionType.BLUETOOTH_LE) {
             val delegate = object : NSObject(), CBCentralManagerDelegateProtocol {
                 override fun centralManagerDidUpdateState(central: CBCentralManager) {
                     if (central.state == CBManagerStatePoweredOn) {
@@ -309,7 +312,7 @@ actual class PrinterConnectorFactory {
                     val address = didDiscoverPeripheral.identifier.UUIDString
 
                     if (discoveredDevices.none { it.address == address }) {
-                        discoveredDevices.add(DiscoveredPrinter(name, "BLUETOOTH_LE", address))
+                        discoveredDevices.add(DiscoveredPrinter(name, PrinterConnectionType.BLUETOOTH_LE, address))
                         trySend(discoveredDevices.toList())
                     }
                 }
@@ -319,11 +322,11 @@ actual class PrinterConnectorFactory {
             awaitClose {
                 centralManager.stopScan()
             }
-        } else if (type == "NETWORK") {
+        } else if (normalizedType == PrinterConnectionType.NETWORK) {
             onLog("Network discovery started...")
             delay(500)
             if (discoveredDevices.none { it.address == "192.168.1.100" }) {
-                discoveredDevices.add(DiscoveredPrinter("Network Printer", "NETWORK", "192.168.1.100", 9100))
+                discoveredDevices.add(DiscoveredPrinter("Network Printer", PrinterConnectionType.NETWORK, "192.168.1.100", 9100))
                 trySend(discoveredDevices.toList())
             }
         }

@@ -1,9 +1,11 @@
 package ngga.ring.printer_esc_pos.ui.screens
 
 import androidx.compose.animation.*
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -32,7 +34,7 @@ fun DiscoveryScreen(viewModel: PrinterViewModel) {
             text = "Discovery",
             style = MaterialTheme.typography.displaySmall,
             fontWeight = FontWeight.Black,
-            letterSpacing = (-1).sp
+            letterSpacing = 0.sp
         )
         Text(
             text = "Hardware synchronization engine",
@@ -44,7 +46,7 @@ fun DiscoveryScreen(viewModel: PrinterViewModel) {
         
         // Mode Selector Card
         Row(
-            modifier = Modifier.fillMaxWidth().padding(4.dp),
+            modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(4.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             val modes = mutableListOf("BLUETOOTH", "USB", "NETWORK")
@@ -82,9 +84,24 @@ fun DiscoveryScreen(viewModel: PrinterViewModel) {
         Spacer(Modifier.height(16.dp))
 
         LazyColumn(
+            modifier = Modifier.weight(1f).fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(bottom = 80.dp)
         ) {
+            if (devices.isEmpty()) {
+                item {
+                    Box(
+                        modifier = Modifier.fillMaxWidth().height(180.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No scanned device yet",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+            }
             items(devices) { device ->
                 DiscoveryCard(
                     device = device,

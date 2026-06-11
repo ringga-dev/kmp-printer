@@ -2,7 +2,7 @@
 
 KmpPrinter is a Kotlin Multiplatform ESC/POS thermal printing library for Android, iOS, JVM/Desktop, and Web targets. It provides a single API for printer discovery, connection management, receipt building, raw ESC/POS output, image printing, barcodes, QR codes, and printer status checks.
 
-The source version configured in this repository is `2.2.0`.
+The source version configured in this repository is `2.2.1`.
 
 ## Features
 
@@ -49,7 +49,7 @@ Add the dependency:
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("io.github.ringga-dev:kmp_printer:2.2.0")
+            implementation("io.github.ringga-dev:kmp_printer:2.2.1")
         }
     }
 }
@@ -113,7 +113,17 @@ data class PrinterConfig(
 )
 ```
 
-Common `connectionType` values are `BLUETOOTH`, `BLUETOOTH_LE`, `USB`, `NETWORK`, `SERIAL`, and `VIRTUAL`. `PrinterConfigs` provides transport-specific factory helpers when direct `PrinterConfig` construction becomes too verbose.
+Common `connectionType` values are `BLUETOOTH`, `BLUETOOTH_LE`, `USB`, `NETWORK`, `SERIAL`, and `VIRTUAL`. New code can avoid hardcoded strings by using `PrinterConnection` or transport-specific configs such as `NetworkPrinterConfig`, `UsbPrinterConfig`, and `BlePrinterConfig`.
+
+```kotlin
+val config = PrinterConfig(
+    name = "Kitchen Printer",
+    connection = PrinterConnection.NETWORK,
+    address = "192.168.1.50"
+)
+```
+
+See [Transport Support](./docs/TRANSPORT_SUPPORT.md) for supported vs best-effort behavior per platform.
 
 ## Discovery
 
@@ -177,7 +187,7 @@ Use the Gradle wrapper for builds:
 
 ## Changelog
 
-Current source version: `2.2.0`.
+Current source version: `2.2.1`.
 
 Recent highlights:
 

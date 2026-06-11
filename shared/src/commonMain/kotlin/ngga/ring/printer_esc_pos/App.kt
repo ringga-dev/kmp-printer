@@ -548,7 +548,7 @@ private fun DeviceStep(
 ) {
     val scrollState = rememberScrollState()
     Column(
-        Modifier.fillMaxSize().then(if (compact) Modifier.verticalScroll(scrollState) else Modifier),
+        Modifier.fillMaxSize().verticalScroll(scrollState),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         Text("Select Device", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
@@ -580,7 +580,7 @@ private fun DeviceStep(
                     devices = devices,
                     selectedDevice = selectedDevice,
                     onSelect = onSelect,
-                    modifier = if (compact) Modifier.height(220.dp) else Modifier.weight(1f)
+                    modifier = Modifier.height(if (compact) 220.dp else 260.dp)
                 )
                 OutlinedTextField(name, onName, label = { Text("Printer Name") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(address, onAddress, label = { Text("Manual Address / Port") }, modifier = Modifier.fillMaxWidth())

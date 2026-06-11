@@ -42,6 +42,10 @@ tasks.register("syncDocumentationVersion") {
                     Regex("""source tree is configured as `[^`]+`"""),
                     "source tree is configured as `$version`"
                 )
+                .replace(
+                    Regex("""Current source version: `[^`]+`"""),
+                    "Current source version: `$version`"
+                )
 
             if (updated != original) {
                 file.writeText(updated)

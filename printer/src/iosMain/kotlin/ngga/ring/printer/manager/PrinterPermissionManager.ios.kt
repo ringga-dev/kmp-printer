@@ -1,12 +1,14 @@
 package ngga.ring.printer.manager
 
+import ngga.ring.printer.model.PrinterConnectionType
 import platform.CoreBluetooth.*
 
 actual class PrinterPermissionManager {
     actual constructor()
 
     actual fun hasPermissions(connectionType: String): Boolean {
-        return if (connectionType == "BLUETOOTH") {
+        val normalizedType = PrinterConnectionType.normalize(connectionType)
+        return if (normalizedType == PrinterConnectionType.BLUETOOTH || normalizedType == PrinterConnectionType.BLUETOOTH_LE) {
             CBCentralManager.authorization == CBManagerAuthorizationAllowedAlways
         } else {
             true

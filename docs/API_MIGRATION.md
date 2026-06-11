@@ -2,6 +2,16 @@
 
 The old `PrinterConfig` API remains supported. New code can use typed transport configs and convert them through `toPrinterConfig()`.
 
+`PrinterConfig.connectionType` remains a `String` for compatibility. New code that still uses `PrinterConfig` directly can avoid hardcoded strings with `PrinterConnection`:
+
+```kotlin
+val config = PrinterConfig(
+    name = "Kitchen Printer",
+    connection = PrinterConnection.NETWORK,
+    address = "192.168.1.50"
+)
+```
+
 ## Network
 
 ```kotlin

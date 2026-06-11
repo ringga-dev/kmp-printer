@@ -21,6 +21,7 @@ class AndroidBluetoothConnector : BasePrinterConnector() {
 
     override suspend fun connect(config: PrinterConfig): Boolean = withContext(Dispatchers.IO) {
         val address = config.address ?: return@withContext false
+        configureFlowControl(config)
         val context = PrinterInitializer.getContext()
         val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         val adapter = bluetoothManager.adapter
@@ -83,10 +84,13 @@ class AndroidBluetoothConnector : BasePrinterConnector() {
 
     override suspend fun sendRawData(data: ByteArray): Boolean = withContext(Dispatchers.IO) {
         try {
-            socket?.outputStream?.write(data)
-            socket?.outputStream?.flush()
+            val current = socket ?: return@withContext false
+            if (!isConnected()) return@withContext false
+            current.outputStream.write(data)
+            current.outputStream.flush()
             true
         } catch (e: Exception) {
+            PrinterLogger.warn(TAG, "Bluetooth send failed", e)
             false
         }
     }
@@ -106,6 +110,7 @@ class AndroidBluetoothConnector : BasePrinterConnector() {
             val read = input.read(buffer)
             if (read > 0) buffer.copyOf(read) else null
         } catch (e: Exception) {
+            PrinterLogger.warn(TAG, "Bluetooth status read failed", e)
             null
         }
     }
@@ -119,7 +124,7 @@ class AndroidBluetoothConnector : BasePrinterConnector() {
                 s.close()
             }
         } catch (e: Exception) {
-            // Logged as silent but prevented from crashing
+            PrinterLogger.warn(TAG, "Bluetooth disconnect failed", e)
         } finally {
             socket = null
         }

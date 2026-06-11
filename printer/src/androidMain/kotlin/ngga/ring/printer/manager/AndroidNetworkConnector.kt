@@ -3,6 +3,7 @@ package ngga.ring.printer.manager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import ngga.ring.printer.model.PrinterConfig
+import ngga.ring.printer.util.PrinterLogger
 import java.net.InetSocketAddress
 import java.net.Socket
 
@@ -14,21 +15,32 @@ class AndroidNetworkConnector : BasePrinterConnector() {
 
     override suspend fun connect(config: PrinterConfig): Boolean = withContext(Dispatchers.IO) {
         try {
+            configureFlowControl(config)
             socket = Socket()
-            socket?.connect(InetSocketAddress(config.address ?: "127.0.0.1", config.port), config.connectionTimeoutMs)
+            socket?.tcpNoDelay = true
+            socket?.keepAlive = true
+            socket?.connect(
+                InetSocketAddress(config.address ?: "127.0.0.1", config.port),
+                config.connectionTimeoutMs
+            )
             socket?.soTimeout = config.readTimeoutMs
-            socket?.isConnected ?: false
+            isConnected()
         } catch (e: Exception) {
+            PrinterLogger.warn(TAG, "Network connection failed", e)
+            socket = null
             false
         }
     }
 
     override suspend fun sendRawData(data: ByteArray): Boolean = withContext(Dispatchers.IO) {
         try {
-            socket?.getOutputStream()?.write(data)
-            socket?.getOutputStream()?.flush()
+            val current = socket ?: return@withContext false
+            if (!isConnected()) return@withContext false
+            current.getOutputStream().write(data)
+            current.getOutputStream().flush()
             true
         } catch (e: Exception) {
+            PrinterLogger.warn(TAG, "Network send failed", e)
             false
         }
     }
@@ -48,6 +60,7 @@ class AndroidNetworkConnector : BasePrinterConnector() {
             val read = input.read(buffer)
             if (read > 0) buffer.copyOf(read) else null
         } catch (e: Exception) {
+            PrinterLogger.warn(TAG, "Network status read failed", e)
             null
         }
     }
@@ -56,8 +69,17 @@ class AndroidNetworkConnector : BasePrinterConnector() {
         try {
             socket?.close()
             socket = null
-        } catch (e: Exception) {}
+        } catch (e: Exception) {
+            PrinterLogger.warn(TAG, "Network disconnect failed", e)
+        }
     }
 
-    override fun isConnected(): Boolean = socket?.isConnected ?: false
+    override fun isConnected(): Boolean {
+        val current = socket ?: return false
+        return current.isConnected && !current.isClosed && !current.isOutputShutdown
+    }
+
+    private companion object {
+        const val TAG = "AndroidNetworkConnector"
+    }
 }

@@ -10,6 +10,7 @@ class WasmBluetoothConnector : BasePrinterConnector() {
 
     override suspend fun connect(config: PrinterConfig): Boolean {
         return try {
+            configureFlowControl(config)
             val options = WasmJSBridge.createBleOptions()
             val device = awaitPromise(WasmJSBridge.requestBluetoothDevice(options)) ?: return false
             // Connection logic here via JS Bridge
@@ -39,6 +40,7 @@ class WasmUsbConnector : BasePrinterConnector() {
 
     override suspend fun connect(config: PrinterConfig): Boolean {
         return try {
+            configureFlowControl(config)
             val options = WasmJSBridge.createUsbOptions()
             val d = awaitPromise(WasmJSBridge.requestUsbDevice(options)) ?: return false
             device = d
@@ -67,6 +69,7 @@ class WasmSerialConnector : BasePrinterConnector() {
 
     override suspend fun connect(config: PrinterConfig): Boolean {
         return try {
+            configureFlowControl(config)
             val p = awaitPromise(WasmJSBridge.requestSerialPort()) ?: return false
             port = p
             true

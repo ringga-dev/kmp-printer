@@ -11,6 +11,7 @@ class WebBluetoothConnector : BasePrinterConnector() {
 
     override suspend fun connect(config: PrinterConfig): Boolean = suspendCancellableCoroutine { cont ->
         try {
+            configureFlowControl(config)
             val nav = kotlinx.browser.window.navigator.asDynamic()
             nav.bluetooth.requestDevice(js("({ filters: [{ services: ['0000ff00-0000-1000-8000-00805f9b34fb'] }, { services: [0xff00] }, { namePrefix: 'Printer' }, { namePrefix: 'MTP' }] })"))
                 .then { d ->
@@ -60,6 +61,7 @@ class WebUsbConnector : BasePrinterConnector() {
 
     override suspend fun connect(config: PrinterConfig): Boolean = suspendCancellableCoroutine { cont ->
         try {
+            configureFlowControl(config)
             val nav = kotlinx.browser.window.navigator.asDynamic()
             nav.usb.requestDevice(js("({ filters: [{ classCode: 7 }] })"))
                 .then { d ->
@@ -103,13 +105,13 @@ class WebUsbConnector : BasePrinterConnector() {
     override fun isConnected(): Boolean = device != null
 }
 
-actual class PrinterConnectorFactory {
+actual class PrinterConnectorFactory : PrinterConnectorProvider {
     actual constructor()
-    actual fun create(config: PrinterConfig): PrinterConnector {
-        return when (config.connectionType) {
-            "BLUETOOTH", "BLUETOOTH_LE" -> WebBluetoothConnector()
-            "USB" -> WebUsbConnector()
-            "VIRTUAL" -> VirtualPrinterConnector()
+    actual override fun create(config: PrinterConfig): PrinterConnector {
+        return when (PrinterConnectionType.normalize(config.connectionType)) {
+            PrinterConnectionType.BLUETOOTH, PrinterConnectionType.BLUETOOTH_LE -> WebBluetoothConnector()
+            PrinterConnectionType.USB -> WebUsbConnector()
+            PrinterConnectionType.VIRTUAL -> VirtualPrinterConnector()
             else -> object : PrinterConnector {
                 override suspend fun connect(config: PrinterConfig) = false
                 override suspend fun sendData(data: ByteArray) = false
@@ -120,7 +122,7 @@ actual class PrinterConnectorFactory {
         }
     }
 
-    actual fun discovery(
+    actual override fun discovery(
         type: String, 
         config: DiscoveryConfig,
         onLog: (String) -> Unit

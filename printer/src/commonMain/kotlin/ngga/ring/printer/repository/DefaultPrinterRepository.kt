@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.delay
 import ngga.ring.printer.manager.PrinterConnector
 import ngga.ring.printer.manager.PrinterConnectorFactory
+import ngga.ring.printer.manager.PrinterConnectorProvider
 import ngga.ring.printer.manager.PrinterStatusMonitor
 import ngga.ring.printer.model.DiscoveredPrinter
 import ngga.ring.printer.model.DiscoveryConfig
@@ -19,7 +20,7 @@ import ngga.ring.printer.model.PrinterStatus
 import ngga.ring.printer.util.ConnectionState
 
 class DefaultPrinterRepository(
-    private val connectorFactory: PrinterConnectorFactory = PrinterConnectorFactory(),
+    private val connectorFactory: PrinterConnectorProvider = PrinterConnectorFactory(),
     private val statusMonitor: PrinterStatusMonitor = PrinterStatusMonitor()
 ) : PrinterRepository {
     private var activeConnector: PrinterConnector? = null

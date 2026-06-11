@@ -79,11 +79,11 @@ class JvmNetworkConnector : BasePrinterConnector() {
     }
 }
 
-actual class PrinterConnectorFactory {
+actual class PrinterConnectorFactory : PrinterConnectorProvider {
     actual constructor()
     private val portService = JvmPrinterPortService()
 
-    actual fun create(config: PrinterConfig): PrinterConnector {
+    actual override fun create(config: PrinterConfig): PrinterConnector {
         return when (PrinterConnectionType.normalize(config.connectionType)) {
             PrinterConnectionType.NETWORK -> JvmNetworkConnector()
             PrinterConnectionType.SERIAL -> JvmSerialConnector()
@@ -113,7 +113,7 @@ actual class PrinterConnectorFactory {
         }
     }
 
-    actual fun discovery(
+    actual override fun discovery(
         type: String, 
         config: DiscoveryConfig,
         onLog: (String) -> Unit

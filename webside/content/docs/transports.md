@@ -23,3 +23,5 @@ Android supports Network, USB host, Bluetooth Classic, BLE, and Virtual. BLE now
 ## Web and Wasm
 
 Web support depends on browser APIs, HTTPS, and user gesture requirements. Wasm is best treated as bridge-backed or virtual unless the host app supplies browser API integrations.
+
+For the platform matrix and best-effort caveats, see [Transport Support](/docs/transport-support).

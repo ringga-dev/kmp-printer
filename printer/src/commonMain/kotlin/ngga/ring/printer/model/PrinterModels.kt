@@ -6,7 +6,7 @@ package ngga.ring.printer.model
  */
 data class PrinterConfig(
     val name: String,
-    val connectionType: String, // "BLUETOOTH", "USB", "NETWORK"
+    val connectionType: String,
     val address: String? = null, // MAC for BT, IP for Network, VID:PID for USB
     val port: Int = 9100,
     val characterPerLine: Int = 31,
@@ -34,7 +34,72 @@ data class PrinterConfig(
     val bleBridgeCommand: String? = null,
     val bluetoothClassicAutoBind: Boolean = true,
     val bluetoothClassicRfcommDevice: String = "/dev/rfcomm0",
-)
+) {
+    constructor(
+        name: String,
+        connection: PrinterConnection,
+        address: String? = null,
+        port: Int = 9100,
+        characterPerLine: Int = 31,
+        paperWidth: Int = 58,
+        paperWidthDots: Int = 0,
+        leftMargin: Int = 0,
+        autoCenter: Boolean = false,
+        charsetName: String = "UTF-8",
+        escPosCodePage: Byte = 0x00,
+        connectionTimeoutMs: Int = 5000,
+        readTimeoutMs: Int = 2000,
+        baudRate: Int = 9600,
+        connectAttempts: Int = 2,
+        sendAttempts: Int = 2,
+        retryDelayMs: Long = 150,
+        reconnectOnSendFailure: Boolean = true,
+        sendChunkSize: Int = 512,
+        sendChunkDelayMs: Long = 20,
+        bleServiceUuid: String = "0000ff00-0000-1000-8000-00805f9b34fb",
+        bleWriteCharacteristicUuid: String = "0000ff01-0000-1000-8000-00805f9b34fb",
+        bleAutoDiscover: Boolean = true,
+        bleHandshakeEnabled: Boolean = true,
+        bleChunkSize: Int = 20,
+        bleCommandDelayMs: Long = 120,
+        bleBridgeCommand: String? = null,
+        bluetoothClassicAutoBind: Boolean = true,
+        bluetoothClassicRfcommDevice: String = "/dev/rfcomm0",
+    ) : this(
+        name = name,
+        connectionType = connection.value,
+        address = address,
+        port = port,
+        characterPerLine = characterPerLine,
+        paperWidth = paperWidth,
+        paperWidthDots = paperWidthDots,
+        leftMargin = leftMargin,
+        autoCenter = autoCenter,
+        charsetName = charsetName,
+        escPosCodePage = escPosCodePage,
+        connectionTimeoutMs = connectionTimeoutMs,
+        readTimeoutMs = readTimeoutMs,
+        baudRate = baudRate,
+        connectAttempts = connectAttempts,
+        sendAttempts = sendAttempts,
+        retryDelayMs = retryDelayMs,
+        reconnectOnSendFailure = reconnectOnSendFailure,
+        sendChunkSize = sendChunkSize,
+        sendChunkDelayMs = sendChunkDelayMs,
+        bleServiceUuid = bleServiceUuid,
+        bleWriteCharacteristicUuid = bleWriteCharacteristicUuid,
+        bleAutoDiscover = bleAutoDiscover,
+        bleHandshakeEnabled = bleHandshakeEnabled,
+        bleChunkSize = bleChunkSize,
+        bleCommandDelayMs = bleCommandDelayMs,
+        bleBridgeCommand = bleBridgeCommand,
+        bluetoothClassicAutoBind = bluetoothClassicAutoBind,
+        bluetoothClassicRfcommDevice = bluetoothClassicRfcommDevice
+    )
+
+    val connection: PrinterConnection
+        get() = PrinterConnection.from(connectionType)
+}
 
 /**
  * Detailed real-time status of the printer.

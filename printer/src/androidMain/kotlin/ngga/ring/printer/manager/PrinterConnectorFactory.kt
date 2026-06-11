@@ -24,7 +24,7 @@ import java.util.*
 /**
  * Android Factory implementation.
  */
-actual class PrinterConnectorFactory {
+actual class PrinterConnectorFactory : PrinterConnectorProvider {
     private val context: Context
 
     actual constructor() {
@@ -35,13 +35,13 @@ actual class PrinterConnectorFactory {
         this.context = context
     }
 
-    actual fun create(config: PrinterConfig): PrinterConnector {
-        return when (config.connectionType) {
-            "NETWORK" -> AndroidNetworkConnector()
-            "BLUETOOTH" -> AndroidBluetoothConnector()
-            "BLUETOOTH_LE" -> AndroidBleConnector(context)
-            "USB" -> AndroidUsbConnector()
-            "VIRTUAL" -> VirtualPrinterConnector()
+    actual override fun create(config: PrinterConfig): PrinterConnector {
+        return when (PrinterConnectionType.normalize(config.connectionType)) {
+            PrinterConnectionType.NETWORK -> AndroidNetworkConnector()
+            PrinterConnectionType.BLUETOOTH -> AndroidBluetoothConnector()
+            PrinterConnectionType.BLUETOOTH_LE -> AndroidBleConnector(context)
+            PrinterConnectionType.USB -> AndroidUsbConnector()
+            PrinterConnectionType.VIRTUAL -> VirtualPrinterConnector()
             else -> object : PrinterConnector {
                 override suspend fun connect(config: PrinterConfig) = false
                 override suspend fun sendData(data: ByteArray) = false
@@ -52,15 +52,16 @@ actual class PrinterConnectorFactory {
         }
     }
 
-    actual fun discovery(
+    actual override fun discovery(
         type: String, 
         config: DiscoveryConfig,
         onLog: (String) -> Unit
     ): Flow<List<DiscoveredPrinter>> {
-        return when (type) {
-            "BLUETOOTH" -> bluetoothDiscovery(config, onLog)
-            "USB" -> usbDiscovery(config, onLog)
-            "NETWORK" -> networkDiscovery(config, onLog)
+        return when (PrinterConnectionType.normalize(type)) {
+            PrinterConnectionType.BLUETOOTH -> bluetoothDiscovery(config, onLog)
+            PrinterConnectionType.BLUETOOTH_LE -> bluetoothDiscovery(config, onLog)
+            PrinterConnectionType.USB -> usbDiscovery(config, onLog)
+            PrinterConnectionType.NETWORK -> networkDiscovery(config, onLog)
             else -> flow { emit(emptyList<DiscoveredPrinter>()) }
         }
     }
@@ -71,7 +72,7 @@ actual class PrinterConnectorFactory {
         val discoveredDevices = Collections.synchronizedSet(mutableSetOf<DiscoveredPrinter>())
 
         if (config.showVirtualDevices) {
-            discoveredDevices.add(DiscoveredPrinter("[VIRTUAL] Bluetooth Android", "VIRTUAL", "00:AA:BB:CC:DD:EE"))
+            discoveredDevices.add(DiscoveredPrinter("[VIRTUAL] Bluetooth Android", PrinterConnectionType.VIRTUAL, "00:AA:BB:CC:DD:EE"))
             launch { send(discoveredDevices.toList()) }
         }
 
@@ -85,7 +86,7 @@ actual class PrinterConnectorFactory {
         adapter.bondedDevices?.forEach { device ->
             discoveredDevices.add(DiscoveredPrinter(
                 name = device.name ?: "Unknown (Classic)",
-                connectionType = "BLUETOOTH",
+                connectionType = PrinterConnectionType.BLUETOOTH,
                 address = device.address
             ))
             launch { send(discoveredDevices.toList()) }
@@ -105,7 +106,7 @@ actual class PrinterConnectorFactory {
                         device?.let {
                             discoveredDevices.add(DiscoveredPrinter(
                                 name = it.name ?: "Unknown Device",
-                                connectionType = if (it.type == BluetoothDevice.DEVICE_TYPE_LE) "BLUETOOTH_LE" else "BLUETOOTH",
+                                connectionType = if (it.type == BluetoothDevice.DEVICE_TYPE_LE) PrinterConnectionType.BLUETOOTH_LE else PrinterConnectionType.BLUETOOTH,
                                 address = it.address
                             ))
                             launch { send(discoveredDevices.toList()) }
@@ -127,14 +128,14 @@ actual class PrinterConnectorFactory {
     private fun usbDiscovery(config: DiscoveryConfig, onLog: (String) -> Unit): Flow<List<DiscoveredPrinter>> = flow {
         val discovered = mutableListOf<DiscoveredPrinter>()
         if (config.showVirtualDevices) {
-            discovered.add(DiscoveredPrinter("[VIRTUAL] USB Android Printer", "VIRTUAL", "1234:5678"))
+            discovered.add(DiscoveredPrinter("[VIRTUAL] USB Android Printer", PrinterConnectionType.VIRTUAL, "1234:5678"))
         }
         
         val usbManager = context.getSystemService(Context.USB_SERVICE) as UsbManager
         usbManager.deviceList.values.forEach { device ->
             discovered.add(DiscoveredPrinter(
                 name = device.productName ?: "USB Device",
-                connectionType = "USB",
+                connectionType = PrinterConnectionType.USB,
                 address = "${device.vendorId}:${device.productId}"
             ))
         }
@@ -145,7 +146,7 @@ actual class PrinterConnectorFactory {
         val discovered = Collections.synchronizedSet(mutableSetOf<DiscoveredPrinter>())
         
         if (config.showVirtualDevices) {
-            discovered.add(DiscoveredPrinter("[VIRTUAL] Network Printer", "VIRTUAL", "192.168.1.101", 9100))
+            discovered.add(DiscoveredPrinter("[VIRTUAL] Network Printer", PrinterConnectionType.VIRTUAL, "192.168.1.101", 9100))
             send(discovered.toList())
         }
 
@@ -178,7 +179,7 @@ actual class PrinterConnectorFactory {
                         
                         discovered.add(DiscoveredPrinter(
                             name = "Network Printer ($address)",
-                            connectionType = "NETWORK",
+                            connectionType = PrinterConnectionType.NETWORK,
                             address = address!!,
                             port = 9100
                         ))
