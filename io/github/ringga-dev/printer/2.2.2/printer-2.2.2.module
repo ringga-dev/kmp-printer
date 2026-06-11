@@ -1,0 +1,388 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "io.github.ringga-dev",
+    "module": "printer",
+    "version": "2.2.2",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "8.14.3"
+    }
+  },
+  "variants": [
+    {
+      "name": "metadataApiElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-metadata",
+        "org.jetbrains.kotlin.platform.type": "common"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.3.20"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-coroutines-core",
+          "version": {
+            "requires": "1.10.2"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-datetime",
+          "version": {
+            "requires": "0.7.1"
+          }
+        },
+        {
+          "group": "io.github.aakira",
+          "module": "napier",
+          "version": {
+            "requires": "2.7.1"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "printer-metadata-2.2.2.jar",
+          "url": "printer-2.2.2.jar",
+          "size": 42486,
+          "sha512": "cdfa668989e061691608fa55b27cd6714285b6f6f3b0e9e8ed0214e91a114f9109dc90690840b9623142f2a9d34012a2daad28603aff87884b9071f3733cfa81",
+          "sha256": "b4915c64f003afc51e67f99a76246978c9c46ae8f4cce0bde38810ddc8c886c2",
+          "sha1": "4b2cb29c30e055c9b7487e9efeeaa06ab0379ae6",
+          "md5": "cc2f57ab5bb62569fd3a07c1aa64450b"
+        }
+      ]
+    },
+    {
+      "name": "metadataSourcesElements",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-runtime",
+        "org.jetbrains.kotlin.platform.type": "common"
+      },
+      "files": [
+        {
+          "name": "printer-kotlin-2.2.2-sources.jar",
+          "url": "printer-2.2.2-sources.jar",
+          "size": 60936,
+          "sha512": "6aba179b150d7d25eb9f642cfce16c1bc2540ef3032db1c73a1b0f6ea10a993a9e6f2f8f9c2004ae53c89b47481a8351d180e294ca5764be78bd8c81c397c870",
+          "sha256": "7dd44602ee65da0801091acbcb975bca9597432f95a99911b21c193fd0722c2d",
+          "sha1": "e961540aae1932b72d3bd7a6f5828da9a474e660",
+          "md5": "cfc1fc263fb9be71ec9aa1a8da7d9d93"
+        }
+      ]
+    },
+    {
+      "name": "releaseApiElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "android",
+        "org.gradle.usage": "java-api",
+        "org.jetbrains.kotlin.platform.type": "androidJvm"
+      },
+      "available-at": {
+        "url": "../../printer-android/2.2.2/printer-android-2.2.2.module",
+        "group": "io.github.ringga-dev",
+        "module": "printer-android",
+        "version": "2.2.2"
+      }
+    },
+    {
+      "name": "releaseRuntimeElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "android",
+        "org.gradle.usage": "java-runtime",
+        "org.jetbrains.kotlin.platform.type": "androidJvm"
+      },
+      "available-at": {
+        "url": "../../printer-android/2.2.2/printer-android-2.2.2.module",
+        "group": "io.github.ringga-dev",
+        "module": "printer-android",
+        "version": "2.2.2"
+      }
+    },
+    {
+      "name": "releaseSourcesElements-published",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.jvm.environment": "android",
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime",
+        "org.jetbrains.kotlin.platform.type": "androidJvm"
+      },
+      "available-at": {
+        "url": "../../printer-android/2.2.2/printer-android-2.2.2.module",
+        "group": "io.github.ringga-dev",
+        "module": "printer-android",
+        "version": "2.2.2"
+      }
+    },
+    {
+      "name": "iosArm64ApiElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-api",
+        "org.jetbrains.kotlin.native.target": "ios_arm64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "available-at": {
+        "url": "../../printer-iosarm64/2.2.2/printer-iosarm64-2.2.2.module",
+        "group": "io.github.ringga-dev",
+        "module": "printer-iosarm64",
+        "version": "2.2.2"
+      }
+    },
+    {
+      "name": "iosArm64SourcesElements-published",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-runtime",
+        "org.jetbrains.kotlin.native.target": "ios_arm64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "available-at": {
+        "url": "../../printer-iosarm64/2.2.2/printer-iosarm64-2.2.2.module",
+        "group": "io.github.ringga-dev",
+        "module": "printer-iosarm64",
+        "version": "2.2.2"
+      }
+    },
+    {
+      "name": "iosArm64MetadataElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-metadata",
+        "org.jetbrains.kotlin.native.target": "ios_arm64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "available-at": {
+        "url": "../../printer-iosarm64/2.2.2/printer-iosarm64-2.2.2.module",
+        "group": "io.github.ringga-dev",
+        "module": "printer-iosarm64",
+        "version": "2.2.2"
+      }
+    },
+    {
+      "name": "iosSimulatorArm64ApiElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-api",
+        "org.jetbrains.kotlin.native.target": "ios_simulator_arm64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "available-at": {
+        "url": "../../printer-iossimulatorarm64/2.2.2/printer-iossimulatorarm64-2.2.2.module",
+        "group": "io.github.ringga-dev",
+        "module": "printer-iossimulatorarm64",
+        "version": "2.2.2"
+      }
+    },
+    {
+      "name": "iosSimulatorArm64SourcesElements-published",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-runtime",
+        "org.jetbrains.kotlin.native.target": "ios_simulator_arm64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "available-at": {
+        "url": "../../printer-iossimulatorarm64/2.2.2/printer-iossimulatorarm64-2.2.2.module",
+        "group": "io.github.ringga-dev",
+        "module": "printer-iossimulatorarm64",
+        "version": "2.2.2"
+      }
+    },
+    {
+      "name": "iosSimulatorArm64MetadataElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-metadata",
+        "org.jetbrains.kotlin.native.target": "ios_simulator_arm64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "available-at": {
+        "url": "../../printer-iossimulatorarm64/2.2.2/printer-iossimulatorarm64-2.2.2.module",
+        "group": "io.github.ringga-dev",
+        "module": "printer-iossimulatorarm64",
+        "version": "2.2.2"
+      }
+    },
+    {
+      "name": "jsApiElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-api",
+        "org.jetbrains.kotlin.js.compiler": "ir",
+        "org.jetbrains.kotlin.platform.type": "js"
+      },
+      "available-at": {
+        "url": "../../printer-js/2.2.2/printer-js-2.2.2.module",
+        "group": "io.github.ringga-dev",
+        "module": "printer-js",
+        "version": "2.2.2"
+      }
+    },
+    {
+      "name": "jsRuntimeElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-runtime",
+        "org.jetbrains.kotlin.js.compiler": "ir",
+        "org.jetbrains.kotlin.platform.type": "js"
+      },
+      "available-at": {
+        "url": "../../printer-js/2.2.2/printer-js-2.2.2.module",
+        "group": "io.github.ringga-dev",
+        "module": "printer-js",
+        "version": "2.2.2"
+      }
+    },
+    {
+      "name": "jsSourcesElements-published",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-runtime",
+        "org.jetbrains.kotlin.js.compiler": "ir",
+        "org.jetbrains.kotlin.platform.type": "js"
+      },
+      "available-at": {
+        "url": "../../printer-js/2.2.2/printer-js-2.2.2.module",
+        "group": "io.github.ringga-dev",
+        "module": "printer-js",
+        "version": "2.2.2"
+      }
+    },
+    {
+      "name": "jvmApiElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "standard-jvm",
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-api",
+        "org.jetbrains.kotlin.platform.type": "jvm"
+      },
+      "available-at": {
+        "url": "../../printer-jvm/2.2.2/printer-jvm-2.2.2.module",
+        "group": "io.github.ringga-dev",
+        "module": "printer-jvm",
+        "version": "2.2.2"
+      }
+    },
+    {
+      "name": "jvmRuntimeElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "standard-jvm",
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime",
+        "org.jetbrains.kotlin.platform.type": "jvm"
+      },
+      "available-at": {
+        "url": "../../printer-jvm/2.2.2/printer-jvm-2.2.2.module",
+        "group": "io.github.ringga-dev",
+        "module": "printer-jvm",
+        "version": "2.2.2"
+      }
+    },
+    {
+      "name": "jvmSourcesElements-published",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.jvm.environment": "standard-jvm",
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime",
+        "org.jetbrains.kotlin.platform.type": "jvm"
+      },
+      "available-at": {
+        "url": "../../printer-jvm/2.2.2/printer-jvm-2.2.2.module",
+        "group": "io.github.ringga-dev",
+        "module": "printer-jvm",
+        "version": "2.2.2"
+      }
+    },
+    {
+      "name": "wasmJsApiElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-api",
+        "org.jetbrains.kotlin.platform.type": "wasm",
+        "org.jetbrains.kotlin.wasm.target": "js"
+      },
+      "available-at": {
+        "url": "../../printer-wasm-js/2.2.2/printer-wasm-js-2.2.2.module",
+        "group": "io.github.ringga-dev",
+        "module": "printer-wasm-js",
+        "version": "2.2.2"
+      }
+    },
+    {
+      "name": "wasmJsRuntimeElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-runtime",
+        "org.jetbrains.kotlin.platform.type": "wasm",
+        "org.jetbrains.kotlin.wasm.target": "js"
+      },
+      "available-at": {
+        "url": "../../printer-wasm-js/2.2.2/printer-wasm-js-2.2.2.module",
+        "group": "io.github.ringga-dev",
+        "module": "printer-wasm-js",
+        "version": "2.2.2"
+      }
+    },
+    {
+      "name": "wasmJsSourcesElements-published",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-runtime",
+        "org.jetbrains.kotlin.platform.type": "wasm",
+        "org.jetbrains.kotlin.wasm.target": "js"
+      },
+      "available-at": {
+        "url": "../../printer-wasm-js/2.2.2/printer-wasm-js-2.2.2.module",
+        "group": "io.github.ringga-dev",
+        "module": "printer-wasm-js",
+        "version": "2.2.2"
+      }
+    }
+  ]
+}
