@@ -2,48 +2,98 @@ name: CI
 
 on:
   push:
-    branches: [ main, master ]
+    branches:
+      - main
+      - master
   pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  JAVA_VERSION: '17'
+  GRADLE_OPTS: -Dorg.gradle.daemon=false
 
 jobs:
   printer:
     name: Printer KMP Checks
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
-      - uses: gradle/actions/setup-gradle@v4
-      - name: JVM tests
-        run: ./gradlew :printer:jvmTest
-      - name: KMP compile matrix
-        run: ./gradlew :printer:compileKotlinMetadata :printer:compileKotlinJs :printer:compileKotlinWasmJs
+          java-version: ${{ env.JAVA_VERSION }}
 
-  android:
-    name: Android Compile
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: Run JVM tests
+        run: ./gradlew :printer:jvmTest --no-daemon
+
+      - name: Compile KMP targets
+        run: ./gradlew :printer:compileKotlinMetadata :printer:compileKotlinJs :printer:compileKotlinWasmJs --no-daemon
+
+      - name: Compile Android library
+        run: ./gradlew :printer:compileDebugKotlinAndroid --no-daemon
+
+  android-sample:
+    name: Android Sample Compile
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
-      - uses: android-actions/setup-android@v3
-      - uses: gradle/actions/setup-gradle@v4
-      - name: Android compile
-        run: ./gradlew :printer:compileReleaseKotlinAndroid :shared:compileReleaseKotlinAndroid :androidApp:compileReleaseKotlinAndroid
+          java-version: ${{ env.JAVA_VERSION }}
 
-  desktop:
-    name: Desktop Sample
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: Compile Android app
+        run: ./gradlew :shared:compileDebugKotlinAndroid :androidApp:compileDebugKotlinAndroid --no-daemon
+
+  desktop-sample:
+    name: Desktop Sample Jar
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
-      - uses: gradle/actions/setup-gradle@v4
-      - name: Desktop jar
-        run: ./gradlew :desktopApp:jvmJar
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: Build desktop jar
+        run: ./gradlew :desktopApp:jvmJar --no-daemon

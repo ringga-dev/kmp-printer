@@ -1,151 +1,221 @@
-name: Unified Library Publishing (GitHub Maven & Releases)
+name: Unified Library Publishing
 
 on:
   push:
-    branches:
-      - master
     tags:
       - 'v*'
+  workflow_dispatch:
 
 permissions:
   contents: write
 
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  JAVA_VERSION: '17'
+  GRADLE_OPTS: -Dorg.gradle.daemon=false
+
 jobs:
-  # 0. Check & Lint
   check:
-    name: Test & Lint
+    name: Test and Compile
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: 'gradle'
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-      - name: Run Lint & Tests
-        run: ./gradlew :printer:lintRelease :printer:allTests --no-daemon
+      - name: Checkout
+        uses: actions/checkout@v4
 
-  # 1. Setup & Version Extraction
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: gradle
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: Run JVM tests
+        run: ./gradlew :printer:jvmTest --no-daemon
+
+      - name: Compile KMP targets
+        run: ./gradlew :printer:compileKotlinMetadata :printer:compileKotlinJs :printer:compileKotlinWasmJs --no-daemon
+
+      - name: Compile Android target
+        run: ./gradlew :printer:compileDebugKotlinAndroid --no-daemon
+
   setup:
-    name: Setup & Versioning
+    name: Read Version
     needs: check
     runs-on: ubuntu-latest
     outputs:
-      lib_version: ${{ steps.get_version.outputs.LIB_VERSION }}
+      lib_version: ${{ steps.version.outputs.lib_version }}
     steps:
-      - uses: actions/checkout@v4
-      - name: Get Version from properties
-        id: get_version
-        run: |
-          VERSION=$(grep 'LIB_VERSION=' gradle.properties | cut -d'=' -f2 | tr -d '\r' | xargs)
-          echo "LIB_VERSION=$VERSION" >> $GITHUB_OUTPUT
+      - name: Checkout
+        uses: actions/checkout@v4
 
-  # 2. Build Android AAR
+      - name: Read LIB_VERSION
+        id: version
+        shell: bash
+        run: |
+          version="$(grep '^LIB_VERSION=' gradle.properties | cut -d'=' -f2 | tr -d '\r' | xargs)"
+          if [ -z "$version" ]; then
+            echo "LIB_VERSION is missing" >&2
+            exit 1
+          fi
+          echo "lib_version=$version" >> "$GITHUB_OUTPUT"
+
   build-android:
-    name: Build Android
+    name: Build Android AAR
     needs: setup
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
         with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: 'gradle'
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: gradle
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
       - name: Build AAR
         run: ./gradlew :printer:assembleRelease --no-daemon
-      - name: Upload Artifact
+
+      - name: Upload AAR
         uses: actions/upload-artifact@v4
         with:
           name: kmp_printer-aar
           path: printer/build/outputs/aar/printer-release.aar
+          if-no-files-found: error
 
-  # 3. Build iOS XCFramework
   build-ios:
-    name: Build iOS
+    name: Build iOS XCFramework
     needs: setup
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
         with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: 'gradle'
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: gradle
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
       - name: Build XCFramework
         run: ./gradlew :printer:assembleKmpPrinterXCFramework --no-daemon
+
       - name: Zip XCFramework
+        shell: bash
         run: |
-          cd printer/build/XCFrameworks/release/
+          cd printer/build/XCFrameworks/release
           zip -r ../../../KmpPrinter.xcframework.zip KmpPrinter.xcframework
-      - name: Upload Artifact
+
+      - name: Upload XCFramework
         uses: actions/upload-artifact@v4
         with:
           name: kmp_printer-xcframework
-          path: KmpPrinter.xcframework.zip
+          path: printer/KmpPrinter.xcframework.zip
+          if-no-files-found: error
 
-  # 4. Build JVM JAR
   build-jvm:
-    name: Build JVM
+    name: Build JVM Jar
     needs: setup
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
         with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: 'gradle'
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: gradle
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
       - name: Build JVM Jar
         run: ./gradlew :printer:jvmJar --no-daemon
-      - name: Upload Artifact
+
+      - name: Upload JVM Jar
         uses: actions/upload-artifact@v4
         with:
           name: kmp_printer-jvm
           path: printer/build/libs/printer-jvm-*.jar
+          if-no-files-found: error
 
-  # 6. Deploy to GitHub Maven (maven-repo branch)
   deploy-github-maven:
-    name: Deploy to GitHub Maven
-    needs: setup
+    name: Deploy GitHub Maven
+    needs:
+      - setup
+      - build-android
+      - build-jvm
+      - build-ios
     runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
         with:
-          ref: master
-      - uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: 'gradle'
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: gradle
+
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-      
-      - name: Generate Maven Repo
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: Generate Maven repository
         env:
           GPG_SIGNING_KEY: ${{ secrets.GPG_SIGNING_KEY }}
           GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
+        run: ./gradlew :printer:publishAllPublicationsToLocalRepoRepository --no-daemon
+
+      - name: Create Sonatype bundle
+        shell: bash
         run: |
-          ./gradlew clean --no-daemon
-          ./gradlew :printer:publishAllPublicationsToLocalRepoRepository --no-daemon
-      
-      - name: Create Manual Bundle for Sonatype
-        run: |
-          BUNDLE_NAME="sonatype-bundle-${{ needs.setup.outputs.lib_version }}.zip"
+          bundle_name="sonatype-bundle-${{ needs.setup.outputs.lib_version }}.zip"
           cd printer/build/repo
-          zip -r -X "../../../$BUNDLE_NAME" .
-          zip -d "../../../$BUNDLE_NAME" "__MACOSX*" "*.DS_Store*" || true
-      
+          zip -r -X "../../../$bundle_name" .
+          zip -d "../../../$bundle_name" "__MACOSX*" "*.DS_Store*" || true
+
       - name: Deploy to maven-repo branch
         uses: JamesIves/github-pages-deploy-action@v4
         with:
@@ -153,63 +223,65 @@ jobs:
           branch: maven-repo
           folder: printer/build/repo
           target-folder: .
-          clean: false # Penting: Jangan hapus versi lama
-          commit-message: "Publish v${{ needs.setup.outputs.lib_version }} to GitHub Maven"
+          clean: false
+          commit-message: Publish v${{ needs.setup.outputs.lib_version }} to GitHub Maven
 
-      - name: Upload Sonatype Bundle
+      - name: Upload Sonatype bundle
         uses: actions/upload-artifact@v4
         with:
           name: sonatype-central-bundle
           path: sonatype-bundle-${{ needs.setup.outputs.lib_version }}.zip
+          if-no-files-found: error
 
-  # 7. Create GitHub Release
   create-release:
     name: Create GitHub Release
-    needs: [setup, build-android, build-ios, build-jvm, deploy-github-maven]
+    needs:
+      - setup
+      - build-android
+      - build-ios
+      - build-jvm
+      - deploy-github-maven
     runs-on: ubuntu-latest
-    if: always() && needs.setup.result == 'success' && needs.build-android.result == 'success' && needs.build-ios.result == 'success' && needs.build-jvm.result == 'success'
+    if: startsWith(github.ref, 'refs/tags/v') && needs.deploy-github-maven.result == 'success'
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Download all artifacts
+
+      - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
           path: release_artifacts
-      - name: Auto-Tag and Create Release
+
+      - name: Create release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ needs.setup.outputs.lib_version }}
-          name: "v${{ needs.setup.outputs.lib_version }}"
+          name: v${{ needs.setup.outputs.lib_version }}
           files: |
             release_artifacts/kmp_printer-aar/**/*
             release_artifacts/kmp_printer-xcframework/**/*
             release_artifacts/kmp_printer-jvm/**/*
             release_artifacts/sonatype-central-bundle/**/*
           body: |
-            ## 🚀 KmpPrinter v${{ needs.setup.outputs.lib_version }}
-            
-            KmpPrinter: Professional Kotlin Multiplatform Thermal Printing Library for ESC/POS.
+            ## KmpPrinter v${{ needs.setup.outputs.lib_version }}
 
-            🛠️ **Integrasi (GitHub Maven)**
-            Tambahkan repository di `settings.gradle.kts`:
+            Kotlin Multiplatform ESC/POS thermal printing library for Android, iOS, JVM/Desktop, JS, and Wasm.
+
+            GitHub Maven repository:
+
             ```kotlin
             repositories {
                 maven { url = uri("https://raw.githubusercontent.com/ringga-dev/kmp-printer/maven-repo") }
             }
             ```
-            
-            Tambahkan dependency di modul Anda:
-            ```kotlin
-            dependencies {
-                implementation("io.github.ringga-dev:kmp_printer:${{ needs.setup.outputs.lib_version }}")
-            }
-            ```
 
-            📦 **Compiled Assets**
-            - Android: `printer-release.aar`
-            - iOS: `KmpPrinter.xcframework.zip`
-            - Bundle: `sonatype-bundle-${{ needs.setup.outputs.lib_version }}.zip` (Manual Upload)
+            Dependency:
+
+            ```kotlin
+            implementation("io.github.ringga-dev:kmp_printer:${{ needs.setup.outputs.lib_version }}")
+            ```
           draft: false
           prerelease: false
           make_latest: true

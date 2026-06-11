@@ -3,10 +3,12 @@ name: Deploy Documentation to GitHub Pages
 on:
   push:
     branches:
-      - master
       - main
+      - master
     paths:
       - README.md
+      - docs/**
+      - webside/content/**
       - gradle.properties
       - .github/workflows/pages.yml
   workflow_dispatch:
@@ -33,16 +35,16 @@ jobs:
         with:
           enablement: true
 
-      - name: Build site from README
+      - name: Build site from Markdown
         shell: bash
         run: |
-          mkdir -p site
+          mkdir -p site/docs
           python3 <<'PY'
           from html import escape
           from pathlib import Path
           import re
 
-          readme = Path("README.md").read_text(encoding="utf-8")
+          sources = [Path("README.md")] + sorted(Path("docs").glob("*.md"))
 
           def inline(text: str) -> str:
               text = escape(text)
@@ -51,93 +53,96 @@ jobs:
               text = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", text)
               return text
 
-          lines = readme.splitlines()
-          html = []
-          in_code = False
-          code_lines = []
-          in_ul = False
-          in_table = False
-          table_rows = []
-
-          def close_ul():
-              global in_ul
-              if in_ul:
-                  html.append("</ul>")
-                  in_ul = False
-
-          def flush_table():
-              global in_table, table_rows
-              if not in_table:
-                  return
-              html.append("<table>")
-              for index, row in enumerate(table_rows):
-                  cells = [cell.strip() for cell in row.strip("|").split("|")]
-                  tag = "th" if index == 0 else "td"
-                  if index == 1 and all(set(cell.replace(":", "").replace("-", "").strip()) == set() for cell in cells):
-                      continue
-                  html.append("<tr>" + "".join(f"<{tag}>{inline(cell)}</{tag}>" for cell in cells) + "</tr>")
-              html.append("</table>")
+          def render_markdown(path: Path) -> str:
+              lines = path.read_text(encoding="utf-8").splitlines()
+              html = []
+              in_code = False
+              code_lines = []
+              in_ul = False
               in_table = False
               table_rows = []
 
-          for line in lines:
-              if line.startswith("```"):
-                  flush_table()
-                  close_ul()
+              def close_ul():
+                  nonlocal in_ul
+                  if in_ul:
+                      html.append("</ul>")
+                      in_ul = False
+
+              def flush_table():
+                  nonlocal in_table, table_rows
+                  if not in_table:
+                      return
+                  html.append("<table>")
+                  for index, row in enumerate(table_rows):
+                      cells = [cell.strip() for cell in row.strip("|").split("|")]
+                      if index == 1 and all(set(cell.replace(":", "").replace("-", "").strip()) == set() for cell in cells):
+                          continue
+                      tag = "th" if index == 0 else "td"
+                      html.append("<tr>" + "".join(f"<{tag}>{inline(cell)}</{tag}>" for cell in cells) + "</tr>")
+                  html.append("</table>")
+                  in_table = False
+                  table_rows = []
+
+              for line in lines:
+                  if line.startswith("```"):
+                      flush_table()
+                      close_ul()
+                      if in_code:
+                          html.append("<pre><code>" + escape("\n".join(code_lines)) + "</code></pre>")
+                          code_lines = []
+                          in_code = False
+                      else:
+                          in_code = True
+                      continue
+
                   if in_code:
-                      html.append("<pre><code>" + escape("\n".join(code_lines)) + "</code></pre>")
-                      code_lines = []
-                      in_code = False
+                      code_lines.append(line)
+                      continue
+
+                  if line.startswith("|") and line.endswith("|"):
+                      close_ul()
+                      in_table = True
+                      table_rows.append(line)
+                      continue
                   else:
-                      in_code = True
-                  continue
+                      flush_table()
 
-              if in_code:
-                  code_lines.append(line)
-                  continue
+                  if not line.strip():
+                      close_ul()
+                      continue
 
-              if line.startswith("|") and line.endswith("|"):
+                  heading = re.match(r"^(#{1,3})\s+(.+)$", line)
+                  if heading:
+                      close_ul()
+                      level = len(heading.group(1))
+                      text = heading.group(2)
+                      anchor = re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
+                      html.append(f'<h{level} id="{anchor}">{inline(text)}</h{level}>')
+                      continue
+
+                  if line.startswith("- "):
+                      if not in_ul:
+                          html.append("<ul>")
+                          in_ul = True
+                      html.append(f"<li>{inline(line[2:])}</li>")
+                      continue
+
                   close_ul()
-                  in_table = True
-                  table_rows.append(line)
-                  continue
-              else:
-                  flush_table()
+                  html.append(f"<p>{inline(line)}</p>")
 
-              if not line.strip():
-                  close_ul()
-                  continue
-
-              heading = re.match(r"^(#{1,3})\s+(.+)$", line)
-              if heading:
-                  close_ul()
-                  level = len(heading.group(1))
-                  text = heading.group(2)
-                  anchor = re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
-                  html.append(f'<h{level} id="{anchor}">{inline(text)}</h{level}>')
-                  continue
-
-              if line.startswith("- "):
-                  if not in_ul:
-                      html.append("<ul>")
-                      in_ul = True
-                  html.append(f"<li>{inline(line[2:])}</li>")
-                  continue
-
+              flush_table()
               close_ul()
-              html.append(f"<p>{inline(line)}</p>")
+              return "\n".join(html)
 
-          flush_table()
-          close_ul()
-
-          page = """<!doctype html>
+          def page(title: str, body: str, nav: str) -> str:
+              return f"""<!doctype html>
           <html lang="en">
           <head>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1">
-            <title>KmpPrinter Documentation</title>
+            <title>{escape(title)}</title>
             <style>
-              :root {
+              :root {{
                 color-scheme: light;
                 --text: #18212f;
                 --muted: #5b6678;
@@ -146,91 +151,99 @@ jobs:
                 --panel: #ffffff;
                 --accent: #0f766e;
                 --code: #101827;
-              }
-              * { box-sizing: border-box; }
-              body {
+              }}
+              * {{ box-sizing: border-box; }}
+              body {{
                 margin: 0;
                 font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
                 color: var(--text);
                 background: var(--bg);
                 line-height: 1.65;
-              }
-              header {
+              }}
+              header {{
                 background: var(--panel);
                 border-bottom: 1px solid var(--line);
-              }
-              .wrap {
+              }}
+              .wrap {{
                 width: min(100%, 1040px);
                 margin: 0 auto;
                 padding: 28px 20px;
-              }
-              main.wrap {
+              }}
+              main.wrap {{
                 background: var(--panel);
                 margin-top: 24px;
                 margin-bottom: 48px;
                 border: 1px solid var(--line);
                 border-radius: 8px;
                 padding: 34px 28px;
-              }
-              h1, h2, h3 {
+              }}
+              nav a {{ margin-right: 14px; }}
+              h1, h2, h3 {{
                 line-height: 1.2;
                 letter-spacing: 0;
                 margin: 28px 0 12px;
-              }
-              h1 { font-size: 2.35rem; margin-top: 0; }
-              h2 { font-size: 1.45rem; border-top: 1px solid var(--line); padding-top: 24px; }
-              h3 { font-size: 1.1rem; }
-              p, ul, table, pre { margin: 0 0 18px; }
-              a { color: var(--accent); text-decoration-thickness: 1px; }
-              code {
+              }}
+              h1 {{ font-size: 2.35rem; margin-top: 0; }}
+              h2 {{ font-size: 1.45rem; border-top: 1px solid var(--line); padding-top: 24px; }}
+              h3 {{ font-size: 1.1rem; }}
+              p, ul, table, pre {{ margin: 0 0 18px; }}
+              a {{ color: var(--accent); text-decoration-thickness: 1px; }}
+              code {{
                 background: #edf2f7;
                 border: 1px solid #dce3ec;
                 padding: 0.12rem 0.32rem;
                 border-radius: 5px;
                 font-size: 0.92em;
-              }
-              pre {
+              }}
+              pre {{
                 background: var(--code);
                 color: #eef5ff;
                 overflow-x: auto;
                 padding: 18px;
                 border-radius: 8px;
-              }
-              pre code {
+              }}
+              pre code {{
                 background: transparent;
                 border: 0;
                 padding: 0;
                 color: inherit;
-              }
-              table {
+              }}
+              table {{
                 width: 100%;
                 border-collapse: collapse;
                 display: block;
                 overflow-x: auto;
-              }
-              th, td {
+              }}
+              th, td {{
                 border: 1px solid var(--line);
                 padding: 10px 12px;
                 text-align: left;
-              }
-              th { background: #f0f4f8; }
-              .subtle { color: var(--muted); margin: 0; }
+              }}
+              th {{ background: #f0f4f8; }}
+              .subtle {{ color: var(--muted); margin: 0; }}
             </style>
           </head>
           <body>
             <header>
               <div class="wrap">
                 <p class="subtle">Kotlin Multiplatform ESC/POS thermal printing library</p>
+                <nav>{nav}</nav>
               </div>
             </header>
-            <main class="wrap">
-          """ + "\n".join(html) + """
-            </main>
+            <main class="wrap">{body}</main>
           </body>
-          </html>
-          """
+          </html>"""
 
-          Path("site/index.html").write_text(page, encoding="utf-8")
+          nav = '<a href="/kmp-printer/">README</a>' + ''.join(
+              f' <a href="/kmp-printer/docs/{p.stem}.html">{escape(p.stem.replace("-", " ").title())}</a>'
+              for p in sources[1:]
+          )
+
+          for source in sources:
+              title = "KmpPrinter Documentation" if source.name == "README.md" else source.stem.replace("-", " ").title()
+              target = Path("site/index.html") if source.name == "README.md" else Path("site/docs") / f"{source.stem}.html"
+              target.write_text(page(title, render_markdown(source), nav), encoding="utf-8")
+
           Path("site/.nojekyll").write_text("", encoding="utf-8")
           PY
 
