@@ -60,6 +60,10 @@ class KmpPrinter(
         }
     }
 
+    fun checkAndRequestPermissions(type: PrinterConnection, onResult: (Boolean) -> Unit) {
+        checkAndRequestPermissions(type.value, onResult)
+    }
+
     /**
      * Creates a new CommandBuilder pre-configured for the specific printer.
      */
@@ -82,12 +86,24 @@ class KmpPrinter(
         return discoverPrintersUseCase(type, config, onLog)
     }
 
+    fun discovery(
+        type: PrinterConnection,
+        config: DiscoveryConfig = DiscoveryConfig(),
+        onLog: (String) -> Unit = {}
+    ): Flow<List<DiscoveredPrinter>> {
+        return discovery(type.value, config, onLog)
+    }
+
     fun platformReport(): PrinterPlatformReport {
         return diagnosticsUseCase.report()
     }
 
     fun troubleshootingHint(connectionType: String): String {
         return diagnosticsUseCase.troubleshootingHint(connectionType)
+    }
+
+    fun troubleshootingHint(connectionType: PrinterConnection): String {
+        return troubleshootingHint(connectionType.value)
     }
 
     fun diagnoseUsb(config: PrinterConfig): PrinterUsbDiagnostic {

@@ -10,7 +10,7 @@ next: /docs/transports
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("io.github.ringga-dev:kmp_printer:2.2.1")
+            implementation("io.github.ringga-dev:kmp_printer:2.2.2")
         }
     }
 }

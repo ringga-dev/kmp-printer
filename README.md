@@ -2,7 +2,7 @@
 
 KmpPrinter is a Kotlin Multiplatform ESC/POS thermal printing library for Android, iOS, JVM/Desktop, and Web targets. It provides a single API for printer discovery, connection management, receipt building, raw ESC/POS output, image printing, barcodes, QR codes, and printer status checks.
 
-The source version configured in this repository is `2.2.1`.
+The source version configured in this repository is `2.2.2`.
 
 ## Features
 
@@ -49,7 +49,7 @@ Add the dependency:
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("io.github.ringga-dev:kmp_printer:2.2.1")
+            implementation("io.github.ringga-dev:kmp_printer:2.2.2")
         }
     }
 }
@@ -119,11 +119,26 @@ Common `connectionType` values are `BLUETOOTH`, `BLUETOOTH_LE`, `USB`, `NETWORK`
 val config = PrinterConfig(
     name = "Kitchen Printer",
     connection = PrinterConnection.NETWORK,
+    profile = PrinterProfile.MM58,
     address = "192.168.1.50"
 )
 ```
 
 See [Transport Support](./docs/TRANSPORT_SUPPORT.md) for supported vs best-effort behavior per platform.
+
+## Print Quality
+
+Some thermal printers print gray when density, heat, power supply, or paper quality is not sufficient. KmpPrinter provides best-effort density and heat helpers for printers that support common ESC/POS-compatible commands:
+
+```kotlin
+printer.print(config) {
+    printQuality(PrintQuality.Dark)
+    line("Darker thermal output")
+    cut()
+}
+```
+
+Density and heat commands are not universal. Some printers ignore them or use vendor-specific commands.
 
 ## Discovery
 
@@ -187,7 +202,7 @@ Use the Gradle wrapper for builds:
 
 ## Changelog
 
-Current source version: `2.2.1`.
+Current source version: `2.2.2`.
 
 Recent highlights:
 

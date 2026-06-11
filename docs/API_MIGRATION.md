@@ -8,7 +8,30 @@ The old `PrinterConfig` API remains supported. New code can use typed transport 
 val config = PrinterConfig(
     name = "Kitchen Printer",
     connection = PrinterConnection.NETWORK,
+    profile = PrinterProfile.MM58,
     address = "192.168.1.50"
+)
+```
+
+Use `PrinterConnection.BLE` as a short alias for `PrinterConnection.BLUETOOTH_LE`.
+
+## Paper Profiles
+
+New code can use built-in printer profiles instead of repeating paper width values:
+
+```kotlin
+val mm58 = PrinterConfig(
+    name = "Counter",
+    connection = PrinterConnection.NETWORK,
+    profile = PrinterProfile.MM58,
+    address = "192.168.1.50"
+)
+
+val mm80 = PrinterConfig(
+    name = "Cashier",
+    connection = PrinterConnection.USB,
+    profile = PrinterProfile.MM80,
+    address = "USB_RAW:04B8:0202"
 )
 ```
 

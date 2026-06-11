@@ -28,5 +28,21 @@ Always handle `PrinterStatus.isStatusSupported == false` and continue with a pri
 - Prefer Network TCP for fixed-location printers.
 - Prefer USB on Android when the printer is physically attached to the device.
 - Prefer typed configs or `PrinterConnection` instead of raw string connection types in new code.
+- Prefer `PrinterProfile.MM58` or `PrinterProfile.MM80` instead of manually repeating paper width values.
+- Use `printQuality(PrintQuality.Dark)` as a best-effort helper when output is too gray, then verify the printer power supply, thermal paper, and head condition.
 - Reduce `sendChunkSize` and increase `sendChunkDelayMs` for cheap BLE or Bluetooth Classic printers that drop bytes.
 - Use `diagnoseUsb`, `diagnoseBle`, and `troubleshootingHint` before asking users to change OS drivers or permissions.
+
+## Print Quality Commands
+
+Density and heat commands are best-effort. KmpPrinter sends common ESC/POS-compatible command sequences, but many printers ignore them or use vendor-specific alternatives.
+
+```kotlin
+printer.print(config) {
+    printQuality(PrintQuality.Dark)
+    line("Darkness test")
+    cut()
+}
+```
+
+If output remains gray after `PrintQuality.Dark`, check the power adapter rating, thermal paper quality, printer head cleanliness, and hardware density settings.

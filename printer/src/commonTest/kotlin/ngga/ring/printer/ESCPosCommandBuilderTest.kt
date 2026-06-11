@@ -3,6 +3,7 @@ package ngga.ring.printer
 import ngga.ring.printer.util.escpos.ESCPosCommandBuilder
 import ngga.ring.printer.model.QRCodeLevel
 import ngga.ring.printer.model.BarcodeType
+import ngga.ring.printer.model.PrintQuality
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -45,5 +46,26 @@ class ESCPosCommandBuilderTest {
             }
         }
         assertTrue(found, "QR Code Level H byte (51) not found in expected sequence")
+    }
+
+    @Test
+    fun testPrintDensity() {
+        val bytes = ESCPosCommandBuilder().setPrintDensity(99).build()
+        val expected = byteArrayOf(0x12, 0x23, 0x0F)
+        assertTrue(bytes.contentEquals(expected))
+    }
+
+    @Test
+    fun testHeatConfig() {
+        val bytes = ESCPosCommandBuilder().setHeatConfig(dots = 11, time = 120, interval = 40).build()
+        val expected = byteArrayOf(0x1B, 0x37, 0x0B, 0x78, 0x28)
+        assertTrue(bytes.contentEquals(expected))
+    }
+
+    @Test
+    fun testPrintQualityDark() {
+        val bytes = ESCPosCommandBuilder().printQuality(PrintQuality.Dark).build()
+        val expected = byteArrayOf(0x12, 0x23, 0x0F, 0x1B, 0x37, 0x0B, 0x78, 0x28)
+        assertTrue(bytes.contentEquals(expected))
     }
 }

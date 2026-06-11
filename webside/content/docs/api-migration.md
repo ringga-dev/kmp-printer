@@ -17,6 +17,19 @@ val config = PrinterConfig(
 )
 ```
 
+New code can avoid hardcoded strings and paper values:
+
+```kotlin
+val config = PrinterConfig(
+    name = "Receipt Printer",
+    connection = PrinterConnection.NETWORK,
+    profile = PrinterProfile.MM58,
+    address = "192.168.1.50"
+)
+```
+
+`PrinterConnection.BLE` is available as a short alias for `PrinterConnection.BLUETOOTH_LE`.
+
 ## Typed Configs
 
 ```kotlin

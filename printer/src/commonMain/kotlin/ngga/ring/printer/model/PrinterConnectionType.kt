@@ -6,6 +6,7 @@ enum class PrinterConnection(val value: String) {
     SERIAL("SERIAL"),
     BLUETOOTH("BLUETOOTH"),
     BLUETOOTH_LE("BLUETOOTH_LE"),
+    BLE("BLUETOOTH_LE"),
     VIRTUAL("VIRTUAL"),
     UNKNOWN("UNKNOWN");
 
@@ -14,7 +15,7 @@ enum class PrinterConnection(val value: String) {
             "TCP", "LAN", "WIFI", NETWORK.value -> NETWORK
             "COM", "TTY", "USB_SERIAL", SERIAL.value -> SERIAL
             "BT", "BLUETOOTH_CLASSIC", BLUETOOTH.value -> BLUETOOTH
-            "BLE", BLUETOOTH_LE.value -> BLUETOOTH_LE
+            "BLE", BLUETOOTH_LE.value -> BLE
             USB.value -> USB
             VIRTUAL.value -> VIRTUAL
             else -> UNKNOWN

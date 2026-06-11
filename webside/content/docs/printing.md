@@ -50,3 +50,17 @@ printer.monitorStatus(config).collect { status ->
 ```
 
 Transport queues and write-only BLE characteristics usually cannot return printer status.
+
+## Print Quality
+
+Thermal output darkness depends on density, heat, power supply, paper quality, and printer firmware. KmpPrinter includes best-effort helpers for common ESC/POS-compatible density and heat commands:
+
+```kotlin
+printer.print(config) {
+    printQuality(PrintQuality.Dark)
+    line("Darkness test")
+    cut()
+}
+```
+
+Some printers ignore these commands or use vendor-specific alternatives. If output stays gray, check the adapter rating, thermal paper, printer head, and hardware density settings.

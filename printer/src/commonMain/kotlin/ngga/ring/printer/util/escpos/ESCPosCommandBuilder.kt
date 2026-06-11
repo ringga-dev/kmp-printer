@@ -4,6 +4,8 @@ import ngga.ring.printer.util.platform.encodeString
 import ngga.ring.printer.util.preview.PreviewBlock
 import ngga.ring.printer.model.QRCodeLevel
 import ngga.ring.printer.model.BarcodeType
+import ngga.ring.printer.model.HeatConfig
+import ngga.ring.printer.model.PrintQuality
 
 /**
  * A pure Kotlin, KMP-friendly ESC/POS command builder.
@@ -689,6 +691,47 @@ class ESCPosCommandBuilder(
      */
     fun rawCommand(vararg bytes: Int): ESCPosCommandBuilder {
         writeRaw(*bytes)
+        return this
+    }
+
+    /**
+     * Best-effort print density command used by many low-cost ESC/POS printers.
+     * Some firmware ignores this command or uses vendor-specific alternatives.
+     */
+    fun setPrintDensity(level: Int): ESCPosCommandBuilder {
+        writeRaw(0x12, 0x23, level.coerceIn(0, 15))
+        return this
+    }
+
+    /**
+     * Best-effort thermal head heat configuration (ESC 7).
+     * Higher values can make output darker but may slow printing and stress the printer.
+     */
+    fun setHeatConfig(
+        dots: Int = HeatConfig.DEFAULT.dots,
+        time: Int = HeatConfig.DEFAULT.time,
+        interval: Int = HeatConfig.DEFAULT.interval
+    ): ESCPosCommandBuilder {
+        writeRaw(
+            0x1B,
+            0x37,
+            dots.coerceIn(0, 255),
+            time.coerceIn(0, 255),
+            interval.coerceIn(0, 255)
+        )
+        return this
+    }
+
+    fun setHeatConfig(config: HeatConfig): ESCPosCommandBuilder {
+        return setHeatConfig(config.dots, config.time, config.interval)
+    }
+
+    /**
+     * Applies a named quality profile using common density/heat commands.
+     */
+    fun printQuality(quality: PrintQuality): ESCPosCommandBuilder {
+        setPrintDensity(quality.density)
+        quality.heatConfig?.let { setHeatConfig(it) }
         return this
     }
 
