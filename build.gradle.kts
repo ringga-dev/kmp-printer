@@ -15,7 +15,8 @@ tasks.register("syncDocumentationVersion") {
 
     val libraryVersion = providers.gradleProperty("LIB_VERSION")
     val documentationFiles = listOf(
-        "README.md"
+        "README.md",
+        "webside/content/docs/getting-started.md"
     ).map { layout.projectDirectory.file(it) }
 
     inputs.property("libraryVersion", libraryVersion)

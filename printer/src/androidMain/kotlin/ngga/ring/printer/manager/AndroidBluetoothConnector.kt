@@ -8,6 +8,7 @@ import android.content.Context
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import ngga.ring.printer.model.PrinterConfig
+import ngga.ring.printer.util.PrinterLogger
 import java.util.*
 
 /**
@@ -25,12 +26,12 @@ class AndroidBluetoothConnector : BasePrinterConnector() {
         val adapter = bluetoothManager.adapter
         
         if (adapter == null) {
-            println("PrinterBT: Error - Bluetooth adapter not available")
+            PrinterLogger.warn(TAG, "Bluetooth adapter not available")
             return@withContext false
         }
         
         if (!adapter.isEnabled) {
-            println("PrinterBT: Error - Bluetooth is disabled")
+            PrinterLogger.warn(TAG, "Bluetooth is disabled")
             return@withContext false
         }
         
@@ -41,39 +42,39 @@ class AndroidBluetoothConnector : BasePrinterConnector() {
             val device = adapter.getRemoteDevice(address)
             adapter.cancelDiscovery()
             
-            println("PrinterBT: Attempting to connect to ${device.name} ($address)")
+            PrinterLogger.info(TAG, "Attempting to connect to ${device.name} ($address)")
             
             // Try standard way
             try {
                 socket = device.createRfcommSocketToServiceRecord(SPP_UUID)
                 socket?.connect()
                 if (socket?.isConnected == true) {
-                    println("PrinterBT: Connected successfully using standard RFCOMM")
+                    PrinterLogger.info(TAG, "Connected successfully using standard RFCOMM")
                     return@withContext true
                 }
             } catch (e: Exception) {
-                println("PrinterBT: Standard RFCOMM failed: ${e.message}")
+                PrinterLogger.warn(TAG, "Standard RFCOMM failed", e)
                 socket?.close()
                 socket = null
             }
 
             // Fallback for some devices (reflection)
-            println("PrinterBT: Attempting reflection fallback (channel 1)")
+            PrinterLogger.info(TAG, "Attempting reflection fallback (channel 1)")
             try {
                 val m = device.javaClass.getMethod("createRfcommSocket", Int::class.javaPrimitiveType)
                 socket = m.invoke(device, 1) as BluetoothSocket
                 socket?.connect()
                 val success = socket?.isConnected == true
-                if (success) println("PrinterBT: Connected successfully using reflection")
+                if (success) PrinterLogger.info(TAG, "Connected successfully using reflection")
                 success
             } catch (e2: Exception) {
-                println("PrinterBT: Reflection fallback failed: ${e2.message}")
+                PrinterLogger.warn(TAG, "Reflection fallback failed", e2)
                 socket?.close()
                 socket = null
                 false
             }
         } catch (e: Exception) {
-            println("PrinterBT: General connection error: ${e.message}")
+            PrinterLogger.warn(TAG, "General connection error", e)
             socket?.close()
             socket = null
             false
@@ -126,4 +127,8 @@ class AndroidBluetoothConnector : BasePrinterConnector() {
     }
 
     override fun isConnected(): Boolean = socket?.isConnected ?: false
+
+    private companion object {
+        const val TAG = "AndroidBluetoothConnector"
+    }
 }

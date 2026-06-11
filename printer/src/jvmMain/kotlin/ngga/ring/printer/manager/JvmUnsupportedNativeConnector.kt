@@ -1,6 +1,7 @@
 package ngga.ring.printer.manager
 
 import ngga.ring.printer.model.PrinterConfig
+import ngga.ring.printer.util.PrinterLogger
 
 /**
  * Placeholder for JVM transports that need OS-native backends.
@@ -13,7 +14,7 @@ class JvmUnsupportedNativeConnector(
     private val reason: String
 ) : BasePrinterConnector() {
     override suspend fun connect(config: PrinterConfig): Boolean {
-        println("PrinterJVM: $reason")
+        PrinterLogger.warn("JvmUnsupportedNativeConnector", reason)
         return false
     }
 

@@ -5,6 +5,7 @@ import kotlinx.coroutines.withContext
 import ngga.ring.printer.model.PrinterBleDiagnostic
 import ngga.ring.printer.model.PrinterBleFailureReason
 import ngga.ring.printer.model.PrinterConfig
+import ngga.ring.printer.util.PrinterLogger
 import java.util.concurrent.TimeUnit
 
 interface JvmBleBackend {
@@ -438,7 +439,7 @@ private object JvmBleBridgeProcess {
             )
             if (session.awaitReady(config.connectionTimeoutMs.toLong())) session else null
         } catch (e: Exception) {
-            println("PrinterJVM: $backendName failed to start: ${e.message}")
+            PrinterLogger.warn("JvmBleBridgeProcess", "$backendName failed to start", e)
             null
         }
     }
@@ -476,7 +477,7 @@ private class BridgeBleSession(
             }
             true
         } catch (e: Exception) {
-            println("PrinterJVM: $backendName write failed: ${e.message}")
+            PrinterLogger.warn("JvmBleBridgeProcess", "$backendName write failed", e)
             false
         }
     }

@@ -12,6 +12,8 @@ import ngga.ring.printer.usecase.GetPrinterDiagnosticsUseCase
 import ngga.ring.printer.usecase.PrintRawUseCase
 import ngga.ring.printer.usecase.PrintReceiptUseCase
 import ngga.ring.printer.usecase.PrintTestPageUseCase
+import ngga.ring.printer.util.PrinterLogEvent
+import ngga.ring.printer.util.PrinterLogger
 import ngga.ring.printer.util.escpos.ESCPosCommandBuilder
 
 /**
@@ -41,6 +43,10 @@ class KmpPrinter(
     private val discoverPrintersUseCase = DiscoverPrintersUseCase(repository)
     private val diagnosticsUseCase = GetPrinterDiagnosticsUseCase()
 
+    fun setLogger(logger: ((PrinterLogEvent) -> Unit)?) {
+        PrinterLogger.setSink(logger)
+    }
+
     /**
      * Checks and requests the necessary permissions for discovery and printing.
      * @param type The connection type (e.g., "BLUETOOTH", "USB", "NETWORK").
@@ -59,6 +65,10 @@ class KmpPrinter(
      */
     fun newCommandBuilder(config: PrinterConfig): ESCPosCommandBuilder {
         return ESCPosCommandBuilder.fromPrinterConfig(config)
+    }
+
+    fun newCommandBuilder(config: PrinterTransportConfig): ESCPosCommandBuilder {
+        return newCommandBuilder(config.toPrinterConfig())
     }
 
     /**
@@ -113,6 +123,10 @@ class KmpPrinter(
      */
     fun printRaw(config: PrinterConfig, data: ByteArray): Flow<PrintStatus> = printRawUseCase(config, data)
 
+    fun printRaw(config: PrinterTransportConfig, data: ByteArray): Flow<PrintStatus> {
+        return printRaw(config.toPrinterConfig(), data)
+    }
+
     /**
      * Prints a professional hardware test page containing styles, barcodes, and QR codes.
      */
@@ -133,6 +147,13 @@ class KmpPrinter(
         printRaw(config, builder.build()).collect { status: PrintStatus ->
             emit(status)
         }
+    }
+
+    suspend fun print(
+        config: PrinterTransportConfig,
+        block: ESCPosCommandBuilder.() -> Unit
+    ): Flow<PrintStatus> {
+        return print(config.toPrinterConfig(), block)
     }
 
     /**

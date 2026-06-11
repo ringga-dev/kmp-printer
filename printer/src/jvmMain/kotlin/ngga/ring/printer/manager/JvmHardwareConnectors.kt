@@ -3,6 +3,7 @@ package ngga.ring.printer.manager
 import com.fazecast.jSerialComm.SerialPort
 import ngga.ring.printer.model.PrinterConnectionType
 import ngga.ring.printer.model.PrinterConfig
+import ngga.ring.printer.util.PrinterLogger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.InputStream
@@ -43,7 +44,7 @@ class JvmSerialConnector : BasePrinterConnector() {
                 false
             }
         } catch (e: Exception) {
-            println("PrinterJVM: Serial connection failed: ${e.message}")
+            PrinterLogger.warn("JvmSerialConnector", "Serial connection failed", e)
             false
         }
     }
@@ -117,10 +118,10 @@ class JvmBluetoothClassicConnector(
 
         val serialCandidates = backend.serialCandidates(config, portService.listSerialPorts())
         for (candidate in serialCandidates) {
-            println("PrinterJVM: Bluetooth Classic ${backend.os} trying serial target ${candidate.address}")
+            PrinterLogger.debug(TAG, "Bluetooth Classic ${backend.os} trying serial target ${candidate.address}")
             if (serialConnector.connect(config.copy(address = candidate.address))) {
                 activeConnector = serialConnector
-                println("PrinterJVM: Bluetooth Classic ${backend.os} connected through serial target ${candidate.address}")
+                PrinterLogger.info(TAG, "Bluetooth Classic ${backend.os} connected through serial target ${candidate.address}")
                 return@withContext true
             }
             serialConnector.disconnect()
@@ -128,16 +129,16 @@ class JvmBluetoothClassicConnector(
 
         val queueCandidates = backend.queueCandidates(config, queueService.listQueues())
         for (candidate in queueCandidates) {
-            println("PrinterJVM: Bluetooth Classic ${backend.os} trying print queue ${candidate.name}")
+            PrinterLogger.debug(TAG, "Bluetooth Classic ${backend.os} trying print queue ${candidate.name}")
             if (printQueueConnector.connect(config.copy(address = candidate.name))) {
                 activeConnector = printQueueConnector
-                println("PrinterJVM: Bluetooth Classic ${backend.os} connected through print queue ${candidate.name}")
+                PrinterLogger.info(TAG, "Bluetooth Classic ${backend.os} connected through print queue ${candidate.name}")
                 return@withContext true
             }
             printQueueConnector.disconnect()
         }
 
-        println("PrinterJVM: Bluetooth Classic ${backend.os} connection failed. ${backend.failureHint(config, portService)}")
+        PrinterLogger.warn(TAG, "Bluetooth Classic ${backend.os} connection failed. ${backend.failureHint(config, portService)}")
         false
     }
 
@@ -319,12 +320,12 @@ private class LinuxBluetoothClassicBackend : BaseBluetoothClassicBackend(JvmOper
 
         val bind = runCommand(listOf("rfcomm", "bind", rfcommDevice, address), timeoutMs = 2500)
         if (bind.available && bind.exitCode == 0) {
-            println("PrinterJVM: Bluetooth Classic bound $address to $rfcommDevice")
+            PrinterLogger.info(TAG, "Bluetooth Classic bound $address to $rfcommDevice")
             return rfcommDevice
         }
 
         val detail = if (bind.available) bind.output.ifBlank { "exitCode=${bind.exitCode}" } else "rfcomm command is not available"
-        println("PrinterJVM: Bluetooth Classic rfcomm bind skipped/failed for $address on $rfcommDevice: $detail")
+        PrinterLogger.warn(TAG, "Bluetooth Classic rfcomm bind skipped/failed for $address on $rfcommDevice: $detail")
         return rfcommDevice
     }
 }
@@ -371,3 +372,5 @@ private data class CommandProbe(
     val exitCode: Int,
     val output: String
 )
+
+private const val TAG = "JvmBluetoothClassicConnector"

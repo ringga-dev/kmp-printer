@@ -10,6 +10,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import ngga.ring.printer.util.PrinterLogger
 import java.net.InetSocketAddress
 import java.net.Socket
 import java.util.Collections
@@ -30,7 +31,7 @@ class JvmNetworkConnector : BasePrinterConnector() {
             socket?.soTimeout = config.readTimeoutMs
             isConnected()
         } catch (e: Exception) {
-            println("PrinterJVM: Network connection failed: ${e.message}")
+            PrinterLogger.warn("JvmNetworkConnector", "Network connection failed", e)
             false
         }
     }

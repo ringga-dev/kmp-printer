@@ -13,6 +13,13 @@ const { data: navigation } = await useAsyncData('navigation', () => {
   return queryCollectionNavigation('docs')
 })
 
+const navItems = computed(() => {
+  return (navigation.value || []).flatMap((item: any) => {
+    if (item.children?.length) return item.children
+    return [item]
+  })
+})
+
 const isSidebarOpen = ref(false)
 </script>
 
@@ -34,22 +41,20 @@ const isSidebarOpen = ref(false)
     <!-- Sidebar Navigation -->
     <aside class="w-full md:w-64 flex-shrink-0 hidden md:block">
       <nav class="sticky top-28 overflow-y-auto max-h-[calc(100vh-160px)]">
-        <div v-for="item in navigation" :key="item.path" class="mb-8">
-          <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-4 px-3">
-            {{ item.title }}
-          </h4>
-          <ul class="space-y-1">
-            <li v-for="child in item.children" :key="child.path">
-              <NuxtLink
-                :to="child.path"
-                class="block px-3 py-2 rounded-lg text-sm transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
-                :class="route.path === child.path ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 font-semibold' : 'text-slate-600 dark:text-slate-400'"
-              >
-                {{ child.title }}
-              </NuxtLink>
-            </li>
-          </ul>
-        </div>
+        <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-4 px-3">
+          KmpPrinter
+        </h4>
+        <ul class="space-y-1">
+          <li v-for="item in navItems" :key="item.path">
+            <NuxtLink
+              :to="item.path"
+              class="block px-3 py-2 rounded-lg text-sm transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
+              :class="route.path === item.path ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 font-semibold' : 'text-slate-600 dark:text-slate-400'"
+            >
+              {{ item.title }}
+            </NuxtLink>
+          </li>
+        </ul>
       </nav>
     </aside>
 
@@ -102,23 +107,21 @@ const isSidebarOpen = ref(false)
       <div class="p-6">
         <Logo class="mb-10" />
         <nav>
-          <div v-for="item in navigation" :key="item.path" class="mb-8">
-            <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-4 px-3">
-              {{ item.title }}
-            </h4>
-            <ul class="space-y-1">
-              <li v-for="child in item.children" :key="child.path">
-                <NuxtLink
-                  :to="child.path"
-                  class="block px-3 py-2 rounded-lg text-sm"
-                  :class="route.path === child.path ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 font-semibold' : 'text-slate-600 dark:text-slate-400'"
-                  @click="isSidebarOpen = false"
-                >
-                  {{ child.title }}
-                </NuxtLink>
-              </li>
-            </ul>
-          </div>
+          <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-4 px-3">
+            KmpPrinter
+          </h4>
+          <ul class="space-y-1">
+            <li v-for="item in navItems" :key="item.path">
+              <NuxtLink
+                :to="item.path"
+                class="block px-3 py-2 rounded-lg text-sm"
+                :class="route.path === item.path ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 font-semibold' : 'text-slate-600 dark:text-slate-400'"
+                @click="isSidebarOpen = false"
+              >
+                {{ item.title }}
+              </NuxtLink>
+            </li>
+          </ul>
         </nav>
       </div>
     </USlideover>

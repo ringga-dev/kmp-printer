@@ -23,7 +23,7 @@ The source version configured in this repository is `2.2.0`.
 | JVM/Desktop | Yes, OS serial/queue | Yes, helper/BlueZ | Yes, raw USB/serial/queue | Yes | Transport dependent |
 | Web | Yes | Yes | Yes | Yes | Browser dependent |
 
-Support still depends on the printer firmware, browser APIs, OS permissions, drivers, and hardware transport availability. See [Printer OS Setup Guide](./docs/PRINTER_OS_SETUP.md) for Windows, Linux, macOS, USB, Bluetooth Classic, BLE, and hardware integration test setup.
+Support still depends on the printer firmware, browser APIs, OS permissions, drivers, and hardware transport availability. See [Printer OS Setup Guide](./docs/PRINTER_OS_SETUP.md) and [API Migration Guide](./docs/API_MIGRATION.md) for setup, troubleshooting, typed config APIs, and hardware integration tests.
 
 ## Installation
 

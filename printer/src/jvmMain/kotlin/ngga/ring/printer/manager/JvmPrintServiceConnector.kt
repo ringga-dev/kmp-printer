@@ -3,6 +3,7 @@ package ngga.ring.printer.manager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import ngga.ring.printer.model.PrinterConfig
+import ngga.ring.printer.util.PrinterLogger
 import java.io.ByteArrayInputStream
 import javax.print.DocFlavor
 import javax.print.DocPrintJob
@@ -78,7 +79,7 @@ class JvmPrintServiceConnector(
             job.print(doc, null)
             true
         } catch (e: Exception) {
-            println("PrinterJVM: Print service send failed: ${e.message}")
+            PrinterLogger.warn("JvmPrintServiceConnector", "Print service send failed", e)
             false
         }
     }

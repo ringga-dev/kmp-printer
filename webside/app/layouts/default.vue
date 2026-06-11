@@ -38,7 +38,7 @@
       <div class="container mx-auto px-4 text-center">
         <Logo class="justify-center mb-6" />
         <p class="text-slate-500 dark:text-slate-400 max-w-md mx-auto mb-8">
-          The ultimate Kotlin Multiplatform library for professional ESC/POS printing.
+          Kotlin Multiplatform ESC/POS printing with diagnostics, typed transport configs, and hardware validation hooks.
         </p>
         <div class="flex justify-center gap-6 mb-8">
           <a href="#" class="text-slate-400 hover:text-primary-600 transition-colors"><UIcon name="i-simple-icons-github" class="w-6 h-6" /></a>

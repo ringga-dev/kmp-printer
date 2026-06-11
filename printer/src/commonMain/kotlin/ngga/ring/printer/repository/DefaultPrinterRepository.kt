@@ -12,6 +12,7 @@ import ngga.ring.printer.manager.PrinterStatusMonitor
 import ngga.ring.printer.model.DiscoveredPrinter
 import ngga.ring.printer.model.DiscoveryConfig
 import ngga.ring.printer.model.PrintStatus
+import ngga.ring.printer.model.PrinterErrorCode
 import ngga.ring.printer.model.PrinterConfig
 import ngga.ring.printer.model.PrinterConnectionType
 import ngga.ring.printer.model.PrinterStatus
@@ -46,7 +47,7 @@ class DefaultPrinterRepository(
 
                 if (!connectWithRetry(connector, normalizedConfig)) {
                     val message = connectionFailureMessage(normalizedConfig)
-                    emit(PrintStatus.Error(message))
+                    emit(PrintStatus.Error(message, PrinterErrorCode.CONNECTION_FAILED))
                     _connectionState.value = ConnectionState.Error(message)
                     return@flow
                 }
@@ -60,12 +61,12 @@ class DefaultPrinterRepository(
             } else {
                 val message = "Failed to send data to printer after ${normalizedConfig.sendAttempts.coerceAtLeast(1)} attempt(s)"
                 _connectionState.value = ConnectionState.Error(message)
-                emit(PrintStatus.Error(message))
+                emit(PrintStatus.Error(message, PrinterErrorCode.SEND_FAILED))
             }
         } catch (e: Exception) {
             val message = e.message ?: "Unknown print error"
             _connectionState.value = ConnectionState.Error(message)
-            emit(PrintStatus.Error(message))
+            emit(PrintStatus.Error(message, PrinterErrorCode.UNKNOWN, e::class.simpleName))
         }
     }
 
@@ -77,10 +78,10 @@ class DefaultPrinterRepository(
                 connector.disconnect()
                 PrintStatus.Success
             } else {
-                PrintStatus.Error(connectionFailureMessage(normalizedConfig))
+                PrintStatus.Error(connectionFailureMessage(normalizedConfig), PrinterErrorCode.CONNECTION_FAILED)
             }
         } catch (e: Exception) {
-            PrintStatus.Error(e.message ?: "Unknown connection test error")
+            PrintStatus.Error(e.message ?: "Unknown connection test error", PrinterErrorCode.UNKNOWN, e::class.simpleName)
         }
     }
 
