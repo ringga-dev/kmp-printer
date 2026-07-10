@@ -1,5 +1,3 @@
-<div align="center">
-
 # 🖨️ KmpPrinter
 
 **Kotlin Multiplatform ESC/POS Thermal Printing Library**
@@ -12,8 +10,6 @@
 [![CI](https://img.shields.io/github/actions/workflow/status/ringga-dev/kmp-printer/ci.yml?style=flat&logo=githubactions&label=CI)](https://github.com/ringga-dev/kmp-printer/actions/workflows/ci.yml)
 
 A single unified API for thermal printer discovery, connection, ESC/POS receipt building, and status monitoring — across **Android, iOS, JVM/Desktop, JS, and Wasm**.
-
-</div>
 
 ---
 
@@ -261,8 +257,4 @@ Copyright (c) 2026 Ringga. Free to use, modify, and distribute in commercial and
 
 ---
 
-<div align="center">
-  <sub>Built with ❤️ and Kotlin Multiplatform</sub>
-  <br>
-  <a href="https://github.com/ringga-dev/kmp-printer">⭐ Star on GitHub</a>
-</div>
+Built with ❤️ and Kotlin Multiplatform — [⭐ Star on GitHub](https://github.com/ringga-dev/kmp-printer)
