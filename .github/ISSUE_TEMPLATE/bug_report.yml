@@ -1,0 +1,70 @@
+name: Bug Report
+description: Report a bug or unexpected behavior
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear description of what the bug is
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      description: Which platform(s) are affected?
+      multiple: true
+      options:
+        - Android
+        - iOS
+        - JVM / Desktop
+        - Web / JS
+        - Wasm
+    validations:
+      required: true
+
+  - type: dropdown
+    id: transport
+    attributes:
+      label: Connection Type
+      description: Which printer connection type?
+      options:
+        - Network TCP
+        - Bluetooth Classic
+        - BLE
+        - USB
+        - Serial
+        - Virtual
+
+  - type: input
+    id: printer
+    attributes:
+      label: Printer Model
+      description: What printer model / firmware?
+      placeholder: e.g. Epson TM-T20X
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: How can we reproduce this issue?
+      placeholder: |
+        1. Create printer config with...
+        2. Call printer.print() with...
+        3. See error...
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant Log Output
+      description: Please copy and paste any relevant log output
+      render: shell

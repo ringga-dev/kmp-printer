@@ -67,6 +67,11 @@ jobs:
           <head>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1">
+            <meta name="description" content="Kotlin Multiplatform ESC/POS thermal printing library for Android, iOS, Desktop, Web, and Wasm. Bluetooth, BLE, USB, Network TCP printing with receipt builder DSL.">
+            <meta name="keywords" content="kotlin,multiplatform,kmp,escpos,thermal-printer,bluetooth-printing,android,ios,receipt-printer,kotlin-library">
+            <meta property="og:title" content="KmpPrinter — Kotlin Multiplatform ESC/POS Library">
+            <meta property="og:description" content="Print receipts from Android, iOS, Desktop & Web via Bluetooth, BLE, USB, or Network TCP.">
+            <meta property="og:url" content="https://ringga-dev.github.io/kmp-printer/">
             <title>{escape(title)}</title>
             <style>
               :root {{
