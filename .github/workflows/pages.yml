@@ -143,14 +143,15 @@ jobs:
             <title>{escape(title)}</title>
             <style>
               :root {{
-                color-scheme: light;
-                --text: #18212f;
-                --muted: #5b6678;
-                --line: #d9dee7;
-                --bg: #f6f8fb;
-                --panel: #ffffff;
-                --accent: #0f766e;
-                --code: #101827;
+                color-scheme: dark;
+                --text: #e2e8f0;
+                --muted: #94a3b8;
+                --line: #334155;
+                --bg: #0f172a;
+                --panel: #1e293b;
+                --accent: #2dd4bf;
+                --code: #0b1120;
+                --accent-dim: #14b8a6;
               }}
               * {{ box-sizing: border-box; }}
               body {{
@@ -226,8 +227,9 @@ jobs:
           <body>
             <header>
               <div class="wrap">
-                <p class="subtle">Kotlin Multiplatform ESC/POS thermal printing library</p>
-                <nav>{nav}</nav>
+                <h1 style="margin:0; font-size:1.6rem; display:inline-block;">KmpPrinter</h1>
+                <span class="subtle" style="margin-left:10px;">Kotlin Multiplatform ESC/POS thermal printing library</span>
+                <p class="subtle" style="margin:4px 0 0;"><nav>{nav}</nav></p>
               </div>
             </header>
             <main class="wrap">{body}</main>
