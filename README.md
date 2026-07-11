@@ -77,7 +77,7 @@ kotlin {
 > <dependency>
 >     <groupId>io.github.ringga-dev</groupId>
 >     <artifactId>kmp_printer</artifactId>
->     <version>2.3.1</version>
+>     <version>2.3.1</version> <!-- sync-version -->
 > </dependency>
 > ```
 > *Available on Maven Central — no extra repository needed.*

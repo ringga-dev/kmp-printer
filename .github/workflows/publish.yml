@@ -69,12 +69,28 @@ jobs:
         id: version
         shell: bash
         run: |
-          version="$(grep '^LIB_VERSION=' gradle.properties | cut -d'=' -f2 | tr -d '\r' | xargs)"
+          version="$(grep '^LIB_VERSION=' gradle.properties | cut -d'=' -f2 | tr -d '\\r' | xargs)"
           if [ -z "$version" ]; then
             echo "LIB_VERSION is missing" >&2
             exit 1
           fi
           echo "lib_version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Verify tag matches version
+        shell: bash
+        if: github.ref_type == 'tag'
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          version="${{ steps.version.outputs.lib_version }}"
+          if [ "$tag" != "$version" ]; then
+            echo "❌ Tag mismatch!"
+            echo "   Tag:        ${GITHUB_REF_NAME} (v$tag)"
+            echo "   LIB_VERSION: $version"
+            echo ""
+            echo "Fix: update LIB_VERSION in gradle.properties to match the tag"
+            exit 1
+          fi
+          echo "✅ Tag v$tag matches LIB_VERSION $version"
 
   build-android:
     name: Build Android AAR
