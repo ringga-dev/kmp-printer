@@ -97,14 +97,12 @@ android {
     }
 }
 
-// Shared javadoc jar task for Maven Central (registered once, used by all publications)
-val javadocJar by tasks.registering(Jar::class) {
-    archiveClassifier.set("javadoc")
-}
-
 publishing {
     publications {
         withType<MavenPublication> {
+            val javadocJar = tasks.register<Jar>("javadocJarFor${name.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }}") {
+                archiveClassifier.set("javadoc")
+            }
             artifact(javadocJar)
 
             pom {
