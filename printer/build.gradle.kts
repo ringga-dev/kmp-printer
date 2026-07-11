@@ -100,13 +100,8 @@ android {
 publishing {
     publications {
         withType<MavenPublication> {
-            // Dokka-generated javadoc instead of README hack
-            val dokkaJar by tasks.registering(Jar::class) {
-                dependsOn(tasks.named("dokkaGenerate"))
-                archiveClassifier.set("javadoc")
-                from(layout.buildDirectory.dir("dokka"))
-            }
-            artifact(dokkaJar)
+            // Dokka-generated javadoc (plugin provides dokkaJar task)
+            artifact(tasks.named("dokkaJar"))
 
             pom {
                 name.set("KmpPrinter")
