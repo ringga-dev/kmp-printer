@@ -100,8 +100,11 @@ android {
 publishing {
     publications {
         withType<MavenPublication> {
-            // Dokka V2 provides dokkaJar task for javadoc
-            artifact(tasks.named("dokkaJar"))
+            // Simple javadoc jar for Maven Central (content is optional)
+            val javadocJar = tasks.register<Jar>("javadocJar") {
+                archiveClassifier.set("javadoc")
+            }
+            artifact(javadocJar)
 
             pom {
                 name.set("KmpPrinter")
