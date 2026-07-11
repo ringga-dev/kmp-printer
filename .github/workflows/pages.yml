@@ -198,6 +198,19 @@ jobs:
               target = Path("site/index.html") if source.name == "README.md" else Path("site/docs") / f"{source.stem}.html"
               target.write_text(page(title, render_markdown(source), nav), encoding="utf-8")
 
+          # Generate sitemap.xml
+          base_url = "https://ringga-dev.github.io/kmp-printer"
+          urls = ["/index.html"] + [f"/docs/{p.stem}.html" for p in sources[1:]]
+          sitemap = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+          for u in urls:
+              sitemap += f"  <url><loc>{base_url}{u}</loc></url>\n"
+          sitemap += "</urlset>\n"
+          Path("site/sitemap.xml").write_text(sitemap, encoding="utf-8")
+
+          # Generate robots.txt
+          robots = "User-agent: *\nAllow: /\nSitemap: https://ringga-dev.github.io/kmp-printer/sitemap.xml\n"
+          Path("site/robots.txt").write_text(robots, encoding="utf-8")
+
           Path("site/.nojekyll").write_text("", encoding="utf-8")
           PY
 
@@ -217,3 +230,11 @@ jobs:
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Ping Google Search
+        shell: bash
+        run: |
+          sleep 10
+          curl -s "https://www.google.com/ping?sitemap=https://ringga-dev.github.io/kmp-printer/sitemap.xml"
+          curl -s "https://bing.com/indexnow?url=https://ringga-dev.github.io/kmp-printer/sitemap.xml"
+          echo "✅ Google & Bing pinged"
