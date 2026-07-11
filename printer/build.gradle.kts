@@ -100,11 +100,6 @@ android {
 publishing {
     publications {
         withType<MavenPublication> {
-            val javadocJar = tasks.register<Jar>("javadocJarFor${name.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }}") {
-                archiveClassifier.set("javadoc")
-            }
-            artifact(javadocJar)
-
             pom {
                 name.set("KmpPrinter")
                 description.set("KmpPrinter: Professional Kotlin Multiplatform Thermal Printing Library for ESC/POS.")
