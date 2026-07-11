@@ -100,12 +100,7 @@ android {
 publishing {
     publications {
         withType<MavenPublication> {
-            // Generate javadoc jar from Dokka V1 output
-            tasks.register<Jar>("dokkaHtmlJar") {
-                dependsOn(tasks.named("dokka"))
-                archiveClassifier.set("javadoc")
-                from(layout.buildDirectory.dir("dokka"))
-            }
+            // Dokka V1 2.0.0 provides dokkaHtmlJar task
             artifact(tasks.named("dokkaHtmlJar"))
 
             pom {
