@@ -47,7 +47,7 @@ jobs:
           import markdown
           import re
 
-          sources = [Path("README.md")] + sorted(Path("docs").glob("*.md"))
+          sources = [Path("README.md")] + sorted(Path("docs").glob("*.md")) + [Path("RELEASING.md")]
 
           md_extensions = [
               "extra",           # tables, code blocks, footnotes, etc.
