@@ -100,8 +100,8 @@ android {
 publishing {
     publications {
         withType<MavenPublication> {
-            // Dokka V1 2.0.0 provides dokkaHtmlJar task
-            artifact(tasks.named("dokkaHtmlJar"))
+            // Dokka V2 provides dokkaJar task for javadoc
+            artifact(tasks.named("dokkaJar"))
 
             pom {
                 name.set("KmpPrinter")
