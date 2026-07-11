@@ -1,0 +1,219 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "url": "../../printer/2.3.0/printer-2.3.0.module",
+    "group": "io.github.ringga-dev",
+    "module": "printer",
+    "version": "2.3.0",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "8.14.3"
+    }
+  },
+  "variants": [
+    {
+      "name": "releaseApiElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "android",
+        "org.gradle.usage": "java-api",
+        "org.jetbrains.kotlin.platform.type": "androidJvm"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.3.20"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "printer-release.aar",
+          "url": "printer-android-2.3.0.aar",
+          "size": 342629,
+          "sha512": "d36dcd32a27977176ec173975661f8bfd447ece7570f7ad32e167877b27a356c6dd56b8eef9b3c97ccc5973aa6f510db9f39c9ff13cf003bad8e163e10257dfb",
+          "sha256": "2b1b8c1b3ad85569dc667e242d485a0f485d503798064bc218ca20524ecbf85f",
+          "sha1": "c1b60696c7b16534fa967dee0b9dbba5b84e2c23",
+          "md5": "e008a631a3b44e760320e3ccad737be6"
+        }
+      ]
+    },
+    {
+      "name": "releaseRuntimeElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "android",
+        "org.gradle.usage": "java-runtime",
+        "org.jetbrains.kotlin.platform.type": "androidJvm"
+      },
+      "dependencies": [
+        {
+          "group": "androidx.appcompat",
+          "module": "appcompat",
+          "version": {
+            "requires": "1.7.0"
+          },
+          "excludes": [
+            {
+              "group": "org.jetbrains.kotlin",
+              "module": "kotlin-stdlib-common"
+            },
+            {
+              "group": "org.jetbrains.kotlin",
+              "module": "kotlin-test-common"
+            },
+            {
+              "group": "org.jetbrains.kotlin",
+              "module": "kotlin-test-annotations-common"
+            }
+          ]
+        },
+        {
+          "group": "com.google.android.material",
+          "module": "material",
+          "version": {
+            "requires": "1.12.0"
+          },
+          "excludes": [
+            {
+              "group": "org.jetbrains.kotlin",
+              "module": "kotlin-stdlib-common"
+            },
+            {
+              "group": "org.jetbrains.kotlin",
+              "module": "kotlin-test-common"
+            },
+            {
+              "group": "org.jetbrains.kotlin",
+              "module": "kotlin-test-annotations-common"
+            }
+          ]
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.3.20"
+          },
+          "excludes": [
+            {
+              "group": "org.jetbrains.kotlin",
+              "module": "kotlin-stdlib-common"
+            },
+            {
+              "group": "org.jetbrains.kotlin",
+              "module": "kotlin-test-common"
+            },
+            {
+              "group": "org.jetbrains.kotlin",
+              "module": "kotlin-test-annotations-common"
+            }
+          ]
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-coroutines-core",
+          "version": {
+            "requires": "1.10.2"
+          },
+          "excludes": [
+            {
+              "group": "org.jetbrains.kotlin",
+              "module": "kotlin-stdlib-common"
+            },
+            {
+              "group": "org.jetbrains.kotlin",
+              "module": "kotlin-test-common"
+            },
+            {
+              "group": "org.jetbrains.kotlin",
+              "module": "kotlin-test-annotations-common"
+            }
+          ]
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-datetime",
+          "version": {
+            "requires": "0.7.1"
+          },
+          "excludes": [
+            {
+              "group": "org.jetbrains.kotlin",
+              "module": "kotlin-stdlib-common"
+            },
+            {
+              "group": "org.jetbrains.kotlin",
+              "module": "kotlin-test-common"
+            },
+            {
+              "group": "org.jetbrains.kotlin",
+              "module": "kotlin-test-annotations-common"
+            }
+          ]
+        },
+        {
+          "group": "io.github.aakira",
+          "module": "napier",
+          "version": {
+            "requires": "2.7.1"
+          },
+          "excludes": [
+            {
+              "group": "org.jetbrains.kotlin",
+              "module": "kotlin-stdlib-common"
+            },
+            {
+              "group": "org.jetbrains.kotlin",
+              "module": "kotlin-test-common"
+            },
+            {
+              "group": "org.jetbrains.kotlin",
+              "module": "kotlin-test-annotations-common"
+            }
+          ]
+        }
+      ],
+      "files": [
+        {
+          "name": "printer-release.aar",
+          "url": "printer-android-2.3.0.aar",
+          "size": 342629,
+          "sha512": "d36dcd32a27977176ec173975661f8bfd447ece7570f7ad32e167877b27a356c6dd56b8eef9b3c97ccc5973aa6f510db9f39c9ff13cf003bad8e163e10257dfb",
+          "sha256": "2b1b8c1b3ad85569dc667e242d485a0f485d503798064bc218ca20524ecbf85f",
+          "sha1": "c1b60696c7b16534fa967dee0b9dbba5b84e2c23",
+          "md5": "e008a631a3b44e760320e3ccad737be6"
+        }
+      ]
+    },
+    {
+      "name": "releaseSourcesElements-published",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.jvm.environment": "android",
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime",
+        "org.jetbrains.kotlin.platform.type": "androidJvm"
+      },
+      "files": [
+        {
+          "name": "printer-android-2.3.0-sources.jar",
+          "url": "printer-android-2.3.0-sources.jar",
+          "size": 69140,
+          "sha512": "9eb95f4ecc41d3f981962b423edbdb1a2d977f3618d52c7c29d20412aaa7b3140523603cafc3b7b691c052c1359158f63c270da5aadd107403a6ddfd1448838a",
+          "sha256": "d61faec340f169e7d27c183a63a6a6b41e91f90fa3c58933d4a828c88436ae75",
+          "sha1": "be96bc9f9599fbdfd6df705d52db0c567a78d57c",
+          "md5": "e72f80527713441ec860559c1c3193f7"
+        }
+      ]
+    }
+  ]
+}
