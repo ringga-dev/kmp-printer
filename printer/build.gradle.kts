@@ -100,8 +100,13 @@ android {
 publishing {
     publications {
         withType<MavenPublication> {
-            // Dokka-generated javadoc (plugin provides dokkaJar task)
-            artifact(tasks.named("dokkaJar"))
+            // Generate javadoc jar from Dokka V1 output
+            tasks.register<Jar>("dokkaHtmlJar") {
+                dependsOn(tasks.named("dokka"))
+                archiveClassifier.set("javadoc")
+                from(layout.buildDirectory.dir("dokka"))
+            }
+            artifact(tasks.named("dokkaHtmlJar"))
 
             pom {
                 name.set("KmpPrinter")
