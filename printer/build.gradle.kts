@@ -97,14 +97,15 @@ android {
     }
 }
 
+// Shared javadoc jar task for Maven Central (registered once, used by all publications)
+val javadocJar by tasks.registering(Jar::class) {
+    archiveClassifier.set("javadoc")
+}
+
 publishing {
     publications {
         withType<MavenPublication> {
-            // javadoc jar for Maven Central (empty but required)
-            val kmpPrinterJavadocJar = tasks.register<Jar>("kmpPrinterJavadocJar") {
-                archiveClassifier.set("javadoc")
-            }
-            artifact(kmpPrinterJavadocJar)
+            artifact(javadocJar)
 
             pom {
                 name.set("KmpPrinter")
