@@ -32,8 +32,8 @@ tasks.register("syncDocumentationVersion") {
             val original = file.readText()
             val updated = original
                 .replace(
-                    Regex("""io\.github\.ringga-dev:kmp_printer:[^")`\s]+"""),
-                    "io.github.ringga-dev:kmp_printer:$version"
+                    Regex("""io\.github\.ringga-dev:printer:[^")`\s]+"""),
+                    "io.github.ringga-dev:printer:$version"
                 )
                 .replace(
                     Regex("""source version configured in this repository is `[^`]+`"""),

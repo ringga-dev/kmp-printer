@@ -107,7 +107,7 @@ If you prefer to do it step by step:
 - It takes ~10-30 minutes for artifacts to appear after Sonatype close & release
 - Library will then be available at:
   ```kotlin
-  implementation("io.github.ringga-dev:kmp_printer:2.3.0")
+  implementation("io.github.ringga-dev:printer:2.3.1")
   ```
   **No extra repository needed!** Just `mavenCentral()` in your build file.
 
