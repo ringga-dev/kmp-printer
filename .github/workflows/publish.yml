@@ -246,32 +246,25 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up JDK
-        uses: actions/setup-java@v4
+      - name: Download bundle artifact
+        uses: actions/download-artifact@v4
         with:
-          java-version: ${{ env.JAVA_VERSION }}
-          distribution: temurin
-          cache: gradle
+          name: sonatype-central-bundle
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
-
-      - name: Make Gradle wrapper executable
-        run: chmod +x ./gradlew
-
-      - name: Publish to Maven Central (Sonatype)
+      - name: Upload to Maven Central Portal
+        shell: bash
         env:
-          GPG_SIGNING_KEY: ${{ secrets.GPG_SIGNING_KEY }}
-          GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
-        run: ./gradlew :printer:publishAllPublicationsToSonatypeRepository --no-daemon
+        run: |
+          bundle_zip="sonatype-bundle-${{ needs.setup.outputs.lib_version }}.zip"
+          echo "Uploading $bundle_zip to Maven Central..."
+          curl -s -X POST \
+            -u "${SONATYPE_USERNAME}:${SONATYPE_PASSWORD}" \
+            -F "bundle=@${bundle_zip}" \
+            "https://central.sonatype.com/api/v1/publisher/upload" | tee response.json
+          echo ""
+          echo "✅ Uploaded! Check: https://central.sonatype.com/publishing/status"
 
   create-release:
     name: Create GitHub Release

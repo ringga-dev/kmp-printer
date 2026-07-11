@@ -12,10 +12,16 @@ This guide covers how to publish KmpPrinter to **GitHub Maven** and **Maven Cent
 2. Create a new Community Support ticket:
    - **Project:** Community Support - Open Source Project Repository Hosting
    - **Summary:** `New OSSRH project for io.github.ringga-dev`
-   - **Description:** Request to publish `io.github.ringga-dev:kmp_printer` artifacts
    - **Group Id:** `io.github.ringga-dev`
 
-### 2. GPG Key (for Artifact Signing)
+### 2. Central Portal (new Maven Central)
+
+1. Login to [https://central.sonatype.com/](https://central.sonatype.com/) with GitHub
+2. **Verify your namespace** `io.github.ringga-dev`
+3. **Generate User Token**: Profile → User Token → Generate
+4. Save the token values — use as `SONATYPE_USERNAME` and `SONATYPE_PASSWORD` secrets
+
+### 3. GPG Key (for Artifact Signing)
 
 ```bash
 # Generate a GPG key (use ringga.dev@gmail.com as email)

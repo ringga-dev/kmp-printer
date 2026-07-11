@@ -140,14 +140,6 @@ publishing {
             name = "LocalRepo"
             url = uri(layout.buildDirectory.dir("repo"))
         }
-        maven {
-            name = "Sonatype"
-            url = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2/")
-            credentials {
-                username = System.getenv("SONATYPE_USERNAME") ?: (project.findProperty("sonatypeUsername") as? String ?: "")
-                password = System.getenv("SONATYPE_PASSWORD") ?: (project.findProperty("sonatypePassword") as? String ?: "")
-            }
-        }
     }
 }
 
