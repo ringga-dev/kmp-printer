@@ -7,6 +7,8 @@ plugins {
     id("signing")
 }
 
+apply(plugin = "org.jetbrains.dokka")
+
 group = project.findProperty("LIB_GROUP")?.toString() ?: "io.github.ringga-dev"
 version = project.findProperty("LIB_VERSION")?.toString() ?: "1.0.0"
 
@@ -99,15 +101,13 @@ android {
 publishing {
     publications {
         withType<MavenPublication> {
-            val javadocJarTaskName = "javadocJarFor${name.replaceFirstChar { it.uppercase() }}"
-            val javadocJar = tasks.register<Jar>(javadocJarTaskName) {
+            // Dokka-generated javadoc instead of README hack
+            val dokkaJar by tasks.registering(Jar::class) {
+                dependsOn(tasks.named("dokkaGenerate"))
                 archiveClassifier.set("javadoc")
-                archiveBaseName.set("printer-${name.lowercase()}")
-                archiveVersion.set(version.toString())
-                // Menambahkan isi ke Javadoc agar tidak 0 bytes (mencegah Error 500 Sonatype)
-                from(project.rootDir.resolve("README.md"))
+                from(layout.buildDirectory.dir("dokka"))
             }
-            artifact(javadocJar)
+            artifact(dokkaJar)
 
             pom {
                 name.set("KmpPrinter")
@@ -139,6 +139,14 @@ publishing {
         maven {
             name = "LocalRepo"
             url = uri(layout.buildDirectory.dir("repo"))
+        }
+        maven {
+            name = "Sonatype"
+            url = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2/")
+            credentials {
+                username = System.getenv("SONATYPE_USERNAME") ?: (project.findProperty("sonatypeUsername") as? String ?: "")
+                password = System.getenv("SONATYPE_PASSWORD") ?: (project.findProperty("sonatypePassword") as? String ?: "")
+            }
         }
     }
 }

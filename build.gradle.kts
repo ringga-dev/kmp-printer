@@ -9,6 +9,8 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform) apply false
 }
 
+apply(plugin = "org.jetbrains.dokka")
+
 tasks.register("syncDocumentationVersion") {
     group = "documentation"
     description = "Updates documentation dependency snippets from LIB_VERSION in gradle.properties."

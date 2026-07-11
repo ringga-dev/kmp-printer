@@ -40,6 +40,7 @@ kotlinx-coroutinesSwing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-s
 compose-materialIconsCore = { module = "org.jetbrains.compose.material:material-icons-core", version = "1.7.3" }
 compose-materialIconsExtended = { module = "org.jetbrains.compose.material:material-icons-extended", version = "1.7.3" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
+dokka = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version = "2.0.0" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

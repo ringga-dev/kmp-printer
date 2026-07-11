@@ -192,6 +192,7 @@ printer.print(config) {
 | [Transport Support](docs/TRANSPORT_SUPPORT.md) | Platform-by-platform transport compatibility |
 | [Printer OS Setup](docs/PRINTER_OS_SETUP.md) | OS-level driver & permission setup (Linux udev, Windows, macOS) |
 | [API & Migration](docs/API_MIGRATION.md) | Typed configs, profiles, migration from v1 |
+| [Releasing](RELEASING.md) | How to publish to GitHub Maven & Maven Central |
 | [GitHub Pages](https://ringga-dev.github.io/kmp-printer/) | Online documentation site |
 
 ---
