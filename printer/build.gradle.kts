@@ -100,11 +100,11 @@ android {
 publishing {
     publications {
         withType<MavenPublication> {
-            // Simple javadoc jar for Maven Central (content is optional)
-            val javadocJar = tasks.register<Jar>("javadocJar") {
+            // javadoc jar for Maven Central (empty but required)
+            val kmpPrinterJavadocJar = tasks.register<Jar>("kmpPrinterJavadocJar") {
                 archiveClassifier.set("javadoc")
             }
-            artifact(javadocJar)
+            artifact(kmpPrinterJavadocJar)
 
             pom {
                 name.set("KmpPrinter")
