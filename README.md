@@ -65,11 +65,22 @@ dependencyResolutionManagement {
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("io.github.ringga-dev:kmp_printer:2.2.2")
+            implementation("io.github.ringga-dev:kmp_printer:2.3.1")
         }
     }
 }
 ```
+
+> **Maven users:**
+> ```xml
+> <!-- pom.xml -->
+> <dependency>
+>     <groupId>io.github.ringga-dev</groupId>
+>     <artifactId>kmp_printer</artifactId>
+>     <version>2.3.1</version>
+> </dependency>
+> ```
+> *Available on Maven Central — no extra repository needed.*
 
 ### 3. Print Your First Receipt
 

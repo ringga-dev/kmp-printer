@@ -100,6 +100,16 @@ android {
 publishing {
     publications {
         withType<MavenPublication> {
+            val javadocJar = tasks.register<Jar>("${name}JavadocJar") {
+                archiveClassifier.set("javadoc")
+                // Unique output dir per publication to prevent signing conflicts
+                destinationDirectory.set(layout.buildDirectory.dir("libs/${name}"))
+                // Include a simple placeholder
+                from(project.rootProject.layout.projectDirectory.file("README.md")) {
+                    rename { "README.md" }
+                }
+            }
+            artifact(javadocJar)
             pom {
                 name.set("KmpPrinter")
                 description.set("KmpPrinter: Professional Kotlin Multiplatform Thermal Printing Library for ESC/POS.")
