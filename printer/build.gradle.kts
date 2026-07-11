@@ -5,9 +5,8 @@ plugins {
     id("com.android.library")
     id("maven-publish")
     id("signing")
+    alias(libs.plugins.dokka)
 }
-
-apply(plugin = "org.jetbrains.dokka")
 
 group = project.findProperty("LIB_GROUP")?.toString() ?: "io.github.ringga-dev"
 version = project.findProperty("LIB_VERSION")?.toString() ?: "1.0.0"
