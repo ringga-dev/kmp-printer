@@ -104,6 +104,14 @@ android {
 publishing {
     publications {
         withType<MavenPublication>().configureEach {
+            // Override artifactId to use kmp_printer prefix instead of printer
+            artifactId = when (name) {
+                "kotlinMultiplatform" -> "kmp_printer"
+                "androidRelease" -> "kmp_printer-android"
+                "wasmJs" -> "kmp_printer-wasm-js"
+                else -> "kmp_printer-${name.replaceFirstChar { it.lowercase() }}"
+            }
+
             val javadocJar = tasks.register<Jar>("${name}JavadocJar") {
                 archiveClassifier.set("javadoc")
                 // Unique output dir per publication to prevent signing conflicts
