@@ -133,10 +133,10 @@
           "name": "printer-iosarm64-2.3.0-metadata.jar",
           "url": "printer-iosarm64-2.3.0-metadata.jar",
           "size": 6848,
-          "sha512": "05110b5116fba68f21aa1260bd6ca09139dfbbe3a80ac29135efd87b219d59c1e799475595c77be38c6e284aa7910b40dd3698b74fb54f5b8f61678f167bcbfb",
-          "sha256": "2818a86ffa1defa8b685f8059000cfd182c4a5cfdf0f15e1a85c023369170cab",
-          "sha1": "35323b6eef960394ac0a42b746afccebf311cf69",
-          "md5": "0050eabf71d648b1856d2e1ea568269c"
+          "sha512": "252e2b8c40fe204a285a218df11e7e939922f364765259262357ec9aba44f2520f5767b230f86bfb96f96e1b8e8159b2bc2878e0e4149665b704c6c9efbd721a",
+          "sha256": "bd4784334b873ea65b788c4b558cbe468a31e589678bed3d36b8b9d566a741a6",
+          "sha1": "311f7d6edd780a045b04e0a9153657d76b498709",
+          "md5": "e5e78e18b302209e4e6e9c7d4dd28165"
         }
       ]
     }
