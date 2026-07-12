@@ -103,7 +103,7 @@ android {
 
 publishing {
     publications {
-        withType<MavenPublication> {
+        withType<MavenPublication>().configureEach {
             val javadocJar = tasks.register<Jar>("${name}JavadocJar") {
                 archiveClassifier.set("javadoc")
                 // Unique output dir per publication to prevent signing conflicts

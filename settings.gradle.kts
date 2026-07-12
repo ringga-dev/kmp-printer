@@ -36,4 +36,3 @@ include(":androidApp")
 include(":desktopApp")
 include(":shared")
 include(":printer")
-project(":printer").name = "kmp_printer"
