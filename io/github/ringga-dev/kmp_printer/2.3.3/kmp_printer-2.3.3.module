@@ -95,9 +95,9 @@
         "org.jetbrains.kotlin.platform.type": "androidJvm"
       },
       "available-at": {
-        "url": "../../printer-android/2.3.3/printer-android-2.3.3.module",
+        "url": "../../kmp_printer-android/2.3.3/kmp_printer-android-2.3.3.module",
         "group": "io.github.ringga-dev",
-        "module": "printer-android",
+        "module": "kmp_printer-android",
         "version": "2.3.3"
       }
     },
@@ -110,9 +110,9 @@
         "org.jetbrains.kotlin.platform.type": "androidJvm"
       },
       "available-at": {
-        "url": "../../printer-android/2.3.3/printer-android-2.3.3.module",
+        "url": "../../kmp_printer-android/2.3.3/kmp_printer-android-2.3.3.module",
         "group": "io.github.ringga-dev",
-        "module": "printer-android",
+        "module": "kmp_printer-android",
         "version": "2.3.3"
       }
     },
@@ -128,9 +128,9 @@
         "org.jetbrains.kotlin.platform.type": "androidJvm"
       },
       "available-at": {
-        "url": "../../printer-android/2.3.3/printer-android-2.3.3.module",
+        "url": "../../kmp_printer-android/2.3.3/kmp_printer-android-2.3.3.module",
         "group": "io.github.ringga-dev",
-        "module": "printer-android",
+        "module": "kmp_printer-android",
         "version": "2.3.3"
       }
     },

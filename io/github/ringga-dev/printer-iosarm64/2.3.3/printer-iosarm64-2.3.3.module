@@ -133,10 +133,10 @@
           "name": "kmp_printer-iosarm64-2.3.3-metadata.jar",
           "url": "printer-iosarm64-2.3.3-metadata.jar",
           "size": 6855,
-          "sha512": "bfd339284b7b98b91975f59c719877be091af3c5655a4d5dfbfb195e722d055b8d6166f51c0a6b100dc25b66498e0cadd7b9165e57b618cc401d74666952bc19",
-          "sha256": "3d84a7cea4ac7675ccf123c981a8a3c5b6b8f03168c2795ab305acc14e1116de",
-          "sha1": "6f55a36a082cb46c75ec34a1a9cb50b3e78fb606",
-          "md5": "a0d9bf680a67ad175085ce858e6881e0"
+          "sha512": "141d123a51c86bfc5cb5b4b5164075aaa0c9f302bb566cc9c4f5eba7fa51fe4acc4d6b08f773398eb061269de841a0dd6791c0df1d9acf271201f6a7aba3a00f",
+          "sha256": "f86332ffda7ca5707f43749c4ec75435d8165169ca71d61711d4b15050383ee6",
+          "sha1": "78f4c5915126abf31cd446a5cd3d6808416975c4",
+          "md5": "7fee47ce23062af5a9424b14c13cedcd"
         }
       ]
     }
