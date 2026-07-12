@@ -105,8 +105,6 @@ publishing {
     publications {
         all {
             // Override artifactId to use kmp_printer prefix instead of printer
-            // Works for all publications including Android AAR which may not
-            // register as MavenPublication at configureEach time
             when (this) {
                 is MavenPublication -> {
                     artifactId = when (name) {
@@ -156,6 +154,19 @@ publishing {
         maven {
             name = "LocalRepo"
             url = uri(layout.buildDirectory.dir("repo"))
+        }
+    }
+}
+
+afterEvaluate {
+    // Re-evaluate artifactId after all plugins have registered
+    // their publications (KMP/AGP create Android/iOS publications late)
+    publishing.publications.withType<MavenPublication>().forEach { pub ->
+        pub.artifactId = when (pub.name) {
+            "kotlinMultiplatform" -> "kmp_printer"
+            "androidRelease" -> "kmp_printer-android"
+            "wasmJs" -> "kmp_printer-wasm-js"
+            else -> "kmp_printer-${pub.name.replaceFirstChar { it.lowercase() }}"
         }
     }
 }
