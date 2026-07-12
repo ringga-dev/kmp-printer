@@ -1,5 +1,8 @@
 import org.jetbrains.kotlin.gradle.plugin.mpp.apple.XCFramework
 
+// Override project name to set consistent artifactId prefix for all publications
+project.name = "kmp_printer"
+
 plugins {
     kotlin("multiplatform")
     id("com.android.library")
@@ -103,50 +106,38 @@ android {
 
 publishing {
     publications {
-        all {
-            // Only apply to Maven/AAR publications (not Ivy or other types)
-            if (this is MavenPublication) {
-                // artifactId follows archivesBaseName convention: kmp_printer-{target}
-                // Known publication names and their suffix mapping
-                artifactId = when (name) {
-                    "metadata", "kotlinMultiplatform" -> "kmp_printer"
-                    "androidRelease" -> "kmp_printer-android"
-                    "wasmJs" -> "kmp_printer-wasm-js"
-                    else -> "kmp_printer-${name.replaceFirstChar { it.lowercase() }}"
+        withType<MavenPublication> {
+            val javadocJar = tasks.register<Jar>("${name}JavadocJar") {
+                archiveClassifier.set("javadoc")
+                // Unique output dir per publication to prevent signing conflicts
+                destinationDirectory.set(layout.buildDirectory.dir("libs/${name}"))
+                // Include a simple placeholder
+                from(project.rootProject.layout.projectDirectory.file("README.md")) {
+                    rename { "README.md" }
                 }
-
-                val javadocJar = tasks.register<Jar>("${name}JavadocJar") {
-                    archiveClassifier.set("javadoc")
-                    // Unique output dir per publication to prevent signing conflicts
-                    destinationDirectory.set(layout.buildDirectory.dir("libs/${name}"))
-                    // Include a simple placeholder
-                    from(project.rootProject.layout.projectDirectory.file("README.md")) {
-                        rename { "README.md" }
+            }
+            artifact(javadocJar)
+            pom {
+                name.set("KmpPrinter")
+                description.set("KmpPrinter: Professional Kotlin Multiplatform Thermal Printing Library for ESC/POS.")
+                url.set("https://github.com/ringga-dev/kmp-printer")
+                licenses {
+                    license {
+                        name.set("MIT License")
+                        url.set("https://opensource.org/licenses/MIT")
                     }
                 }
-                artifact(javadocJar)
-                pom {
-                    name.set("KmpPrinter")
-                    description.set("KmpPrinter: Professional Kotlin Multiplatform Thermal Printing Library for ESC/POS.")
+                developers {
+                    developer {
+                        id.set("ringga")
+                        name.set("Ringga")
+                        email.set("ringgadev@gmail.com")
+                    }
+                }
+                scm {
+                    connection.set("scm:git:git://github.com/ringga-dev/kmp-printer.git")
+                    developerConnection.set("scm:git:ssh://github.com/ringga-dev/kmp-printer.git")
                     url.set("https://github.com/ringga-dev/kmp-printer")
-                    licenses {
-                        license {
-                            name.set("MIT License")
-                            url.set("https://opensource.org/licenses/MIT")
-                        }
-                    }
-                    developers {
-                        developer {
-                            id.set("ringga")
-                            name.set("Ringga")
-                            email.set("ringgadev@gmail.com")
-                        }
-                    }
-                    scm {
-                        connection.set("scm:git:git://github.com/ringga-dev/kmp-printer.git")
-                        developerConnection.set("scm:git:ssh://github.com/ringga-dev/kmp-printer.git")
-                        url.set("https://github.com/ringga-dev/kmp-printer")
-                    }
                 }
             }
         }
