@@ -1,8 +1,5 @@
 import org.jetbrains.kotlin.gradle.plugin.mpp.apple.XCFramework
 
-// Override project name to set consistent artifactId prefix for all publications
-project.name = "kmp_printer"
-
 plugins {
     kotlin("multiplatform")
     id("com.android.library")
