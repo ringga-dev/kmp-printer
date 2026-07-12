@@ -1,9 +1,9 @@
 {
   "formatVersion": "1.1",
   "component": {
-    "url": "../../printer/2.3.3/printer-2.3.3.module",
+    "url": "../../kmp_printer/2.3.3/kmp_printer-2.3.3.module",
     "group": "io.github.ringga-dev",
-    "module": "printer",
+    "module": "kmp_printer",
     "version": "2.3.3",
     "attributes": {
       "org.gradle.status": "release"
@@ -133,10 +133,10 @@
           "name": "kmp_printer-iosarm64-2.3.3-metadata.jar",
           "url": "printer-iosarm64-2.3.3-metadata.jar",
           "size": 6855,
-          "sha512": "4cf9da55e2cabe1ff9bebca87e24472b04639c9f719d462a8a87b8fd1ddb1fd48c682a8c8c72a7425e43b13c91b9d551fd21a4ddc97b80d5d5a2036199487bd7",
-          "sha256": "fa8f17c55ffc5eff272cfeb7a032ec804ee6481db532d7e48e88bf263ccff96f",
-          "sha1": "7eb73e8cbce358a555dffb5a84fc40fe9356287b",
-          "md5": "c6499114ce69d85c3477c17fc5ee94d8"
+          "sha512": "c2df1d8232e478609794dece9559490bed8574104563a950e6874f069f71c7f5ca430f875e055182383c435ee0581ac44f397a52efbf7d63b532cf2fb70b8762",
+          "sha256": "180ad7eea15a9953e8248ab71d0b379727016d0023ecb7591867c7fe2534b8ad",
+          "sha1": "c9b5a188598a0beabf7fa0cf51f4c1e82af490b2",
+          "md5": "85b91cbe5c31c91c91191694841c83ce"
         }
       ]
     }
