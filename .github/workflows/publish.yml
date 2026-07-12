@@ -123,7 +123,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: kmp_printer-aar
-          path: printer/build/outputs/aar/printer-release.aar
+          path: printer/build/outputs/aar/kmp_printer-release.aar
           if-no-files-found: error
 
   build-ios:
@@ -191,7 +191,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: kmp_printer-jvm
-          path: printer/build/libs/printer-jvm-*.jar
+          path: printer/build/libs/kmp_printer-jvm-*.jar
           if-no-files-found: error
 
   deploy-github-maven:
