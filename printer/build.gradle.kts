@@ -104,6 +104,15 @@ android {
 publishing {
     publications {
         withType<MavenPublication> {
+            // artifactId follows archivesBaseName convention: kmp_printer-{target}
+            // Known publication names and their suffix mapping
+            artifactId = when (name) {
+                "metadata", "kotlinMultiplatform" -> "kmp_printer"
+                "androidRelease" -> "kmp_printer-android"
+                "wasmJs" -> "kmp_printer-wasm-js"
+                else -> "kmp_printer-${name.replaceFirstChar { it.lowercase() }}"
+            }
+
             val javadocJar = tasks.register<Jar>("${name}JavadocJar") {
                 archiveClassifier.set("javadoc")
                 // Unique output dir per publication to prevent signing conflicts
