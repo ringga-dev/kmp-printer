@@ -83,7 +83,7 @@ If you prefer to do it step by step:
 1. Update `LIB_VERSION` in `gradle.properties` (single source of truth):
    ```bash
    # Example: change this in gradle.properties
-   LIB_VERSION=2.3.1
+   LIB_VERSION=2.3.3
    ```
 
 2. Sync documentation version references:
@@ -107,7 +107,7 @@ If you prefer to do it step by step:
 - It takes ~10-30 minutes for artifacts to appear after Sonatype close & release
 - Library will then be available at:
   ```kotlin
-  implementation("io.github.ringga-dev:printer:2.3.1")
+  implementation("io.github.ringga-dev:kmp_printer:2.3.3")
   ```
   **No extra repository needed!** Just `mavenCentral()` in your build file.
 

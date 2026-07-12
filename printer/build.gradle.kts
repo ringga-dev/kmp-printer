@@ -11,6 +11,10 @@ plugins {
 group = project.findProperty("LIB_GROUP")?.toString() ?: "io.github.ringga-dev"
 version = project.findProperty("LIB_VERSION")?.toString() ?: "1.0.0"
 
+base {
+    archivesName = "kmp_printer"
+}
+
 kotlin {
     androidTarget {
         publishLibraryVariants("release")

@@ -65,7 +65,7 @@ dependencyResolutionManagement {
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("io.github.ringga-dev:printer:2.3.2")
+            implementation("io.github.ringga-dev:kmp_printer:2.3.3")
         }
     }
 }
@@ -76,8 +76,8 @@ kotlin {
 > <!-- pom.xml -->
 > <dependency>
 >     <groupId>io.github.ringga-dev</groupId>
->     <artifactId>printer</artifactId>
->     <version>2.3.2</version> <!-- sync-version -->
+>     <artifactId>kmp_printer</artifactId>
+>     <version>2.3.3</version> <!-- sync-version -->
 > </dependency>
 > ```
 > *Available on Maven Central — no extra repository needed.*
