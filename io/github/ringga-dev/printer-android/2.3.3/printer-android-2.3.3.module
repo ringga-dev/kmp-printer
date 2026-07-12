@@ -1,9 +1,9 @@
 {
   "formatVersion": "1.1",
   "component": {
-    "url": "../../kmp_printer/2.3.3/kmp_printer-2.3.3.module",
+    "url": "../../printer/2.3.3/printer-2.3.3.module",
     "group": "io.github.ringga-dev",
-    "module": "kmp_printer",
+    "module": "printer",
     "version": "2.3.3",
     "attributes": {
       "org.gradle.status": "release"
