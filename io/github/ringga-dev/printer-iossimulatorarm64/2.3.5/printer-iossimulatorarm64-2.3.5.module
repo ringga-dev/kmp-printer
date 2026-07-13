@@ -133,10 +133,10 @@
           "name": "kmp_printer-iossimulatorarm64-2.3.5-metadata.jar",
           "url": "printer-iossimulatorarm64-2.3.5-metadata.jar",
           "size": 6855,
-          "sha512": "a5887f9f865b685c6395594113643ca6e153ebe02b9e2d0d34c579a629bade4ecdecbc53c416237d95e26ac8a76ab42e40f92d61289f76891ba62d873ba70fd4",
-          "sha256": "5b021f380b5ad223fe79914b613ccb18c616252477c63daa03d1372df485fe1e",
-          "sha1": "30bcb8b7c44059a1dd1442c276e6e52e717fd25c",
-          "md5": "dc422d2b39b77d91b26e59d7c8847854"
+          "sha512": "db3cf15b38e5769ec1b2f3b2f9a78cb83d3dfd08517b53d13d93df0315a1a6bb4777a8bdbcd0ded6d98127ee9e4cbf9d899bdab9f973d45efa2f5f6d843ff167",
+          "sha256": "df622d58d2310c76b2658050604ebf8eac69f373dc02982acdc16abe912441ea",
+          "sha1": "8f02869e2ff8e307c3520dc90185c0a33ade4e4c",
+          "md5": "428b22746856de15fb3decafd1abbdd6"
         }
       ]
     }
