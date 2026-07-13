@@ -45,6 +45,36 @@ kotlin {
     js(IR) {
         browser()
     }
+
+    // ═══════════════════════════════════════════════
+    // Native Shared Library — DLL / .so / .dylib
+    // ═══════════════════════════════════════════════
+
+    mingwX64 {
+        binaries.sharedLib {
+            baseName = "kmp_printer"
+        }
+    }
+    linuxX64 {
+        binaries.sharedLib {
+            baseName = "kmp_printer"
+        }
+    }
+    linuxArm64 {
+        binaries.sharedLib {
+            baseName = "kmp_printer"
+        }
+    }
+    macosX64 {
+        binaries.sharedLib {
+            baseName = "kmp_printer"
+        }
+    }
+    macosArm64 {
+        binaries.sharedLib {
+            baseName = "kmp_printer"
+        }
+    }
     
     targets.all {
         compilations.all {
@@ -79,6 +109,18 @@ kotlin {
             implementation(kotlin("test"))
             implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
         }
+
+        // ── Native Shared Library source set ──
+        val nativeMain by creating {
+            dependsOn(commonMain.get())
+        }
+        listOf(
+            mingwX64().compilations["main"].defaultSourceSet,
+            linuxX64().compilations["main"].defaultSourceSet,
+            linuxArm64().compilations["main"].defaultSourceSet,
+            macosX64().compilations["main"].defaultSourceSet,
+            macosArm64().compilations["main"].defaultSourceSet
+        ).forEach { it.dependsOn(nativeMain) }
     }
 }
 
