@@ -55,6 +55,12 @@ jobs:
       - name: Compile Android target
         run: ./gradlew :printer:compileDebugKotlinAndroid --no-daemon
 
+      - name: Compile Label module
+        run: ./gradlew :printer:label:compileKotlinJvm --no-daemon
+
+      - name: Compile Receipt module
+        run: ./gradlew :printer:receipt:compileKotlinJvm --no-daemon
+
   setup:
     name: Read Version
     needs: check
@@ -227,7 +233,10 @@ jobs:
         env:
           GPG_SIGNING_KEY: ${{ secrets.GPG_SIGNING_KEY }}
           GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
-        run: ./gradlew :printer:publishAllPublicationsToLocalRepoRepository --no-daemon
+        run: |
+          ./gradlew :printer:publishAllPublicationsToLocalRepoRepository --no-daemon
+          ./gradlew :printer:label:publishAllPublicationsToLocalRepoRepository --no-daemon
+          ./gradlew :printer:receipt:publishAllPublicationsToLocalRepoRepository --no-daemon
 
       - name: Create Sonatype bundle
         shell: bash
