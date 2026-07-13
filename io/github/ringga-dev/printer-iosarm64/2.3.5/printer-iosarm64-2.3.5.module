@@ -1,0 +1,144 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "url": "../../kmp_printer/2.3.5/kmp_printer-2.3.5.module",
+    "group": "io.github.ringga-dev",
+    "module": "kmp_printer",
+    "version": "2.3.5",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "8.14.3"
+    }
+  },
+  "variants": [
+    {
+      "name": "iosArm64ApiElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-api",
+        "org.jetbrains.kotlin.native.target": "ios_arm64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.3.20"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-coroutines-core",
+          "version": {
+            "requires": "1.10.2"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-datetime",
+          "version": {
+            "requires": "0.7.1"
+          }
+        },
+        {
+          "group": "io.github.aakira",
+          "module": "napier",
+          "version": {
+            "requires": "2.7.1"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "printer-iosArm64Main-2.3.5.klib",
+          "url": "printer-iosarm64-2.3.5.klib",
+          "size": 300777,
+          "sha512": "da5e93508268546925addfb25725170ef17e53cf1c64a353ca3555f5f4cf3f0f34e81a988f5b1a12b1cfc3989533b75e834c2e0c7e199bb5315d17b1fa7b4c48",
+          "sha256": "3d7d686697f48d4fb49ac6b6c91801cb6bd97c55af82ad9dc3181d968fa3410c",
+          "sha1": "0f49759dbd7a9fceba9e3e934b21a44dc17e337e",
+          "md5": "b86ecf41109b6ac07499ab1133977127"
+        }
+      ]
+    },
+    {
+      "name": "iosArm64SourcesElements-published",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-runtime",
+        "org.jetbrains.kotlin.native.target": "ios_arm64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "files": [
+        {
+          "name": "kmp_printer-iosarm64-2.3.5-sources.jar",
+          "url": "printer-iosarm64-2.3.5-sources.jar",
+          "size": 60936,
+          "sha512": "c963e343f1fced87af6fdc095a538f586d7edbde876775220bdfb8f02ea46665a1440498cc7a1b9e8ae90bfe3d13237d26b1841841cd6e84c8653c98c2e43bcf",
+          "sha256": "165df4e4097f92bca92df535f83b4e5c9d60de56f31f5a2ddffef9ebcaf38220",
+          "sha1": "ee60f9be52aff1681b493f7e65bfda8c36ffce3b",
+          "md5": "e30662f3e53cc9bc2deb9914692a4320"
+        }
+      ]
+    },
+    {
+      "name": "iosArm64MetadataElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-metadata",
+        "org.jetbrains.kotlin.native.target": "ios_arm64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.3.20"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-coroutines-core",
+          "version": {
+            "requires": "1.10.2"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-datetime",
+          "version": {
+            "requires": "0.7.1"
+          }
+        },
+        {
+          "group": "io.github.aakira",
+          "module": "napier",
+          "version": {
+            "requires": "2.7.1"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "kmp_printer-iosarm64-2.3.5-metadata.jar",
+          "url": "printer-iosarm64-2.3.5-metadata.jar",
+          "size": 6855,
+          "sha512": "a5887f9f865b685c6395594113643ca6e153ebe02b9e2d0d34c579a629bade4ecdecbc53c416237d95e26ac8a76ab42e40f92d61289f76891ba62d873ba70fd4",
+          "sha256": "5b021f380b5ad223fe79914b613ccb18c616252477c63daa03d1372df485fe1e",
+          "sha1": "30bcb8b7c44059a1dd1442c276e6e52e717fd25c",
+          "md5": "dc422d2b39b77d91b26e59d7c8847854"
+        }
+      ]
+    }
+  ]
+}
