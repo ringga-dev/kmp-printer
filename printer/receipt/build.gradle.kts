@@ -38,9 +38,9 @@ publishing {
 afterEvaluate {
     publishing.publications.withType<MavenPublication>().forEach { pub ->
         pub.artifactId = when (pub.name) {
-            "kotlinMultiplatform" -> "kmp_printer_receipt"
-            "jvm" -> "kmp_printer_receipt-jvm"
-            else -> "kmp_printer_receipt-${pub.name.replaceFirstChar { it.lowercase() }}"
+            "kotlinMultiplatform" -> "kmp_printer:receipt"
+            "jvm" -> "kmp_printer:receipt-jvm"
+            else -> "kmp_printer:receipt-${pub.name.replaceFirstChar { it.lowercase() }}"
         }
     }
 }
