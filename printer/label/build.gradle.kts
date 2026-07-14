@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.dokka)
+    id("maven-publish")
+    id("signing")
 }
 
 group = project.findProperty("LIB_GROUP")?.toString() ?: "io.github.ringga-dev"
