@@ -1,4 +1,4 @@
-package ngga.ring.receipt
+package ngga.ring.printer.receipt
 
 import org.apache.pdfbox.Loader
 import org.apache.pdfbox.rendering.PDFRenderer

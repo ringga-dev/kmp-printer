@@ -1,4 +1,4 @@
-package ngga.ring.label
+package ngga.ring.printer.label
 
 /**
  * Available label printer driver protocols.

@@ -1,4 +1,4 @@
-package ngga.ring.label
+package ngga.ring.printer.label
 
 /**
  * [BrotherQlBuilder] generates Brother QL Raster Command Set bytes

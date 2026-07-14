@@ -1,4 +1,4 @@
-package ngga.ring.label
+package ngga.ring.printer.label
 
 /**
  * [ZplBuilder] generates raw ZPL (Zebra Programming Language) commands

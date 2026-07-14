@@ -1,4 +1,4 @@
-package ngga.ring.receipt
+package ngga.ring.printer.receipt
 
 import ngga.ring.printer.util.escpos.ESCPosCommandBuilder
 

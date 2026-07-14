@@ -1,4 +1,4 @@
-package ngga.ring.label
+package ngga.ring.printer.label
 
 import ngga.ring.printer.KmpPrinter
 import ngga.ring.printer.model.PrinterConfig
