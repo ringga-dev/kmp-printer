@@ -134,12 +134,6 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-
-    lint {
-        abortOnError = false
-        checkReleaseBuilds = false
-        disable.add("MissingPermission")
-    }
 }
 
 publishing {
@@ -194,7 +188,7 @@ publishing {
     repositories {
         maven {
             name = "LocalRepo"
-            url = uri(layout.buildDirectory.dir("repo"))
+            url = uri(rootProject.layout.projectDirectory.dir("maven-repo"))
         }
     }
 }

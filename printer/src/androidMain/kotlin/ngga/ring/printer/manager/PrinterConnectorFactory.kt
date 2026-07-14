@@ -1,15 +1,19 @@
 package ngga.ring.printer.manager
 
+import android.Manifest
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.net.LinkProperties
 import android.os.Build
 import android.hardware.usb.UsbManager
+import androidx.core.content.ContextCompat
 import ngga.ring.printer.model.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
@@ -66,6 +70,7 @@ actual class PrinterConnectorFactory : PrinterConnectorProvider {
         }
     }
 
+    @SuppressLint("MissingPermission")
     private fun bluetoothDiscovery(config: DiscoveryConfig, onLog: (String) -> Unit): Flow<List<DiscoveredPrinter>> = callbackFlow {
         val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         val adapter = bluetoothManager.adapter
@@ -82,14 +87,32 @@ actual class PrinterConnectorFactory : PrinterConnectorProvider {
             return@callbackFlow
         }
 
+        if (!hasBluetoothConnectPermission()) {
+            onLog("Error: Bluetooth connect permission is missing")
+            close()
+            return@callbackFlow
+        }
+
         // 1. Bonded devices
-        adapter.bondedDevices?.forEach { device ->
-            discoveredDevices.add(DiscoveredPrinter(
-                name = device.name ?: "Unknown (Classic)",
-                connectionType = PrinterConnectionType.BLUETOOTH,
-                address = device.address
-            ))
-            launch { send(discoveredDevices.toList()) }
+        try {
+            adapter.bondedDevices?.forEach { device ->
+                discoveredDevices.add(DiscoveredPrinter(
+                    name = device.safeName("Unknown (Classic)"),
+                    connectionType = PrinterConnectionType.BLUETOOTH,
+                    address = device.address
+                ))
+                launch { send(discoveredDevices.toList()) }
+            }
+        } catch (e: SecurityException) {
+            onLog("Error: Bluetooth bonded device access denied")
+            close(e)
+            return@callbackFlow
+        }
+
+        if (!hasBluetoothScanPermission()) {
+            onLog("Error: Bluetooth scan permission is missing")
+            close()
+            return@callbackFlow
         }
 
         // 2. Scan for new devices
@@ -105,8 +128,8 @@ actual class PrinterConnectorFactory : PrinterConnectorProvider {
                         }
                         device?.let {
                             discoveredDevices.add(DiscoveredPrinter(
-                                name = it.name ?: "Unknown Device",
-                                connectionType = if (it.type == BluetoothDevice.DEVICE_TYPE_LE) PrinterConnectionType.BLUETOOTH_LE else PrinterConnectionType.BLUETOOTH,
+                                name = it.safeName("Unknown Device"),
+                                connectionType = if (it.safeType() == BluetoothDevice.DEVICE_TYPE_LE) PrinterConnectionType.BLUETOOTH_LE else PrinterConnectionType.BLUETOOTH,
                                 address = it.address
                             ))
                             launch { send(discoveredDevices.toList()) }
@@ -117,10 +140,19 @@ actual class PrinterConnectorFactory : PrinterConnectorProvider {
         }
 
         context.registerReceiver(receiver, IntentFilter(BluetoothDevice.ACTION_FOUND))
-        adapter.startDiscovery()
+        try {
+            adapter.startDiscovery()
+        } catch (e: SecurityException) {
+            onLog("Error: Bluetooth discovery start denied")
+            close(e)
+        }
 
         awaitClose {
-            adapter.cancelDiscovery()
+            try {
+                adapter.cancelDiscovery()
+            } catch (e: SecurityException) {
+                onLog("Error: Bluetooth discovery cancel denied")
+            }
             try { context.unregisterReceiver(receiver) } catch (e: Exception) {}
         }
     }.flowOn(Dispatchers.IO)
@@ -199,4 +231,32 @@ actual class PrinterConnectorFactory : PrinterConnectorProvider {
             try { socket.close() } catch (e: Exception) {}
         }
     }.flowOn(Dispatchers.IO)
+
+    private fun hasBluetoothConnectPermission(): Boolean {
+        return Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
+            ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun hasBluetoothScanPermission(): Boolean {
+        return Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
+            ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_SCAN) == PackageManager.PERMISSION_GRANTED
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun BluetoothDevice.safeName(fallback: String): String {
+        return try {
+            name ?: fallback
+        } catch (e: SecurityException) {
+            fallback
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun BluetoothDevice.safeType(): Int {
+        return try {
+            type
+        } catch (e: SecurityException) {
+            BluetoothDevice.DEVICE_TYPE_UNKNOWN
+        }
+    }
 }

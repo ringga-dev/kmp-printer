@@ -6,8 +6,12 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.hardware.usb.*
+import android.os.Build
+import androidx.core.content.ContextCompat
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import ngga.ring.printer.model.PrinterConfig
 import ngga.ring.printer.util.PrinterLogger
 
@@ -51,18 +55,47 @@ class AndroidUsbConnector : BasePrinterConnector() {
         if (usbManager?.hasPermission(device) == true) {
             openDevice(device)
         } else {
-            // Request permission
-            requestUsbPermission(context, device)
-            false 
+            val granted = requestUsbPermission(context, device, config.connectionTimeoutMs.toLong())
+            if (granted) openDevice(device) else false
         }
     }
 
-    private fun requestUsbPermission(context: Context, device: UsbDevice) {
+    private suspend fun requestUsbPermission(context: Context, device: UsbDevice, timeoutMs: Long): Boolean {
+        val result = CompletableDeferred<Boolean>()
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                if (intent?.action != ACTION_USB_PERMISSION) return
+                val granted = intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)
+                val receivedDevice = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    intent.getParcelableExtra(UsbManager.EXTRA_DEVICE, UsbDevice::class.java)
+                } else {
+                    @Suppress("DEPRECATION")
+                    intent.getParcelableExtra(UsbManager.EXTRA_DEVICE)
+                }
+
+                result.complete(granted && receivedDevice?.deviceName == device.deviceName)
+            }
+        }
+
+        val filter = IntentFilter(ACTION_USB_PERMISSION)
+        ContextCompat.registerReceiver(context, receiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
+
         val permissionIntent = PendingIntent.getBroadcast(
             context, 0, Intent(ACTION_USB_PERMISSION), 
             PendingIntent.FLAG_IMMUTABLE
         )
-        usbManager?.requestPermission(device, permissionIntent)
+        return try {
+            usbManager?.requestPermission(device, permissionIntent)
+            withTimeoutOrNull(timeoutMs.coerceAtLeast(1000)) {
+                result.await()
+            } == true
+        } finally {
+            try {
+                context.unregisterReceiver(receiver)
+            } catch (e: Exception) {
+                PrinterLogger.warn(TAG, "USB permission receiver unregister failed", e)
+            }
+        }
     }
 
     private fun openDevice(device: UsbDevice): Boolean {

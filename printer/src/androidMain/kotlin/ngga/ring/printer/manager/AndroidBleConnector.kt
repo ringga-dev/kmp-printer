@@ -7,6 +7,7 @@ import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattDescriptor
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothProfile
+import android.bluetooth.BluetoothStatusCodes
 import android.content.Context
 import android.os.Build
 import kotlinx.coroutines.CompletableDeferred
@@ -29,9 +30,9 @@ class AndroidBleConnector(private val context: Context) : BasePrinterConnector()
     private var pendingWrite: CompletableDeferred<Boolean>? = null
     private var pendingRead: CompletableDeferred<ByteArray?>? = null
     private var pendingNotify: CompletableDeferred<ByteArray?>? = null
-
-    private val printerServiceUuid = UUID.fromString("0000ff00-0000-1000-8000-00805f9b34fb")
-    private val printerWriteUuid = UUID.fromString("0000ff01-0000-1000-8000-00805f9b34fb")
+    private var printerServiceUuid: UUID = UUID.fromString(DEFAULT_SERVICE_UUID)
+    private var printerWriteUuid: UUID = UUID.fromString(DEFAULT_WRITE_UUID)
+    private var autoDiscoverCharacteristics: Boolean = true
 
     override suspend fun connect(config: PrinterConfig): Boolean = withContext(Dispatchers.IO) {
         configureFlowControl(config)
@@ -39,6 +40,12 @@ class AndroidBleConnector(private val context: Context) : BasePrinterConnector()
         val adapter = bluetoothManager.adapter ?: return@withContext false
         val address = config.address ?: return@withContext false
         configuredChunkSize = config.bleChunkSize.coerceIn(1, MAX_PAYLOAD_SIZE)
+        autoDiscoverCharacteristics = config.bleAutoDiscover
+        printerServiceUuid = parseUuid(config.bleServiceUuid, DEFAULT_SERVICE_UUID)
+            ?: return@withContext false
+        printerWriteUuid = parseUuid(config.bleWriteCharacteristicUuid, DEFAULT_WRITE_UUID)
+            ?: return@withContext false
+
         val device = try {
             adapter.getRemoteDevice(address)
         } catch (e: IllegalArgumentException) {
@@ -234,18 +241,35 @@ class AndroidBleConnector(private val context: Context) : BasePrinterConnector()
     }
 
     private fun selectCharacteristics(gatt: BluetoothGatt): Boolean {
-        val service = gatt.getService(printerServiceUuid)
-            ?: gatt.services.firstOrNull { service ->
+        val fallbackService = if (autoDiscoverCharacteristics) {
+            gatt.services.firstOrNull { service ->
                 service.characteristics.any { it.supportsWrite() || it.supportsWriteWithoutResponse() }
             }
-            ?: return false
+        } else {
+            null
+        }
+        val service = gatt.getService(printerServiceUuid) ?: fallbackService ?: return false
 
-        writeCharacteristic = service.getCharacteristic(printerWriteUuid)
-            ?: service.characteristics.firstOrNull { it.supportsWrite() || it.supportsWriteWithoutResponse() }
+        val configuredWrite = service.getCharacteristic(printerWriteUuid)
+        writeCharacteristic = configuredWrite
+            ?: if (autoDiscoverCharacteristics) {
+                service.characteristics.firstOrNull { it.supportsWrite() || it.supportsWriteWithoutResponse() }
+            } else {
+                null
+            }
         readCharacteristic = service.characteristics.firstOrNull { it.supportsRead() }
         notifyCharacteristic = service.characteristics.firstOrNull { it.supportsNotify() || it.supportsIndicate() }
 
         return writeCharacteristic != null
+    }
+
+    private fun parseUuid(value: String, fallback: String): UUID? {
+        return try {
+            UUID.fromString(value.ifBlank { fallback })
+        } catch (e: IllegalArgumentException) {
+            PrinterLogger.warn(TAG, "Invalid BLE UUID: $value", e)
+            null
+        }
     }
 
     private fun enableNotifyIfPossible() {
@@ -279,7 +303,7 @@ class AndroidBleConnector(private val context: Context) : BasePrinterConnector()
             pendingWrite = CompletableDeferred()
         }
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            gatt.writeCharacteristic(characteristic, value, characteristic.writeType) == BluetoothGatt.GATT_SUCCESS
+            gatt.writeCharacteristic(characteristic, value, characteristic.writeType) == BluetoothStatusCodes.SUCCESS
         } else {
             @Suppress("DEPRECATION")
             characteristic.value = value
@@ -316,6 +340,8 @@ class AndroidBleConnector(private val context: Context) : BasePrinterConnector()
 
     private companion object {
         const val TAG = "AndroidBleConnector"
+        const val DEFAULT_SERVICE_UUID = "0000ff00-0000-1000-8000-00805f9b34fb"
+        const val DEFAULT_WRITE_UUID = "0000ff01-0000-1000-8000-00805f9b34fb"
         const val DEFAULT_MTU = 23
         const val MAX_MTU = 185
         const val ATT_HEADER_SIZE = 3

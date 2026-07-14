@@ -6,6 +6,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import ngga.ring.printer.manager.PrinterConnector
 import ngga.ring.printer.manager.PrinterConnectorFactory
 import ngga.ring.printer.manager.PrinterConnectorProvider
@@ -25,6 +27,7 @@ class DefaultPrinterRepository(
 ) : PrinterRepository {
     private var activeConnector: PrinterConnector? = null
     private var activeConfig: PrinterConfig? = null
+    private val operationMutex = Mutex()
 
     private val _connectionState = MutableStateFlow<ConnectionState>(ConnectionState.Disconnected)
     override val connectionState: StateFlow<ConnectionState> = _connectionState.asStateFlow()
@@ -40,54 +43,76 @@ class DefaultPrinterRepository(
     override fun printRaw(config: PrinterConfig, data: ByteArray): Flow<PrintStatus> = flow {
         val normalizedConfig = config.normalized()
 
-        try {
-            val connector = connectorFor(normalizedConfig)
-            if (!connector.isConnected()) {
-                emit(PrintStatus.Connecting)
-                _connectionState.value = ConnectionState.Connecting
+        operationMutex.withLock {
+            try {
+                val connector = connectorFor(normalizedConfig)
+                if (!connector.isConnected()) {
+                    emit(PrintStatus.Connecting)
+                    _connectionState.value = ConnectionState.Connecting
 
-                if (!connectWithRetry(connector, normalizedConfig)) {
-                    val message = connectionFailureMessage(normalizedConfig)
-                    emit(PrintStatus.Error(message, PrinterErrorCode.CONNECTION_FAILED))
-                    _connectionState.value = ConnectionState.Error(message)
-                    return@flow
+                    if (!connectWithRetry(connector, normalizedConfig)) {
+                        val message = connectionFailureMessage(normalizedConfig)
+                        emit(PrintStatus.Error(message, PrinterErrorCode.CONNECTION_FAILED))
+                        _connectionState.value = ConnectionState.Error(message)
+                        return@withLock
+                    }
                 }
-            }
 
-            _connectionState.value = ConnectionState.Connected(normalizedConfig.name, normalizedConfig.address)
-            emit(PrintStatus.Sending)
+                _connectionState.value = ConnectionState.Connected(normalizedConfig.name, normalizedConfig.address)
+                emit(PrintStatus.Sending)
 
-            if (sendWithRetry(connector, normalizedConfig, data)) {
-                emit(PrintStatus.Success)
-            } else {
-                val message = "Failed to send data to printer after ${normalizedConfig.sendAttempts.coerceAtLeast(1)} attempt(s)"
+                if (sendWithRetry(connector, normalizedConfig, data)) {
+                    emit(PrintStatus.Success)
+                } else {
+                    val message = "Failed to send data to printer after ${normalizedConfig.sendAttempts.coerceAtLeast(1)} attempt(s)"
+                    _connectionState.value = ConnectionState.Error(message)
+                    emit(PrintStatus.Error(message, PrinterErrorCode.SEND_FAILED))
+                }
+            } catch (e: Exception) {
+                val message = e.message ?: "Unknown print error"
                 _connectionState.value = ConnectionState.Error(message)
-                emit(PrintStatus.Error(message, PrinterErrorCode.SEND_FAILED))
+                emit(PrintStatus.Error(message, PrinterErrorCode.UNKNOWN, e::class.simpleName))
             }
-        } catch (e: Exception) {
-            val message = e.message ?: "Unknown print error"
-            _connectionState.value = ConnectionState.Error(message)
-            emit(PrintStatus.Error(message, PrinterErrorCode.UNKNOWN, e::class.simpleName))
         }
     }
 
     override suspend fun testConnection(config: PrinterConfig): PrintStatus {
         val normalizedConfig = config.normalized()
         val connector = connectorFactory.create(normalizedConfig)
-        return try {
-            if (connectWithRetry(connector, normalizedConfig)) {
+        return operationMutex.withLock {
+            try {
+                if (connectWithRetry(connector, normalizedConfig)) {
+                    connector.disconnect()
+                    PrintStatus.Success
+                } else {
+                    PrintStatus.Error(connectionFailureMessage(normalizedConfig), PrinterErrorCode.CONNECTION_FAILED)
+                }
+            } catch (e: Exception) {
+                PrintStatus.Error(e.message ?: "Unknown connection test error", PrinterErrorCode.UNKNOWN, e::class.simpleName)
+            } finally {
                 connector.disconnect()
-                PrintStatus.Success
-            } else {
-                PrintStatus.Error(connectionFailureMessage(normalizedConfig), PrinterErrorCode.CONNECTION_FAILED)
             }
-        } catch (e: Exception) {
-            PrintStatus.Error(e.message ?: "Unknown connection test error", PrinterErrorCode.UNKNOWN, e::class.simpleName)
         }
     }
 
     override fun monitorStatus(config: PrinterConfig, intervalMs: Long): Flow<PrinterStatus> = flow {
-        val connector = activeConnector
+        val normalizedConfig = config.normalized()
+        val connector = operationMutex.withLock {
+            val current = connectorFor(normalizedConfig)
+            if (!current.isConnected()) {
+                _connectionState.value = ConnectionState.Connecting
+                if (!connectWithRetry(current, normalizedConfig)) {
+                    _connectionState.value = ConnectionState.Error(connectionFailureMessage(normalizedConfig))
+                    null
+                } else {
+                    _connectionState.value = ConnectionState.Connected(normalizedConfig.name, normalizedConfig.address)
+                    current
+                }
+            } else {
+                current
+            }
+        }
+
         if (connector == null || !connector.isConnected()) {
             emit(PrinterStatus(isOnline = false))
             return@flow
@@ -99,16 +124,20 @@ class DefaultPrinterRepository(
     }
 
     override suspend fun queryStatus(): PrinterStatus {
-        val connector = activeConnector ?: return PrinterStatus(isOnline = false)
-        if (!connector.isConnected()) return PrinterStatus(isOnline = false)
-        return statusMonitor.queryStatus(connector)
+        return operationMutex.withLock {
+            val connector = activeConnector ?: return@withLock PrinterStatus(isOnline = false)
+            if (!connector.isConnected()) return@withLock PrinterStatus(isOnline = false)
+            statusMonitor.queryStatus(connector)
+        }
     }
 
     override suspend fun disconnect() {
-        activeConnector?.disconnect()
-        activeConnector = null
-        activeConfig = null
-        _connectionState.value = ConnectionState.Disconnected
+        operationMutex.withLock {
+            activeConnector?.disconnect()
+            activeConnector = null
+            activeConfig = null
+            _connectionState.value = ConnectionState.Disconnected
+        }
     }
 
     private suspend fun connectorFor(config: PrinterConfig): PrinterConnector {
@@ -165,6 +194,10 @@ class DefaultPrinterRepository(
     private fun PrinterConfig.sameEndpointAs(other: PrinterConfig): Boolean {
         return PrinterConnectionType.normalize(connectionType) == PrinterConnectionType.normalize(other.connectionType) &&
             address == other.address &&
-            port == other.port
+            port == other.port &&
+            baudRate == other.baudRate &&
+            bleServiceUuid == other.bleServiceUuid &&
+            bleWriteCharacteristicUuid == other.bleWriteCharacteristicUuid &&
+            bluetoothClassicRfcommDevice == other.bluetoothClassicRfcommDevice
     }
 }

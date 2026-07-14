@@ -1,7 +1,11 @@
 package ngga.ring.printer
 
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import ngga.ring.printer.manager.PrinterConnector
@@ -78,6 +82,34 @@ class DefaultPrinterRepositoryTest {
         assertIs<PrintStatus.Error>(result.last())
     }
 
+    @Test
+    fun serializesConcurrentPrintsOnSharedRepository() = runTest {
+        val connector = FakeConnector(sendDelayMs = 50)
+        val repository = DefaultPrinterRepository(FakeConnectorProvider(connector))
+
+        (1..3)
+            .map { index ->
+                async {
+                    repository.printRaw(config(), byteArrayOf(index.toByte())).toList()
+                }
+            }
+            .awaitAll()
+
+        assertEquals(3, connector.sendCalls)
+        assertEquals(1, connector.maxConcurrentSends)
+    }
+
+    @Test
+    fun monitorStatusConnectsRequestedConfig() = runTest {
+        val provider = FakeConnectorProvider(FakeConnector())
+        val repository = DefaultPrinterRepository(provider)
+
+        repository.printRaw(config(address = "192.168.1.50"), byteArrayOf(1)).toList()
+        repository.monitorStatus(config(address = "192.168.1.51"), intervalMs = 1).take(1).toList()
+
+        assertEquals(2, provider.createCalls)
+    }
+
     private fun config(
         address: String = "192.168.1.10",
         connectAttempts: Int = 1,
@@ -115,11 +147,14 @@ private class FakeConnectorProvider(
 
 private class FakeConnector(
     private val connectResults: ArrayDeque<Boolean> = ArrayDeque(listOf(true)),
-    private val sendResults: ArrayDeque<Boolean> = ArrayDeque(listOf(true))
+    private val sendResults: ArrayDeque<Boolean> = ArrayDeque(listOf(true)),
+    private val sendDelayMs: Long = 0
 ) : PrinterConnector {
     var connectCalls = 0
     var sendCalls = 0
     var disconnectCalls = 0
+    var maxConcurrentSends = 0
+    private var activeSends = 0
     private var connected = false
 
     override suspend fun connect(config: PrinterConfig): Boolean {
@@ -131,6 +166,10 @@ private class FakeConnector(
 
     override suspend fun sendData(data: ByteArray): Boolean {
         sendCalls++
+        activeSends++
+        maxConcurrentSends = maxOf(maxConcurrentSends, activeSends)
+        if (sendDelayMs > 0) delay(sendDelayMs)
+        activeSends--
         val result = sendResults.removeFirstOrNull() ?: sendResults.lastOrNull() ?: true
         if (!result) connected = false
         return result
