@@ -2,6 +2,7 @@ package ngga.ring.printer_esc_pos.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import ngga.ring.printer.KmpPrinter
@@ -11,6 +12,7 @@ import ngga.ring.printer.util.platform.ESCPosImageHelper
 import ngga.ring.printer.util.escpos.TextAlignment
 import androidx.compose.ui.graphics.ImageBitmap
 import ngga.ring.printer.model.*
+import ngga.ring.printer.util.escpos.ESCPosCommandBuilder
 
 class PrinterViewModel : ViewModel() {
     private val printer = KmpPrinter()
@@ -23,17 +25,29 @@ class PrinterViewModel : ViewModel() {
     val showVirtual: StateFlow<Boolean> = _showVirtual.asStateFlow()
 
     // --- Discovery State ---
-    private val _discoveryMode = MutableStateFlow("BLUETOOTH")
+    private val _discoveryMode = MutableStateFlow("NETWORK")
     val discoveryMode: StateFlow<String> = _discoveryMode.asStateFlow()
 
     private val _discoveredPrinters = MutableStateFlow<List<DiscoveredPrinter>>(emptyList())
     val discoveredPrinters: StateFlow<List<DiscoveredPrinter>> = _discoveredPrinters.asStateFlow()
 
-    private val _discoveryLog = MutableStateFlow("Ready to scan...")
+    private val _discoveryLog = MutableStateFlow("Ready")
     val discoveryLog: StateFlow<String> = _discoveryLog.asStateFlow()
+
+    private val _isScanning = MutableStateFlow(false)
+    val isScanning: StateFlow<Boolean> = _isScanning.asStateFlow()
+
+    private var _discoveryJob: Job? = null
 
     private val _availableModes = MutableStateFlow(listOf("BLUETOOTH", "USB", "NETWORK", "SERIAL"))
     val availableModes: StateFlow<List<String>> = _availableModes.asStateFlow()
+
+    // --- Code Preview State ---
+    private val _rawCommandHex = MutableStateFlow("")
+    val rawCommandHex: StateFlow<String> = _rawCommandHex.asStateFlow()
+
+    private val _rawCommandBytes = MutableStateFlow(0)
+    val rawCommandBytes: StateFlow<Int> = _rawCommandBytes.asStateFlow()
 
     // --- Connection & Print State ---
     val connectionState: StateFlow<ConnectionState> = printer.connectionState
@@ -134,19 +148,25 @@ class PrinterViewModel : ViewModel() {
     }
 
     init {
-        // Update preview when config changes
         _config.onEach { updatePreview(it) }.launchIn(viewModelScope)
-        
-        // Start auto-discovery when mode changes
-        _discoveryMode
-            .onEach { mode ->
-                startDiscovery(mode, _showVirtual.value)
-            }.launchIn(viewModelScope)
-        
         _showVirtual.onEach { virtual ->
             val base = listOf("BLUETOOTH", "USB", "NETWORK", "SERIAL")
             _availableModes.value = if (virtual) base + "VIRTUAL" else base
         }.launchIn(viewModelScope)
+    }
+
+    fun cancelDiscovery() {
+        _discoveryJob?.cancel()
+        _discoveryJob = null
+        _isScanning.value = false
+    }
+
+    fun setConnectionType(type: String) {
+        cancelDiscovery()
+        _discoveryMode.value = type
+        _config.value = _config.value.copy(connectionType = type)
+        _discoveredPrinters.value = emptyList()
+        _discoveryLog.value = "Connection: $type"
     }
 
     fun setDiscoveryMode(mode: String) {
@@ -157,11 +177,145 @@ class PrinterViewModel : ViewModel() {
         _showVirtual.value = enabled
     }
 
+    fun startDiscovery() {
+        cancelDiscovery()
+        val mode = _discoveryMode.value
+        val showVirtual = _showVirtual.value
+        _discoveryJob = viewModelScope.launch {
+            _isScanning.value = true
+            _discoveredPrinters.value = emptyList()
+            _discoveryLog.value = "Scanning $mode..."
+            printer.checkAndRequestPermissions(mode) { granted ->
+                if (granted) {
+                    viewModelScope.launch {
+                        doDiscovery(mode, showVirtual)
+                    }
+                } else {
+                    _discoveryLog.value = "Permission denied. Please enable in settings."
+                    _isScanning.value = false
+                }
+            }
+        }
+    }
+
+    fun testConnection() {
+        viewModelScope.launch {
+            _discoveryLog.value = "Testing connection..."
+            val status = printer.testConnection(_config.value)
+            _discoveryLog.value = when (status) {
+                PrintStatus.Success -> "Connection test success."
+                is PrintStatus.Error -> "Connection test failed: ${status.message}"
+                else -> "Connection test: $status"
+            }
+            _printStatus.value = status
+        }
+    }
+
+    fun runDiagnostics() {
+        val cfg = _config.value
+        val report = printer.platformReport()
+        val diag = when (cfg.connectionType) {
+            PrinterConnectionType.USB -> {
+                val usb = printer.diagnoseUsb(cfg)
+                buildString {
+                    append("USB: ${usb.failureReason}. ${usb.message}")
+                    if (usb.suggestedFix.isNotBlank()) append(" Fix: ${usb.suggestedFix}")
+                    if (usb.udevRule != null) append(" Udev: ${usb.udevRule}")
+                }
+            }
+            PrinterConnectionType.BLUETOOTH_LE -> {
+                val ble = printer.diagnoseBle(cfg)
+                "BLE: ${ble.failureReason}. ${ble.message} Fix: ${ble.suggestedFix}"
+            }
+            PrinterConnectionType.BLUETOOTH,
+            PrinterConnectionType.SERIAL -> {
+                val serial = printer.diagnoseSerial(cfg)
+                buildString {
+                    append("${cfg.connectionType}: ${serial.failureReason}. ${serial.message}")
+                    if (serial.suggestedFix.isNotBlank()) append(" Fix: ${serial.suggestedFix}")
+                    if (serial.ports.isNotEmpty()) {
+                        append(" Ports: ")
+                        append(serial.ports.joinToString { "${it.address}(${it.confidence}%)" })
+                    }
+                }
+            }
+            else -> {
+                val capability = report.capabilityFor(cfg.connectionType)
+                "Platform ${report.platformName}/${report.osName}. ${cfg.connectionType}: supported=${capability?.isSupported}, native=${capability?.isNative}."
+            }
+        }
+        _discoveryLog.value = diag
+    }
+
+    // --- Individual field updaters (to avoid Map.copy() ambiguity) ---
+    fun updateName(value: String) { _config.update { it.copy(name = value) } }
+    fun updateAddress(value: String) { _config.update { it.copy(address = value.ifBlank { null }) } }
+    fun updatePort(value: Int) { _config.update { it.copy(port = value) } }
+    fun updateBaudRate(value: Int) { _config.update { it.copy(baudRate = value) } }
+    fun updateCharsPerLine(value: Int) { _config.update { it.copy(characterPerLine = value) } }
+    fun updatePaperDots(value: Int) { _config.update { it.copy(paperWidthDots = value) } }
+    fun updateLeftMargin(value: Int) { _config.update { it.copy(leftMargin = value) } }
+    fun updateBleServiceUuid(value: String) { _config.update { it.copy(bleServiceUuid = value) } }
+    fun updateBleCharacteristicUuid(value: String) { _config.update { it.copy(bleWriteCharacteristicUuid = value) } }
+    fun updateBleAutoDiscover(value: Boolean) { _config.update { it.copy(bleAutoDiscover = value) } }
+    fun updateBleHandshake(value: Boolean) { _config.update { it.copy(bleHandshakeEnabled = value) } }
+    fun updateBluetoothAutoBind(value: Boolean) { _config.update { it.copy(bluetoothClassicAutoBind = value) } }
+    fun updateBluetoothRfcomm(value: String) { _config.update { it.copy(bluetoothClassicRfcommDevice = value) } }
+
+    fun buildRawHex() {
+        viewModelScope.launch {
+            try {
+                val cfg = _config.value
+                val data = printer.newCommandBuilder(cfg)
+                    .initialize()
+                    .alignCenter()
+                    .bold(true)
+                    .line("KMP PRINTER")
+                    .bold(false)
+                    .line("Test Receipt")
+                    .divider()
+                    .alignLeft()
+                    .line("Type: ${cfg.connectionType}")
+                    .line("Name: ${cfg.name}")
+                    .line("Address: ${cfg.address ?: "-"}")
+                    .feed(3)
+                    .cut()
+                    .build()
+
+                val hexLines = data.toHexDump()
+                _rawCommandHex.value = hexLines
+                _rawCommandBytes.value = data.size
+            } catch (e: Exception) {
+                _rawCommandHex.value = "Error: ${e.message}"
+                _rawCommandBytes.value = 0
+            }
+        }
+    }
+
+    private fun ByteArray.toHexDump(): String {
+        val sb = StringBuilder()
+        var offset = 0
+        while (offset < size) {
+            val lineEnd = minOf(offset + 16, size)
+            val hexPart = (offset until lineEnd).joinToString(" ") { this[it].toUByte().toString(16).padStart(2, '0') }
+            val asciiPart = (offset until lineEnd).joinToString("") {
+                val c = this[it].toInt().toChar()
+                if (c in ' '..'~') c.toString() else "."
+            }
+            val addrHex = offset.toString(16).padStart(8, '0')
+            sb.appendLine("$addrHex  $hexPart  |$asciiPart|")
+            offset = lineEnd
+        }
+        return sb.toString().trimEnd()
+    }
+
     private fun startDiscovery(mode: String, showVirtual: Boolean) {
         viewModelScope.launch {
             printer.checkAndRequestPermissions(mode) { granted ->
                 if (granted) {
-                    doDiscovery(mode, showVirtual)
+                    viewModelScope.launch {
+                        doDiscovery(mode, showVirtual)
+                    }
                 } else {
                     _discoveryLog.value = "Permission denied. Please enable in settings."
                 }
@@ -169,14 +323,15 @@ class PrinterViewModel : ViewModel() {
         }
     }
 
-    private fun doDiscovery(mode: String, showVirtual: Boolean) {
-        viewModelScope.launch {
-            val discoveryConfig = DiscoveryConfig(showVirtualDevices = showVirtual)
-            printer.discovery(mode, discoveryConfig) { log ->
-                _discoveryLog.value = log
-            }.collectLatest { devices ->
-                _discoveredPrinters.value = devices
-            }
+    private suspend fun doDiscovery(mode: String, showVirtual: Boolean) {
+        val discoveryConfig = DiscoveryConfig(showVirtualDevices = showVirtual)
+        printer.discovery(mode, discoveryConfig) { log ->
+            _discoveryLog.value = log
+        }.collectLatest { devices ->
+            _discoveredPrinters.value = devices
+            _isScanning.value = false
+            _discoveryLog.value = if (devices.isEmpty()) "No devices found."
+            else "Found ${devices.size} device(s)."
         }
     }
 
@@ -358,18 +513,20 @@ class PrinterViewModel : ViewModel() {
 
 
     private fun updatePreview(config: PrinterConfig) {
-        val baseBlocks = printer.receiptService.generateTestPreview(config).toMutableList()
-        
-        // Inject logo if exists
-        _logoPreview.value?.let { bitmap ->
-            baseBlocks.add(0, PreviewBlock.Image(
-                width = _logoWidth.value,
-                height = _logoHeight.value,
-                alignment = TextAlignment.CENTER,
-                previewData = bitmap
-            ))
+        try {
+            val baseBlocks = printer.receiptService.generateTestPreview(config).toMutableList()
+            _logoPreview.value?.let { bitmap ->
+                baseBlocks.add(0, PreviewBlock.Image(
+                    width = _logoWidth.value,
+                    height = _logoHeight.value,
+                    alignment = TextAlignment.CENTER,
+                    previewData = bitmap
+                ))
+            }
+            _previewBlocks.value = baseBlocks
+        } catch (e: Exception) {
+            _discoveryLog.value = "Preview error: ${e.message}"
+            _previewBlocks.value = emptyList()
         }
-        
-        _previewBlocks.value = baseBlocks
     }
 }
