@@ -22,9 +22,13 @@ actual class PrinterPlatformDiagnostics actual constructor() {
                 capability(PrinterConnectionType.BLUETOOTH_LE, supported = true, native = true, discovery = true),
                 capability(PrinterConnectionType.BLUETOOTH, supported = true, native = false, discovery = true),
                 capability(PrinterConnectionType.USB, supported = false, native = false, discovery = false),
+                capability(PrinterConnectionType.SERIAL, supported = false, native = false, discovery = false),
                 capability(PrinterConnectionType.VIRTUAL, supported = true, native = true, discovery = true)
             ),
-            notes = listOf("iOS Bluetooth printing is implemented through CoreBluetooth/BLE.")
+            notes = listOf(
+                "iOS Bluetooth printing is implemented through CoreBluetooth/BLE.",
+                "iOS does not expose raw USB or serial ports to third-party apps."
+            )
         )
     }
 
@@ -34,6 +38,7 @@ actual class PrinterPlatformDiagnostics actual constructor() {
             PrinterConnectionType.BLUETOOTH_LE -> "Make sure the printer exposes a writable BLE characteristic."
             PrinterConnectionType.NETWORK -> "Use a reachable IPv4 address and raw TCP port."
             PrinterConnectionType.USB -> "USB printing is not available in this iOS backend."
+            PrinterConnectionType.SERIAL -> "Serial ports are not available to iOS apps; use BLE or network TCP."
             else -> "No iOS-specific troubleshooting hint available."
         }
     }
