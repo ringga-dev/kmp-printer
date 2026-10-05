@@ -1,0 +1,130 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "url": "../../kmp_printer/2.3.6/kmp_printer-2.3.6.module",
+    "group": "io.github.ringga-dev",
+    "module": "kmp_printer",
+    "version": "2.3.6",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "8.14.5"
+    }
+  },
+  "variants": [
+    {
+      "name": "jsApiElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-api",
+        "org.jetbrains.kotlin.js.compiler": "ir",
+        "org.jetbrains.kotlin.platform.type": "js"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-dom-api-compat",
+          "version": {
+            "requires": "2.3.20"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.3.20"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "kmp_printer-js-2.3.6.klib",
+          "url": "kmp_printer-js-2.3.6.klib",
+          "size": 278837,
+          "sha512": "14b138cd6e32312df7b90ca4b8e820c8a5f4eb81bfb03743be6f3842fe962235415b596422b0215b38f3b6e02eaa7dc98e97f20850376195aaecf3dff93652f7",
+          "sha256": "7501cee11d03b3cb39dbb76a6ace7c183b96b9aa761711fc53ff3a258de235fd",
+          "sha1": "99ea209e7ec97fee9374d440bb3faafe3068605e",
+          "md5": "729d6637cbad1bb96d655aeb670538c5"
+        }
+      ]
+    },
+    {
+      "name": "jsRuntimeElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-runtime",
+        "org.jetbrains.kotlin.js.compiler": "ir",
+        "org.jetbrains.kotlin.platform.type": "js"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-dom-api-compat",
+          "version": {
+            "requires": "2.3.20"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.3.20"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-coroutines-core",
+          "version": {
+            "requires": "1.10.2"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-datetime",
+          "version": {
+            "requires": "0.7.1"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "kmp_printer-js-2.3.6.klib",
+          "url": "kmp_printer-js-2.3.6.klib",
+          "size": 278837,
+          "sha512": "14b138cd6e32312df7b90ca4b8e820c8a5f4eb81bfb03743be6f3842fe962235415b596422b0215b38f3b6e02eaa7dc98e97f20850376195aaecf3dff93652f7",
+          "sha256": "7501cee11d03b3cb39dbb76a6ace7c183b96b9aa761711fc53ff3a258de235fd",
+          "sha1": "99ea209e7ec97fee9374d440bb3faafe3068605e",
+          "md5": "729d6637cbad1bb96d655aeb670538c5"
+        }
+      ]
+    },
+    {
+      "name": "jsSourcesElements-published",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-runtime",
+        "org.jetbrains.kotlin.js.compiler": "ir",
+        "org.jetbrains.kotlin.platform.type": "js"
+      },
+      "files": [
+        {
+          "name": "kmp_printer-js-2.3.6-sources.jar",
+          "url": "kmp_printer-js-2.3.6-sources.jar",
+          "size": 59962,
+          "sha512": "06016c91d7112994a38e82cb1aa18a626a4cdfb44ff7eda640f628287040a7b4ee399d7fd0d115c7d1f2623bc32a07b14891c23cdc9c95955434ef96cefb8adb",
+          "sha256": "a158f7fa37ff47810c3f9ccdb3ae611ea29e164f011c2a2f12cb59200d9c4008",
+          "sha1": "43e549bd6c7f53918ba9f5c5b9c39530f861e9c8",
+          "md5": "5da899cc2a525aea5ab609c1e19533ea"
+        }
+      ]
+    }
+  ]
+}

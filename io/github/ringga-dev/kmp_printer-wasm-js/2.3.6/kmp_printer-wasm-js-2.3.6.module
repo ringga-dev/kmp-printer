@@ -1,0 +1,116 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "url": "../../kmp_printer/2.3.6/kmp_printer-2.3.6.module",
+    "group": "io.github.ringga-dev",
+    "module": "kmp_printer",
+    "version": "2.3.6",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "8.14.5"
+    }
+  },
+  "variants": [
+    {
+      "name": "wasmJsApiElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-api",
+        "org.jetbrains.kotlin.platform.type": "wasm",
+        "org.jetbrains.kotlin.wasm.target": "js"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.3.20"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "kmp_printer-wasm-js-2.3.6.klib",
+          "url": "kmp_printer-wasm-js-2.3.6.klib",
+          "size": 278986,
+          "sha512": "58b3ce401e9636a3b25a9711ac4384f273314a41a110a1c9dcb6572ec7c5ec988f7819072d848ef094b7c3df3c7611f1edd9f1fc75e966fd1fc539d2331979fb",
+          "sha256": "b3d3257c03de69d8d8de2512ffc44e0e4c3f12fd26d1075e93712f3e144b9b69",
+          "sha1": "152424c5332ddb08ab612b8c1a79c331c13a0aad",
+          "md5": "fb41fd575544d8fb7e3bfe7648cc80a6"
+        }
+      ]
+    },
+    {
+      "name": "wasmJsRuntimeElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-runtime",
+        "org.jetbrains.kotlin.platform.type": "wasm",
+        "org.jetbrains.kotlin.wasm.target": "js"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.3.20"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-coroutines-core",
+          "version": {
+            "requires": "1.10.2"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-datetime",
+          "version": {
+            "requires": "0.7.1"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "kmp_printer-wasm-js-2.3.6.klib",
+          "url": "kmp_printer-wasm-js-2.3.6.klib",
+          "size": 278986,
+          "sha512": "58b3ce401e9636a3b25a9711ac4384f273314a41a110a1c9dcb6572ec7c5ec988f7819072d848ef094b7c3df3c7611f1edd9f1fc75e966fd1fc539d2331979fb",
+          "sha256": "b3d3257c03de69d8d8de2512ffc44e0e4c3f12fd26d1075e93712f3e144b9b69",
+          "sha1": "152424c5332ddb08ab612b8c1a79c331c13a0aad",
+          "md5": "fb41fd575544d8fb7e3bfe7648cc80a6"
+        }
+      ]
+    },
+    {
+      "name": "wasmJsSourcesElements-published",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-runtime",
+        "org.jetbrains.kotlin.platform.type": "wasm",
+        "org.jetbrains.kotlin.wasm.target": "js"
+      },
+      "files": [
+        {
+          "name": "kmp_printer-wasm-js-2.3.6-sources.jar",
+          "url": "kmp_printer-wasm-js-2.3.6-sources.jar",
+          "size": 60954,
+          "sha512": "581be49771c0608177f6f3764e558af712aaf75dc563082ec1451b8f22a0c5778b3d6fd870dd3a6638724fa5a8963c259c3cce72ce733abdbb7ceb6a0088168b",
+          "sha256": "9cbbdd619534f100290f87241da2fe92d2dc1461cf8d2a8b69e47bc53d05732f",
+          "sha1": "5b04cb3a1ffa3c1c2ace93d299f7578cdf35dfb9",
+          "md5": "e05efd04ea4c93457458cb70e6fce17e"
+        }
+      ]
+    }
+  ]
+}

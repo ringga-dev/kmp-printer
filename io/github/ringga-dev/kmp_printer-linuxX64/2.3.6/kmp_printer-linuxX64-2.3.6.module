@@ -1,0 +1,86 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "url": "../../kmp_printer/2.3.6/kmp_printer-2.3.6.module",
+    "group": "io.github.ringga-dev",
+    "module": "kmp_printer",
+    "version": "2.3.6",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "8.14.5"
+    }
+  },
+  "variants": [
+    {
+      "name": "linuxX64ApiElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-api",
+        "org.jetbrains.kotlin.native.target": "linux_x64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.3.20"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-coroutines-core",
+          "version": {
+            "requires": "1.10.2"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-datetime",
+          "version": {
+            "requires": "0.7.1"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "printer-linuxX64Main-2.3.6.klib",
+          "url": "kmp_printer-linuxX64-2.3.6.klib",
+          "size": 292001,
+          "sha512": "f9c8fc15ed381a741c52a80f8a7738b6ca504218c71e7a6c4a1aebffeadf146390e0f2973aa2e8fb66c46ef9de2eb4dd61e55ac4679f1fd696ec7c889c48834d",
+          "sha256": "457c527c101e4409f62537263926b41e49bafcf7260e7d3fa50b292027105817",
+          "sha1": "ed78fe5185682bc93614d6fc650a341421289f38",
+          "md5": "1d79e9c72ec6d79eba4e858ad6c7a0eb"
+        }
+      ]
+    },
+    {
+      "name": "linuxX64SourcesElements-published",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-runtime",
+        "org.jetbrains.kotlin.native.target": "linux_x64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "files": [
+        {
+          "name": "kmp_printer-linuxx64-2.3.6-sources.jar",
+          "url": "kmp_printer-linuxX64-2.3.6-sources.jar",
+          "size": 61374,
+          "sha512": "aef58790ef31398622aba57c34ce6e801ea04c052a1d35eb4ddf87cf11ad2a0b1a950357ce41040b1a1e9a7fdece1e93b53555278d36832854ff5eb91a5abbfa",
+          "sha256": "1ad8e09f6d4986d9cc30134421d868998d026908da2ee55c72acf43ad7d54fb6",
+          "sha1": "6a09779ee910c574c1caf9147579f6f0e8ffdfc5",
+          "md5": "9bc80e3b7b6c219bda9aacbaaf20367d"
+        }
+      ]
+    }
+  ]
+}

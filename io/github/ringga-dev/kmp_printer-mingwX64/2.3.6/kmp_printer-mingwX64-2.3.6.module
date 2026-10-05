@@ -1,0 +1,86 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "url": "../../kmp_printer/2.3.6/kmp_printer-2.3.6.module",
+    "group": "io.github.ringga-dev",
+    "module": "kmp_printer",
+    "version": "2.3.6",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "8.14.5"
+    }
+  },
+  "variants": [
+    {
+      "name": "mingwX64ApiElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-api",
+        "org.jetbrains.kotlin.native.target": "mingw_x64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.3.20"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-coroutines-core",
+          "version": {
+            "requires": "1.10.2"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-datetime",
+          "version": {
+            "requires": "0.7.1"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "printer-mingwX64Main-2.3.6.klib",
+          "url": "kmp_printer-mingwX64-2.3.6.klib",
+          "size": 292001,
+          "sha512": "fadd7fa85c1840e7dbbf1467b7db90a9a32d7e407a362840cce51b4c22b555092c92ae72a90bcee1b2308f53f3d42ccea6c234c00bd638da42b4d45e08f2e5dc",
+          "sha256": "43fb9a3f2054ce8d8f3c9e2605c905769525efeec7174ed288b96bb0826b74c2",
+          "sha1": "ce5ab8d98efcc75ba44beb58304111a16c9eaf53",
+          "md5": "9090312b425a4497ece024cc721839cf"
+        }
+      ]
+    },
+    {
+      "name": "mingwX64SourcesElements-published",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-runtime",
+        "org.jetbrains.kotlin.native.target": "mingw_x64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "files": [
+        {
+          "name": "kmp_printer-mingwx64-2.3.6-sources.jar",
+          "url": "kmp_printer-mingwX64-2.3.6-sources.jar",
+          "size": 61374,
+          "sha512": "aef58790ef31398622aba57c34ce6e801ea04c052a1d35eb4ddf87cf11ad2a0b1a950357ce41040b1a1e9a7fdece1e93b53555278d36832854ff5eb91a5abbfa",
+          "sha256": "1ad8e09f6d4986d9cc30134421d868998d026908da2ee55c72acf43ad7d54fb6",
+          "sha1": "6a09779ee910c574c1caf9147579f6f0e8ffdfc5",
+          "md5": "9bc80e3b7b6c219bda9aacbaaf20367d"
+        }
+      ]
+    }
+  ]
+}
