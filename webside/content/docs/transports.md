@@ -20,8 +20,8 @@ next: /docs/diagnostics
 
 Android supports Network, USB host, Bluetooth Classic, BLE, and Virtual. BLE now uses MTU negotiation, service discovery retry, write-result callbacks, and read/notify status where the printer exposes readable or notifiable characteristics.
 
-## Web and Wasm
+## Web
 
-Web support depends on browser APIs, HTTPS, and user gesture requirements. Wasm is best treated as bridge-backed or virtual unless the host app supplies browser API integrations.
+Web support depends on browser APIs, HTTPS, and user gesture requirements.
 
 For the platform matrix and best-effort caveats, see [Transport Support](/docs/transport-support).

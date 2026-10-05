@@ -6,16 +6,16 @@
 [![License](https://img.shields.io/github/license/ringga-dev/kmp-printer?style=flat&color=green)](LICENSE)
 [![GitHub Stars](https://img.shields.io/github/stars/ringga-dev/kmp-printer?style=flat&logo=github)](https://github.com/ringga-dev/kmp-printer/stargazers)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.1.x-blueviolet?style=flat&logo=kotlin)](https://kotlinlang.org)
-[![Platforms](https://img.shields.io/badge/Platform-Android%20%7C%20iOS%20%7C%20Desktop%20%7C%20Web%20%7C%20Wasm-blue?style=flat)](#platform-support)
 [![CI](https://img.shields.io/github/actions/workflow/status/ringga-dev/kmp-printer/ci.yml?style=flat&logo=githubactions&label=CI)](https://github.com/ringga-dev/kmp-printer/actions/workflows/ci.yml)
 
-A single unified API for thermal printer discovery, connection, ESC/POS receipt building, and status monitoring — across **Android, iOS, JVM/Desktop, JS, and Wasm**.
+A single unified API for thermal printer discovery, connection, ESC/POS receipt building, and status monitoring — across **Android, iOS, JVM/Desktop, and JS**.
+
 
 ---
 
 ## ✨ Features
 
-- ✅ **Multiplatform** — Android, iOS, JVM/Desktop, JS, Wasm
+- ✅ **Multiplatform** — Android, iOS, JVM/Desktop, JS
 - ✅ **Multiple Transports** — Bluetooth Classic, BLE, USB, Network TCP, Serial, Virtual
 - ✅ **ESC/POS Receipt DSL** — text styling, alignment, tables, dividers, images, barcodes, QR codes
 - ✅ **Flow-based Discovery** — reactive printer scanning via Kotlin coroutines
@@ -35,7 +35,6 @@ A single unified API for thermal printer discovery, connection, ESC/POS receipt 
 | **iOS** | ❌ | ✅ | ❌ | ✅ | ✅ |
 | **JVM/Desktop** | ✅ OS serial/queue | ✅ BlueZ helper | ✅ raw USB/serial | ✅ | ⚠️ Transport dependent |
 | **Web (JS)** | ✅ | ✅ | ✅ | ✅ | ⚠️ Browser dependent |
-| **Wasm** | ✅ | ✅ | ✅ | ✅ | ⚠️ Browser dependent |
 
 > Support depends on printer firmware, OS APIs, browser capabilities, and hardware transport. See [Transport Support](docs/TRANSPORT_SUPPORT.md) for details.
 
@@ -249,7 +248,6 @@ val config = PrinterConfig(
 # Compile specific targets
 ./gradlew :printer:compileKotlinMetadata
 ./gradlew :printer:compileKotlinJs
-./gradlew :printer:compileKotlinWasmJs
 ./gradlew :printer:compileDebugKotlinAndroid
 
 # Update version in docs after changing LIB_VERSION in gradle.properties
@@ -272,7 +270,6 @@ printer/
 │   ├── iosMain/           # iOS BLE, Network
 │   ├── jvmMain/           # Desktop USB, Serial, Network, BlueZ
 │   ├── jsMain/            # Web Bluetooth, USB, Serial, Network
-│   └── wasmJsMain/        # Wasm hardware bridge
 ├── androidApp/            # Android sample app
 ├── desktopApp/            # JVM Desktop sample app
 └── iosApp/                # iOS sample app
