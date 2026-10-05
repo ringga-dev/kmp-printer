@@ -4,7 +4,7 @@ KmpPrinter keeps the print API consistent across platforms, but hardware support
 
 | Transport | Android | iOS | JVM/Desktop | Web/JS | Notes |
 | --- | --- | --- | --- | --- | --- |
-| Network TCP | Supported | Supported | Supported | Best-effort | Usually the most reliable raw ESC/POS transport. |
+| Network TCP | Supported | Supported | Supported | Not supported | Usually the most reliable raw ESC/POS transport. |
 | USB | Supported | Not supported | Supported / best-effort | Best-effort | Requires Android USB host permission, JVM driver setup, or browser user gesture. |
 | Bluetooth Classic | Supported | Not supported | Best-effort | Browser dependent | JVM normally uses OS serial ports, rfcomm, or print queues. |
 | BLE | Supported / best-effort | Supported / best-effort | Best-effort | Browser dependent | UUIDs, MTU, and write mode differ across printers. |

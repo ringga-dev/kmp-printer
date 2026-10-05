@@ -1,6 +1,0 @@
-{
-  "name": "kmp-printer",
-  "version": "2.2.2",
-  "private": true,
-  "description": "Kotlin Multiplatform ESC/POS thermal printing library"
-}

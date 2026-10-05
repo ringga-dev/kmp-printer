@@ -34,7 +34,7 @@ A single unified API for thermal printer discovery, connection, ESC/POS receipt 
 | **Android** | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **iOS** | ❌ | ✅ | ❌ | ✅ | ✅ |
 | **JVM/Desktop** | ✅ OS serial/queue | ✅ BlueZ helper | ✅ raw USB/serial | ✅ | ⚠️ Transport dependent |
-| **Web (JS)** | ✅ | ✅ | ✅ | ✅ | ⚠️ Browser dependent |
+| **Web (JS)** | ❌ Not supported | ✅ (Chrome WebBLE) | ✅ (WebUSB) | ❌ Not supported | ⚠️ Browser dependent |
 
 > Support depends on printer firmware, OS APIs, browser capabilities, and hardware transport. See [Transport Support](docs/TRANSPORT_SUPPORT.md) for details.
 
@@ -269,7 +269,7 @@ printer/
 │   ├── androidMain/       # Android BLE, USB, Network, Bluetooth
 │   ├── iosMain/           # iOS BLE, Network
 │   ├── jvmMain/           # Desktop USB, Serial, Network, BlueZ
-│   ├── jsMain/            # Web Bluetooth, USB, Serial, Network
+│   ├── jsMain/            # Web Bluetooth, USB
 ├── androidApp/            # Android sample app
 ├── desktopApp/            # JVM Desktop sample app
 └── iosApp/                # iOS sample app

@@ -4,7 +4,7 @@ KmpPrinter exposes one API across platforms, but transport support depends on OS
 
 | Transport | Android | iOS | JVM/Desktop | Web/JS | Notes |
 | --- | --- | --- | --- | --- | --- |
-| Network TCP `9100` | Supported | Supported | Supported | Best-effort | Most reliable ESC/POS transport when the printer exposes raw TCP. Status readback depends on firmware. |
+| Network TCP `9100` | Supported | Supported | Supported | Not supported | Most reliable ESC/POS transport when the printer exposes raw TCP. Status readback depends on firmware. |
 | USB raw printer | Supported | Not supported | Supported / best-effort | Best-effort | Android requires USB host permission. JVM may need libusb, WinUSB, udev rules, or fallback to serial/print queue. Browser USB requires secure context and user gesture. |
 | Bluetooth Classic SPP | Supported | Not supported | Best-effort | Browser dependent | Android can connect to paired SPP devices. JVM uses OS serial ports, rfcomm, or print queues, not always direct MAC access. |
 | BLE | Supported / best-effort | Supported / best-effort | Best-effort with helper/backends | Browser dependent | BLE printers vary heavily by service UUID, characteristic properties, MTU, and write-with-response support. |

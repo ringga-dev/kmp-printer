@@ -48,10 +48,16 @@ jobs:
         run: ./gradlew :printer:jvmTest --no-daemon
 
       - name: Compile KMP targets
-        run: ./gradlew :printer:compileKotlinMetadata :printer:compileKotlinJs :printer:compileKotlinWasmJs --no-daemon
+        run: ./gradlew :printer:compileKotlinMetadata :printer:compileKotlinJs --no-daemon
 
       - name: Compile Android target
         run: ./gradlew :printer:compileDebugKotlinAndroid --no-daemon
+
+      - name: Run Android unit tests
+        run: ./gradlew :printer:testDebugUnitTest --no-daemon
+
+      - name: Compile sample app module
+        run: ./gradlew :shared:compileKotlinJvm :shared:compileKotlinJs :shared:compileDebugKotlinAndroid --no-daemon
 
   setup:
     name: Read Version
@@ -311,7 +317,9 @@ jobs:
           body: |
             ## KmpPrinter v${{ needs.setup.outputs.lib_version }}
 
-            Kotlin Multiplatform ESC/POS thermal printing library for Android, iOS, JVM/Desktop, JS, and Wasm.
+            Kotlin Multiplatform ESC/POS thermal printing library for Android, iOS, JVM/Desktop, and JS.
+
+Supported transports: Network TCP, USB, Serial, Bluetooth Classic, BLE, and Virtual — availability depends on platform and hardware. See `docs/TRANSPORT_SUPPORT.md`.
 
             ### 📦 Maven Central (soon)
 

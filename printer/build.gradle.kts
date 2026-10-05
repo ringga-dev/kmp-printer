@@ -18,9 +18,6 @@ base {
 kotlin {
     androidTarget {
         publishLibraryVariants("release")
-        compilerOptions {
-            freeCompilerArgs.add("-Xexpect-actual-classes")
-        }
     }
 
     val xcf = XCFramework("KmpPrinter")
@@ -34,6 +31,11 @@ kotlin {
             freeCompilerArgs += listOf("-Xbinary=bundleId=io.github.ringga_dev.kmp_printer")
             xcf.add(this)
         }
+        // KMP sets the klib publication artifactId from the project name when
+        // the publication is created, which overwrites any later rename.
+        iosTarget.mavenPublication {
+            artifactId = "kmp_printer-" + iosTarget.name.lowercase()
+        }
     }
 
     jvm()
@@ -42,8 +44,8 @@ kotlin {
         browser()
     }
 
-    targets.all {
-        compilations.all {
+    targets.configureEach {
+        compilations.configureEach {
             compilerOptions.configure {
                 freeCompilerArgs.add("-Xexpect-actual-classes")
             }
@@ -75,14 +77,8 @@ kotlin {
             implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
         }
 
-        // ── iOS source set (actual implementations for iOS targets) ──
-        val iosMain by creating {
-            dependsOn(commonMain.get())
-        }
-        listOf(
-            iosArm64().compilations["main"].defaultSourceSet,
-            iosSimulatorArm64().compilations["main"].defaultSourceSet
-        ).forEach { it.dependsOn(iosMain) }
+        // iOS source set (iosMain) comes from the default hierarchy template,
+        // which wires iosArm64Main and iosSimulatorArm64Main to it.
     }
 }
 
@@ -162,8 +158,9 @@ publishing {
 }
 
 afterEvaluate {
-    // Re-evaluate artifactId after all plugins have registered
-    // their publications (KMP/AGP create Android/iOS publications late)
+    // KMP derives the klib publication artifactId from the project name during
+    // its own evaluation, so renaming it from here (or from an `afterEvaluate`)
+    // is overwritten. The supported hook is `mavenPublication` on each target.
     publishing.publications.withType<MavenPublication>().forEach { pub ->
         pub.artifactId = when (pub.name) {
             "kotlinMultiplatform" -> "kmp_printer"

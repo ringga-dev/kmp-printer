@@ -4,19 +4,17 @@
   "description": "Web application that uses Kotlin Multiplatform Library",
   "type": "module",
   "scripts": {
-    "build": "tsc && vite build",
-    "start": "vite"
+    "build": "vite build",
+    "start": "vite",
+    "dev": "vite",
+    "preview": "vite preview --port 8080"
   },
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "shared": "0.0.0-unspecified"
+    "shared": "file:../shared/build/dist/js/developmentLibrary"
   },
   "devDependencies": {
-    "@types/react": "^18.2.0",
-    "@types/react-dom": "^18.2.0",
-    "@vitejs/plugin-react": "^4.0.0",
-    "typescript": "^5.0.2",
+    "@js-joda/core": "^3.2.0",
+    "typescript": "^5.9.3",
     "vite": "^7.1.6"
   }
 }
