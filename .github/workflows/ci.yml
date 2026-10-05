@@ -44,10 +44,24 @@ jobs:
         run: ./gradlew :printer:jvmTest --no-daemon
 
       - name: Compile KMP targets
-        run: ./gradlew :printer:compileKotlinMetadata :printer:compileKotlinJs :printer:compileKotlinWasmJs --no-daemon
+        run: ./gradlew :printer:compileKotlinMetadata :printer:compileKotlinJs --no-daemon
 
       - name: Compile Android library
         run: ./gradlew :printer:compileDebugKotlinAndroid --no-daemon
+
+      - name: Run Android unit tests
+        run: ./gradlew :printer:testDebugUnitTest --no-daemon
+
+      - name: Set up Chrome
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable
+
+      - name: Run JS tests in Chrome headless
+        run: ./gradlew :printer:jsBrowserTest --no-daemon
+
+      - name: Compile shared sample module
+        run: ./gradlew :shared:compileKotlinJvm :shared:compileKotlinJs :shared:compileDebugKotlinAndroid --no-daemon
 
   android-sample:
     name: Android Sample Compile
