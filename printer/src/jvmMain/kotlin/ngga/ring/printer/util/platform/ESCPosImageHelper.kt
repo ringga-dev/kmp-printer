@@ -20,47 +20,29 @@ actual object ESCPosImageHelper {
         // 1. Scaling
         val scale = maxWidth.toDouble() / original.width.toDouble()
         val targetWidth = maxWidth
-        val targetHeight = (original.height * scale).toInt()
+        val targetHeight = (original.height * scale).toInt().coerceAtLeast(1)
         
         val scaled = BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_ARGB)
         val g = scaled.createGraphics()
         g.drawImage(original.getScaledInstance(targetWidth, targetHeight, Image.SCALE_SMOOTH), 0, 0, null)
         g.dispose()
         
-        // 2. Pixel extraction & Grayscale
+        // 2. Pixel extraction to grayscale
         val width = scaled.width
         val height = scaled.height
-        val gray = DoubleArray(width * height)
+        val gray = IntArray(width * height)
         
         for (y in 0 until height) {
             for (x in 0 until width) {
                 val color = Color(scaled.getRGB(x, y), true)
-                // Use a standard grayscale conversion formula
-                gray[y * width + x] = color.red * 0.299 + color.green * 0.587 + color.blue * 0.114
+                // Standard luminance formula
+                gray[y * width + x] = (color.red * 0.299 + color.green * 0.587 + color.blue * 0.114).toInt()
             }
         }
         
-        val bitonal = BooleanArray(width * height)
-        
-        // Floyd-Steinberg Dithering
-        for (y in 0 until height) {
-            for (x in 0 until width) {
-                val index = y * width + x
-                val oldPixel = gray[index]
-                val newPixel = if (oldPixel < 128) 0.0 else 255.0
-                bitonal[index] = newPixel == 0.0 
-                
-                val error = oldPixel - newPixel
-                
-                if (x + 1 < width) gray[index + 1] += error * 7.0 / 16.0
-                if (y + 1 < height) {
-                    if (x - 1 >= 0) gray[(y + 1) * width + x - 1] += error * 3.0 / 16.0
-                    gray[(y + 1) * width + x] += error * 5.0 / 16.0
-                    if (x + 1 < width) gray[(y + 1) * width + x + 1] += error * 1.0 / 16.0
-                }
-            }
-        }
-        
+        // 3. Dithering and packing live in commonMain so every platform
+        // produces identical output from identical pixels.
+        val bitonal = CommonHelper.applyFloydSteinberg(gray, width, height)
         val bytes = CommonHelper.packPixelsToRaster(bitonal, width, height)
         return Triple(bytes, width, height)
     }

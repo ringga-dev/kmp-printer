@@ -111,6 +111,7 @@ actual class PrinterConnectorFactory : PrinterConnectorProvider {
         return when (PrinterConnectionType.normalize(config.connectionType)) {
             PrinterConnectionType.BLUETOOTH, PrinterConnectionType.BLUETOOTH_LE -> WebBluetoothConnector()
             PrinterConnectionType.USB -> WebUsbConnector()
+            PrinterConnectionType.SERIAL -> WebSerialConnector()
             PrinterConnectionType.VIRTUAL -> VirtualPrinterConnector()
             else -> object : PrinterConnector {
                 override suspend fun connect(config: PrinterConfig) = false

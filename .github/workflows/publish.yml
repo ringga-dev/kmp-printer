@@ -56,6 +56,13 @@ jobs:
       - name: Run Android unit tests
         run: ./gradlew :printer:testDebugUnitTest --no-daemon
 
+      - name: Run JS browser tests
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable
+      - name: Run JS tests in Chrome headless
+        run: ./gradlew :printer:jsBrowserTest --no-daemon
+
       - name: Compile sample app module
         run: ./gradlew :shared:compileKotlinJvm :shared:compileKotlinJs :shared:compileDebugKotlinAndroid --no-daemon
 
@@ -151,6 +158,9 @@ jobs:
 
       - name: Build XCFramework
         run: ./gradlew :printer:assembleKmpPrinterXCFramework --no-daemon
+
+      - name: Run iOS simulator tests
+        run: ./gradlew :printer:iosSimulatorArm64Test --no-daemon
 
       - name: Zip XCFramework
         shell: bash
@@ -319,7 +329,7 @@ jobs:
 
             Kotlin Multiplatform ESC/POS thermal printing library for Android, iOS, JVM/Desktop, and JS.
 
-Supported transports: Network TCP, USB, Serial, Bluetooth Classic, BLE, and Virtual — availability depends on platform and hardware. See `docs/TRANSPORT_SUPPORT.md`.
+            Supported transports: Network TCP, USB, Serial, Bluetooth Classic, BLE, and Virtual — availability depends on platform and hardware. See `docs/TRANSPORT_SUPPORT.md`.
 
             ### 📦 Maven Central (soon)
 
