@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.plugin.mpp.apple.XCFramework
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     kotlin("multiplatform")
@@ -17,6 +18,9 @@ base {
 
 kotlin {
     androidTarget {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_11)
+        }
         publishLibraryVariants("release")
     }
 
@@ -38,7 +42,11 @@ kotlin {
         }
     }
 
-    jvm()
+    jvm {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_17)
+        }
+    }
 
     js(IR) {
         browser()
