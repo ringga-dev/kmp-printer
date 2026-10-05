@@ -9,8 +9,12 @@ plugins {
 }
 
 kotlin {
-    jvm()
-    
+    jvm {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_17)
+        }
+    }
+
     sourceSets {
         jvmMain.dependencies {
             implementation(project(":shared"))
