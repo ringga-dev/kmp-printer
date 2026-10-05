@@ -35,6 +35,20 @@ val mm80 = PrinterConfig(
 )
 ```
 
+Profiles dan config juga menerima opsi layout (semuanya default-aman, tanpa breaking change):
+
+```kotlin
+PrinterProfile(
+    paperWidth = 58,
+    paperWidthDots = 384,
+    characterPerLine = 32,
+    leftMargin = 20,   // margin kiri (dots)
+    rightMargin = 0,   // margin kanan (dots) — baru di 2.3.6
+    autoCenter = false,// true = margin kiri dicerminkan ke kanan
+    lineSpacing = 40   // jarak antar baris (dots), 0 = default printer — baru di 2.3.6
+)
+```
+
 ## Network
 
 ```kotlin

@@ -44,21 +44,65 @@ object ESCPosTextLayout {
 
     /**
      * Centers a text string into the given line width using spaces.
+     * Long text is normalized with [wrapText] first so content is never
+     * silently truncated; each wrapped line is centered with balanced padding.
      */
     fun centeredText(
         text: String,
         maxCharsPerLine: Int
     ): String {
         val safeMax = (maxCharsPerLine - SAFETY_MARGIN).coerceAtLeast(1)
-        val cleanText = text.trim()
-        
-        if (cleanText.length >= safeMax) return cleanText.take(safeMax)
+        val lines = wrapText(text, safeMax)
 
-        val totalPadding = safeMax - cleanText.length
-        val leftPad = totalPadding / 2
-        val rightPad = totalPadding - leftPad
+        return lines.joinToString("\n") { line ->
+            val totalPadding = (safeMax - line.length).coerceAtLeast(0)
+            val leftPad = totalPadding / 2
+            val rightPad = totalPadding - leftPad
+            " ".repeat(leftPad) + line + " ".repeat(rightPad)
+        }
+    }
 
-        return " ".repeat(leftPad) + cleanText + " ".repeat(rightPad)
+    /**
+     * Word-wrap a single string into lines of at most [maxWidth] chars.
+     * - Extra whitespace is normalized to a single space.
+     * - Words longer than maxWidth are hard-split.
+     * - Always returns at least one element.
+     */
+    fun wrapText(text: String, maxWidth: Int): List<String> {
+        val width = maxWidth.coerceAtLeast(1)
+        val normalized = text.replace(Regex("\\s+"), " ").trim()
+        if (normalized.isEmpty()) return listOf("")
+
+        val lines = mutableListOf<String>()
+        var current = StringBuilder()
+
+        fun flush() {
+            if (current.isNotEmpty()) {
+                lines.add(current.toString())
+                current = StringBuilder()
+            }
+        }
+
+        for (word in normalized.split(' ')) {
+            var remaining = word
+            // Hard-split words longer than the max width
+            while (remaining.length > width) {
+                flush()
+                lines.add(remaining.take(width))
+                remaining = remaining.drop(width)
+            }
+            if (current.isEmpty()) {
+                current.append(remaining)
+            } else if (current.length + 1 + remaining.length <= width) {
+                current.append(' ').append(remaining)
+            } else {
+                flush()
+                current.append(remaining)
+            }
+        }
+        flush()
+        if (lines.isEmpty()) lines.add("")
+        return lines
     }
 
     /**
@@ -67,8 +111,8 @@ object ESCPosTextLayout {
     fun centerText(maxCharsPerLine: Int, text: String, maxLine: Int = 5): String {
         if (text.isBlank()) return ""
         val safeMax = (maxCharsPerLine - SAFETY_MARGIN).coerceAtLeast(1)
-        
-        val chunks = text.chunked(safeMax)
+
+        val chunks = wrapText(text, safeMax)
         val finalLines = if (chunks.size > maxLine) {
             chunks.take(maxLine - 1) + (chunks[maxLine - 1].take((safeMax - 3).coerceAtLeast(0)) + "...")
         } else {

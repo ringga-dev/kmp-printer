@@ -7,12 +7,13 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import ngga.ring.printer.KmpPrinter
 import ngga.ring.printer.util.preview.PreviewBlock
+import ngga.ring.printer.util.preview.PreviewResult
 import ngga.ring.printer.util.ConnectionState
 import ngga.ring.printer.util.platform.ESCPosImageHelper
+import ngga.ring.printer.util.escpos.ESCPosConfig
 import ngga.ring.printer.util.escpos.TextAlignment
 import androidx.compose.ui.graphics.ImageBitmap
 import ngga.ring.printer.model.*
-import ngga.ring.printer.util.escpos.ESCPosCommandBuilder
 
 class PrinterViewModel : ViewModel() {
     private val printer = KmpPrinter()
@@ -55,8 +56,17 @@ class PrinterViewModel : ViewModel() {
     private val _printStatus = MutableStateFlow<PrintStatus>(PrintStatus.Idle)
     val printStatus: StateFlow<PrintStatus> = _printStatus.asStateFlow()
 
-    private val _previewBlocks = MutableStateFlow<List<PreviewBlock>>(emptyList())
-    val previewBlocks: StateFlow<List<PreviewBlock>> = _previewBlocks.asStateFlow()
+    private val _isPrinting = MutableStateFlow(false)
+    val isPrinting: StateFlow<Boolean> = _isPrinting.asStateFlow()
+
+    // --- Printer Monitoring State ---
+    private val _printerHealth = MutableStateFlow<PrinterStatus?>(null)
+    val printerHealth: StateFlow<PrinterStatus?> = _printerHealth.asStateFlow()
+
+    private var _monitorJob: Job? = null
+
+    private val _previewResult = MutableStateFlow(PreviewResult.EMPTY)
+    val previewResult: StateFlow<PreviewResult> = _previewResult.asStateFlow()
 
     // --- Logo State ---
     private val _originalLogoSource = MutableStateFlow<Any?>(null)
@@ -66,6 +76,19 @@ class PrinterViewModel : ViewModel() {
     
     private val _logoPreview = MutableStateFlow<ImageBitmap?>(null)
     val logoPreview: StateFlow<ImageBitmap?> = _logoPreview.asStateFlow()
+
+    // --- Profile & Feature State ---
+    private val _barcodeType = MutableStateFlow(BarcodeType.CODE128)
+    val barcodeType: StateFlow<BarcodeType> = _barcodeType.asStateFlow()
+
+    private val _qrLevel = MutableStateFlow(QRCodeLevel.L)
+    val qrLevel: StateFlow<QRCodeLevel> = _qrLevel.asStateFlow()
+
+    private val _charset = MutableStateFlow(PrinterCharset.UTF8)
+    val charset: StateFlow<PrinterCharset> = _charset.asStateFlow()
+
+    private val _printQuality = MutableStateFlow(PrintQuality.Default)
+    val printQuality: StateFlow<PrintQuality> = _printQuality.asStateFlow()
 
     // --- Enterprise Imaging State ---
     private val _imagingDithering = MutableStateFlow("THRESHOLD")
@@ -161,16 +184,45 @@ class PrinterViewModel : ViewModel() {
         _isScanning.value = false
     }
 
+    fun disconnect() {
+        viewModelScope.launch {
+            stopMonitoring()
+            printer.disconnect()
+            _discoveryLog.value = "Disconnected."
+            _printerHealth.value = null
+        }
+    }
+
+    fun stopMonitoring() {
+        _monitorJob?.cancel()
+        _monitorJob = null
+    }
+
+    fun startMonitoring() {
+        stopMonitoring()
+        _monitorJob = viewModelScope.launch {
+            printer.monitorStatus(_config.value, 2000).collect { status ->
+                _printerHealth.value = status
+            }
+        }
+    }
+
+    fun queryPrinterStatus() {
+        viewModelScope.launch {
+            val status = printer.queryStatus()
+            _printerHealth.value = status
+            _discoveryLog.value = status.message.ifBlank {
+                if (status.isOnline) "Printer online" else "Printer offline"
+            }
+        }
+    }
+
     fun setConnectionType(type: String) {
         cancelDiscovery()
         _discoveryMode.value = type
         _config.value = _config.value.copy(connectionType = type)
         _discoveredPrinters.value = emptyList()
         _discoveryLog.value = "Connection: $type"
-    }
-
-    fun setDiscoveryMode(mode: String) {
-        _discoveryMode.value = mode
     }
 
     fun toggleVirtual(enabled: Boolean) {
@@ -255,12 +307,33 @@ class PrinterViewModel : ViewModel() {
     fun updateCharsPerLine(value: Int) { _config.update { it.copy(characterPerLine = value) } }
     fun updatePaperDots(value: Int) { _config.update { it.copy(paperWidthDots = value) } }
     fun updateLeftMargin(value: Int) { _config.update { it.copy(leftMargin = value) } }
+    fun updateRightMargin(value: Int) { _config.update { it.copy(rightMargin = value) } }
+    fun updateLineSpacing(value: Int) { _config.update { it.copy(lineSpacing = value) } }
+    fun updateAutoCenter(value: Boolean) { _config.update { it.copy(autoCenter = value) } }
     fun updateBleServiceUuid(value: String) { _config.update { it.copy(bleServiceUuid = value) } }
     fun updateBleCharacteristicUuid(value: String) { _config.update { it.copy(bleWriteCharacteristicUuid = value) } }
     fun updateBleAutoDiscover(value: Boolean) { _config.update { it.copy(bleAutoDiscover = value) } }
     fun updateBleHandshake(value: Boolean) { _config.update { it.copy(bleHandshakeEnabled = value) } }
     fun updateBluetoothAutoBind(value: Boolean) { _config.update { it.copy(bluetoothClassicAutoBind = value) } }
     fun updateBluetoothRfcomm(value: String) { _config.update { it.copy(bluetoothClassicRfcommDevice = value) } }
+
+    fun applyProfile(profile: PrinterProfile) {
+        _config.update {
+            it.copy(
+                paperWidthDots = profile.paperWidthDots,
+                characterPerLine = profile.characterPerLine,
+                leftMargin = profile.leftMargin,
+                autoCenter = profile.autoCenter,
+                rightMargin = profile.rightMargin,
+                lineSpacing = profile.lineSpacing
+            )
+        }
+    }
+
+    fun setBarcodeType(type: BarcodeType) { _barcodeType.value = type }
+    fun setQrLevel(level: QRCodeLevel) { _qrLevel.value = level }
+    fun setCharset(charset: PrinterCharset) { _charset.value = charset }
+    fun setPrintQuality(quality: PrintQuality) { _printQuality.value = quality }
 
     fun buildRawHex() {
         viewModelScope.launch {
@@ -309,20 +382,6 @@ class PrinterViewModel : ViewModel() {
         return sb.toString().trimEnd()
     }
 
-    private fun startDiscovery(mode: String, showVirtual: Boolean) {
-        viewModelScope.launch {
-            printer.checkAndRequestPermissions(mode) { granted ->
-                if (granted) {
-                    viewModelScope.launch {
-                        doDiscovery(mode, showVirtual)
-                    }
-                } else {
-                    _discoveryLog.value = "Permission denied. Please enable in settings."
-                }
-            }
-        }
-    }
-
     private suspend fun doDiscovery(mode: String, showVirtual: Boolean) {
         val discoveryConfig = DiscoveryConfig(showVirtualDevices = showVirtual)
         printer.discovery(mode, discoveryConfig) { log ->
@@ -348,19 +407,126 @@ class PrinterViewModel : ViewModel() {
         _config.value = newConfig
     }
 
-    fun printTestPage() {
+    fun beep() {
+        if (_isPrinting.value) return
+        _isPrinting.value = true
         viewModelScope.launch {
-            printer.printTestPage(_config.value).collect { status ->
-                _printStatus.value = status
+            try {
+                val data = printer.newCommandBuilder(_config.value)
+                    .beep()
+                    .build()
+                printer.printRaw(_config.value, data).collect { status ->
+                    _printStatus.value = status
+                }
+            } finally {
+                _isPrinting.value = false
+            }
+        }
+    }
+
+    fun openCashDrawer() {
+        if (_isPrinting.value) return
+        _isPrinting.value = true
+        viewModelScope.launch {
+            try {
+                val data = printer.newCommandBuilder(_config.value)
+                    .openCashDrawer()
+                    .build()
+                printer.printRaw(_config.value, data).collect { status ->
+                    _printStatus.value = status
+                }
+            } finally {
+                _isPrinting.value = false
+            }
+        }
+    }
+
+    fun defineNVBitImage() {
+        val logoBytes = _selectedLogoBytes.value ?: run {
+            _discoveryLog.value = "No logo loaded to store."
+            return
+        }
+        val pixels = IntArray(logoBytes.size) { logoBytes[it].toInt() and 0xFF }
+        if (_isPrinting.value) return
+        _isPrinting.value = true
+        viewModelScope.launch {
+            try {
+                val data = printer.newCommandBuilder(_config.value)
+                    .defineNVBitImage(pixels, _logoWidth.value, _logoHeight.value)
+                    .build()
+                printer.printRaw(_config.value, data).collect { status ->
+                    _printStatus.value = status
+                    if (status is PrintStatus.Success) {
+                        _discoveryLog.value = "Logo stored to NV memory."
+                    }
+                }
+            } finally {
+                _isPrinting.value = false
+            }
+        }
+    }
+
+    fun printNVImage() {
+        if (_isPrinting.value) return
+        _isPrinting.value = true
+        viewModelScope.launch {
+            try {
+                val data = printer.newCommandBuilder(_config.value)
+                    .printNVImage(1)
+                    .build()
+                printer.printRaw(_config.value, data).collect { status ->
+                    _printStatus.value = status
+                }
+            } finally {
+                _isPrinting.value = false
+            }
+        }
+    }
+
+    fun deleteNVBitImages() {
+        if (_isPrinting.value) return
+        _isPrinting.value = true
+        viewModelScope.launch {
+            try {
+                val data = printer.newCommandBuilder(_config.value)
+                    .deleteNVBitImages()
+                    .build()
+                printer.printRaw(_config.value, data).collect { status ->
+                    _printStatus.value = status
+                }
+            } finally {
+                _isPrinting.value = false
+            }
+        }
+    }
+
+    fun printTestPage() {
+        if (_isPrinting.value) return
+        _isPrinting.value = true
+        _printStatus.value = PrintStatus.Idle
+        viewModelScope.launch {
+            try {
+                printer.printTestPage(_config.value).collect { status ->
+                    _printStatus.value = status
+                }
+            } finally {
+                _isPrinting.value = false
             }
         }
     }
 
     fun printCalibrationPage() {
+        if (_isPrinting.value) return
+        _isPrinting.value = true
+        _printStatus.value = PrintStatus.Idle
         viewModelScope.launch {
-            val bytes = printer.receiptService.generateCalibrationReceipt(_config.value)
-            printer.printRaw(_config.value, bytes).collect { status ->
-                _printStatus.value = status
+            try {
+                val bytes = printer.receiptService.generateCalibrationReceipt(_config.value)
+                printer.printRaw(_config.value, bytes).collect { status ->
+                    _printStatus.value = status
+                }
+            } finally {
+                _isPrinting.value = false
             }
         }
     }
@@ -384,129 +550,156 @@ class PrinterViewModel : ViewModel() {
     }
 
     fun printExpertTest() {
+        if (_isPrinting.value) return
+        _isPrinting.value = true
+        _printStatus.value = PrintStatus.Idle
         viewModelScope.launch {
-            val buildConfig = _config.value
-            val data = printer.newCommandBuilder(buildConfig)
-                .initialize()
-                .selectCodePage(buildConfig.escPosCodePage)
-                .line("EXPERT NATIVE TEST")
-                .divider()
-                .line("Native Barcode (128):")
-                .barcode("KMP-PRINTER-V2")
-                .feed(1)
-                .line("Native QR Code:")
-                .qrCodeNative("https://github.com/ringga-dev", size = 8, center = true)
-                .feed(1)
-                .line("Charset: ${buildConfig.charsetName}")
-                .line("Special Char: " + if(buildConfig.charsetName == "UTF-8") "€ £ ¥ ©" else "Testing Charset")
-                .feed(3)
-                .cut()
-                .build()
-            
-            printer.printRaw(buildConfig, data).collect { status ->
-                _printStatus.value = status
+            try {
+                val buildConfig = _config.value
+                val data = printer.newCommandBuilder(buildConfig)
+                    .initialize()
+                    .selectCodePage(buildConfig.escPosCodePage)
+                    .line("EXPERT NATIVE TEST")
+                    .divider()
+                    .line("Native Barcode (128):")
+                    .barcode("KMP-PRINTER-V2")
+                    .feed(1)
+                    .line("Native QR Code:")
+                    .qrCodeNative("https://github.com/ringga-dev", size = 8, center = true)
+                    .feed(1)
+                    .line("Charset: ${buildConfig.charsetName}")
+                    .line("Special Char: " + if(buildConfig.charsetName == "UTF-8") "€ £ ¥ ©" else "Testing Charset")
+                    .feed(3)
+                    .cut()
+                    .build()
+                
+                printer.printRaw(buildConfig, data).collect { status ->
+                    _printStatus.value = status
+                }
+            } finally {
+                _isPrinting.value = false
             }
         }
     }
 
     fun printPageModeDemo() {
+        if (_isPrinting.value) return
+        _isPrinting.value = true
+        _printStatus.value = PrintStatus.Idle
         viewModelScope.launch {
-            val buildConfig = _config.value
-            val data = printer.newCommandBuilder(buildConfig)
-                .initialize()
-                .line("--- PAGE MODE DEMO ---")
-                .enterPageMode()
-                .setPagePrintArea(0, 0, 384, 200)
-                // Diagonal Teks
-                .setHorizontalPosition(10)
-                .setPageVerticalPosition(10)
-                .text("X:10, Y:10")
-                .setHorizontalPosition(100)
-                .setPageVerticalPosition(50)
-                .text("X:100, Y:50")
-                .setHorizontalPosition(200)
-                .setPageVerticalPosition(90)
-                .text("X:200, Y:90")
-                .printPageAndReturn()
-                .feed(3)
-                .cut()
-                .build()
-            
-            printer.printRaw(buildConfig, data).collect { status ->
-                _printStatus.value = status
+            try {
+                val buildConfig = _config.value
+                val data = printer.newCommandBuilder(buildConfig)
+                    .initialize()
+                    .line("--- PAGE MODE DEMO ---")
+                    .enterPageMode()
+                    .setPagePrintArea(0, 0, 384, 200)
+                    .setHorizontalPosition(10)
+                    .setPageVerticalPosition(10)
+                    .text("X:10, Y:10")
+                    .setHorizontalPosition(100)
+                    .setPageVerticalPosition(50)
+                    .text("X:100, Y:50")
+                    .setHorizontalPosition(200)
+                    .setPageVerticalPosition(90)
+                    .text("X:200, Y:90")
+                    .printPageAndReturn()
+                    .feed(3)
+                    .cut()
+                    .build()
+                
+                printer.printRaw(buildConfig, data).collect { status ->
+                    _printStatus.value = status
+                }
+            } finally {
+                _isPrinting.value = false
             }
         }
     }
 
     fun printBarcodeSuite() {
+        if (_isPrinting.value) return
+        _isPrinting.value = true
+        _printStatus.value = PrintStatus.Idle
         viewModelScope.launch {
-            val buildConfig = _config.value
-            val data = printer.newCommandBuilder(buildConfig)
-                .initialize()
-                .alignCenter()
-                .line("--- BARCODE SUITE ---")
-                .feed(1)
-                .line("PDF417 (High Density)")
-                .pdf417("KMP-PRINTER-PDF417-TEST")
-                .feed(1)
-                .line("DataMatrix")
-                .dataMatrix("KMP-PRINTER-DATAMATRIX")
-                .feed(1)
-                .line("Native QR Code")
-                .qrCodeNative("https://github.com/ringga-dev", size = 10)
-                .feed(3)
-                .cut()
-                .build()
-            
-            printer.printRaw(buildConfig, data).collect { status ->
-                _printStatus.value = status
+            try {
+                val buildConfig = _config.value
+                val data = printer.newCommandBuilder(buildConfig)
+                    .initialize()
+                    .alignCenter()
+                    .line("--- BARCODE SUITE ---")
+                    .feed(1)
+                    .line("PDF417 (High Density)")
+                    .pdf417("KMP-PRINTER-PDF417-TEST")
+                    .feed(1)
+                    .line("DataMatrix")
+                    .dataMatrix("KMP-PRINTER-DATAMATRIX")
+                    .feed(1)
+                    .line("Native QR Code")
+                    .qrCodeNative("https://github.com/ringga-dev", size = 10)
+                    .feed(3)
+                    .cut()
+                    .build()
+                
+                printer.printRaw(buildConfig, data).collect { status ->
+                    _printStatus.value = status
+                }
+            } finally {
+                _isPrinting.value = false
             }
         }
     }
 
     fun printExpertReceipt() {
+        if (_isPrinting.value) return
+        _isPrinting.value = true
+        _printStatus.value = PrintStatus.Idle
         viewModelScope.launch {
-            val buildConfig = _config.value
-            val logoBytes = _selectedLogoBytes.value
-            val logoW = _logoWidth.value
-            val logoH = _logoHeight.value
+            try {
+                val buildConfig = _config.value
+                val logoBytes = _selectedLogoBytes.value
+                val logoW = _logoWidth.value
+                val logoH = _logoHeight.value
 
-            val data = printer.newCommandBuilder(buildConfig)
-                .initialize()
-                .alignCenter()
+                val data = printer.newCommandBuilder(buildConfig)
+                    .initialize()
+                    .alignCenter()
+                    
+                if (logoBytes != null) {
+                    data.image(logoBytes, logoW, logoH)
+                    data.feed(1)
+                }
                 
-            if (logoBytes != null) {
-                data.image(logoBytes, logoW, logoH)
-                data.feed(1)
-            }
-            
-            data.bold(true)
-                .line("ENTERPRISE STORE POS")
-                .bold(false)
-                .line("Sudirman St. 123, Jakarta")
-                .line("Tel: +62 21 555-0199")
-                .divider()
-                .alignLeft()
-                .tableRow(listOf("Cappuccino", "1x", "45.000"), listOf(2, 1, 1))
-                .tableRow(listOf("Croissant Cheese", "2x", "60.000"), listOf(2, 1, 1))
-                .tableRow(listOf("Iced Matcha", "1x", "38.000"), listOf(2, 1, 1))
-                .divider()
-                .alignRight()
-                .bold(true)
-                .line("TOTAL: 143.000")
-                .bold(false)
-                .divider()
-                .alignCenter()
-                .line("Order #88901 - 2024-10-21")
-                .feed(1)
-                .qrCodeNative("TRX-88901-VERIFIED", size = 6)
-                .feed(1)
-                .line("Thank you for your visit!")
-                .feed(4)
-                .cut()
-            
-            printer.printRaw(buildConfig, data.build()).collect { status ->
-                _printStatus.value = status
+                data.bold(true)
+                    .line("ENTERPRISE STORE POS")
+                    .bold(false)
+                    .line("Sudirman St. 123, Jakarta")
+                    .line("Tel: +62 21 555-0199")
+                    .divider()
+                    .alignLeft()
+                    .tableRow(listOf("Cappuccino", "1x", "45.000"), listOf(2, 1, 1))
+                    .tableRow(listOf("Croissant Cheese", "2x", "60.000"), listOf(2, 1, 1))
+                    .tableRow(listOf("Iced Matcha", "1x", "38.000"), listOf(2, 1, 1))
+                    .divider()
+                    .alignRight()
+                    .bold(true)
+                    .line("TOTAL: 143.000")
+                    .bold(false)
+                    .divider()
+                    .alignCenter()
+                    .line("Order #88901 - 2024-10-21")
+                    .feed(1)
+                    .qrCodeNative("TRX-88901-VERIFIED", size = 6)
+                    .feed(1)
+                    .line("Thank you for your visit!")
+                    .feed(4)
+                    .cut()
+                
+                printer.printRaw(buildConfig, data.build()).collect { status ->
+                    _printStatus.value = status
+                }
+            } finally {
+                _isPrinting.value = false
             }
         }
     }
@@ -514,19 +707,28 @@ class PrinterViewModel : ViewModel() {
 
     private fun updatePreview(config: PrinterConfig) {
         try {
-            val baseBlocks = printer.receiptService.generateTestPreview(config).toMutableList()
+            val blocks = printer.receiptService.generateTestPreview(config).toMutableList()
             _logoPreview.value?.let { bitmap ->
-                baseBlocks.add(0, PreviewBlock.Image(
-                    width = _logoWidth.value,
-                    height = _logoHeight.value,
-                    alignment = TextAlignment.CENTER,
-                    previewData = bitmap
-                ))
+                if (blocks.none { it is PreviewBlock.Image }) {
+                    blocks.add(0, PreviewBlock.Image(
+                        width = _logoWidth.value,
+                        height = _logoHeight.value,
+                        alignment = TextAlignment.CENTER,
+                        previewData = bitmap
+                    ))
+                }
             }
-            _previewBlocks.value = baseBlocks
+            val escPosConfig = ESCPosConfig(
+                charsPerLine = config.characterPerLine,
+                paperWidthDots = config.paperWidthDots,
+                leftMargin = config.leftMargin,
+                charset = config.charsetName
+            )
+            _previewResult.value = PreviewResult.from(blocks, escPosConfig)
         } catch (e: Exception) {
             _discoveryLog.value = "Preview error: ${e.message}"
-            _previewBlocks.value = emptyList()
+            _previewResult.value = PreviewResult.EMPTY
         }
     }
+
 }

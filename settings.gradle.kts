@@ -1,4 +1,4 @@
-rootProject.name = "KotlinProject"
+rootProject.name = "PrinterESCPOS"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {

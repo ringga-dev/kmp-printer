@@ -27,5 +27,6 @@ enum class LineType {
     QR_CODE,
     IMAGE,
     SPACE,
-    CUT
+    CUT,
+    SYSTEM_COMMAND
 }

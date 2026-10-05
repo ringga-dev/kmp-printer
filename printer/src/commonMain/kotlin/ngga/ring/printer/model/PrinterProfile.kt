@@ -5,7 +5,9 @@ data class PrinterProfile(
     val paperWidthDots: Int,
     val characterPerLine: Int,
     val leftMargin: Int = 0,
-    val autoCenter: Boolean = false
+    val autoCenter: Boolean = false,
+    val rightMargin: Int = 0,
+    val lineSpacing: Int = 0
 ) {
     companion object {
         val MM58 = PrinterProfile(
@@ -25,13 +27,17 @@ data class PrinterProfile(
             paperWidthDots: Int,
             characterPerLine: Int,
             leftMargin: Int = 0,
-            autoCenter: Boolean = false
+            autoCenter: Boolean = false,
+            rightMargin: Int = 0,
+            lineSpacing: Int = 0
         ): PrinterProfile = PrinterProfile(
             paperWidth = paperWidth,
             paperWidthDots = paperWidthDots,
             characterPerLine = characterPerLine,
             leftMargin = leftMargin,
-            autoCenter = autoCenter
+            autoCenter = autoCenter,
+            rightMargin = rightMargin,
+            lineSpacing = lineSpacing
         )
     }
 }

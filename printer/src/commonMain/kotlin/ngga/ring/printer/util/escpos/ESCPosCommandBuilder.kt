@@ -2,10 +2,12 @@ package ngga.ring.printer.util.escpos
 
 import ngga.ring.printer.util.platform.encodeString
 import ngga.ring.printer.util.preview.PreviewBlock
+import ngga.ring.printer.util.preview.PreviewResult
 import ngga.ring.printer.model.QRCodeLevel
 import ngga.ring.printer.model.BarcodeType
 import ngga.ring.printer.model.HeatConfig
 import ngga.ring.printer.model.PrintQuality
+import kotlin.math.roundToInt
 
 /**
  * A pure Kotlin, KMP-friendly ESC/POS command builder.
@@ -27,24 +29,22 @@ class ESCPosCommandBuilder(
                 ((config.paperWidth - 10) * 8).coerceAtLeast(384)
             }
             val dotsPerChar = dots.toDouble() / config.characterPerLine
+            // FIX (#1): left/right margins must shrink the printable area so the
+            // total (leftMargin + text + rightMargin) never exceeds the paper dots.
             val printWidth = if (config.autoCenter) {
-                (dots - (2 * config.leftMargin)).coerceAtLeast(1)
+                (dots - (2 * config.leftMargin) - config.rightMargin).coerceAtLeast(1)
             } else {
-                dots
+                (dots - config.leftMargin - config.rightMargin).coerceAtLeast(1)
             }
 
-            // Adjust characters per line if area is narrowed by auto-center
-            val effectiveChars = if (config.autoCenter) {
-                (printWidth / dotsPerChar).toInt().coerceAtLeast(1)
-            } else {
-                config.characterPerLine
-            }
+            // Adjust characters per line so text always fits the printable area
+            val effectiveChars = (printWidth / dotsPerChar).toInt().coerceAtLeast(1)
 
             // SMART CALIBRATION: Calculate the gap between printable dots and actual text dots
             // This ensures characters are centered even if charsPerLine < max possible
             val actualTextWidth = effectiveChars * dotsPerChar
             val centeringPadding = if (config.autoCenter) {
-                ((printWidth - actualTextWidth) / 2).toInt().coerceAtLeast(0)
+                ((printWidth - actualTextWidth) / 2).roundToInt().coerceAtLeast(0)
             } else {
                 0
             }
@@ -52,8 +52,9 @@ class ESCPosCommandBuilder(
             return ESCPosCommandBuilder(
                 ESCPosConfig(
                     charsPerLine = effectiveChars,
-                    paperWidthDots = (actualTextWidth.toInt()), 
-                    leftMargin = config.leftMargin + centeringPadding
+                    paperWidthDots = (actualTextWidth.toInt()),
+                    leftMargin = config.leftMargin + centeringPadding,
+                    lineSpacing = config.lineSpacing
                 )
             ).apply {
                 this.hardwareTotalDots = dots
@@ -81,6 +82,16 @@ class ESCPosCommandBuilder(
      * Returns a logical list of blocks representing the receipt for UI preview.
      */
     fun buildPreview(): List<PreviewBlock> = previewBlocks.toList()
+
+    /**
+     * Professional preview result with blocks, virtual lines, ASCII art,
+     * paper dimensions, style analysis, and byte count.
+     * Use this for UI rendering instead of raw bytes.
+     */
+    fun preview(): PreviewResult {
+        val bytes = build()
+        return PreviewResult.from(previewBlocks.toList(), config, bytes)
+    }
 
     /* ------------------------------------------------------------
      * High-level text helpers
@@ -131,6 +142,7 @@ class ESCPosCommandBuilder(
      * Manually sets the print code page (ESC t n).
      */
     fun setPrintCodePage(codePage: Byte): ESCPosCommandBuilder {
+        previewBlocks.add(PreviewBlock.SystemCommand("CODE PAGE", "0x${codePage.toUByte().toString(16).padStart(2, '0')}"))
         writeRaw(0x1B, 0x74, codePage.toInt())
         return this
     }
@@ -167,27 +179,57 @@ class ESCPosCommandBuilder(
         return this
     }
 
-    /** Centers the given text (uses hardware alignment if possible, otherwise software spaces). */
+    /** Centers the given text using the printer's HARDWARE alignment (ESC a 1).
+     *  Text is word-wrapped to fit the effective width so nothing is truncated. */
     fun centerText(text: String): ESCPosCommandBuilder {
+        val prevAlign = currentAlignment
+        setAlignment(TextAlignment.CENTER)
+        val effectiveWidth = (config.charsPerLine / currentWidthMultiplier - 1).coerceAtLeast(1)
+        ESCPosTextLayout.wrapText(text, effectiveWidth).forEach { lineText ->
+            line(lineText)
+        }
+        setAlignment(prevAlign)
+        return this
+    }
+
+    /** Centers a single line of text with software padding (legacy behavior). */
+    fun centerTextSingleLine(text: String): ESCPosCommandBuilder {
         if (currentAlignment == TextAlignment.CENTER) {
-            // Hardware alignment is already center
             line(text.trim())
         } else {
-            // Use software spaces
             writeText(ESCPosTextLayout.centeredText(text, config.charsPerLine / currentWidthMultiplier))
             writeLF()
         }
         return this
     }
 
-    /** Centers text and splits into multiple lines if needed (wrapping). */
+    /** Centers text and splits into multiple lines if needed (hardware alignment). */
     fun centerWrapped(text: String, maxLine: Int = 3): ESCPosCommandBuilder {
-        writeText(ESCPosTextLayout.centerText(
-            maxCharsPerLine = config.charsPerLine / currentWidthMultiplier,
-            text = text,
-            maxLine = maxLine
-        ))
-        writeLF()
+        val effectiveWidth = (config.charsPerLine / currentWidthMultiplier - 1).coerceAtLeast(1)
+        val wrapped = ESCPosTextLayout.wrapText(text, effectiveWidth).let { lines ->
+            if (lines.size > maxLine) {
+                lines.take(maxLine).toMutableList().also { cut ->
+                    val last = cut[maxLine - 1]
+                    cut[maxLine - 1] = if (last.length > effectiveWidth - 3) last.take(effectiveWidth - 3) + "..." else last + "..."
+                }
+            } else lines
+        }
+        val prevAlign = currentAlignment
+        setAlignment(TextAlignment.CENTER)
+        wrapped.forEach { lineText ->
+            previewBlocks.add(PreviewBlock.Text(
+                text = lineText,
+                alignment = TextAlignment.CENTER,
+                isBold = isBold,
+                isUnderline = isUnderline,
+                isInverted = isInverted,
+                widthMultiplier = currentWidthMultiplier,
+                heightMultiplier = currentHeightMultiplier
+            ))
+            writeText(lineText)
+            writeLF()
+        }
+        setAlignment(prevAlign)
         return this
     }
 
@@ -568,29 +610,34 @@ class ESCPosCommandBuilder(
     }
 
     fun bold(enabled: Boolean): ESCPosCommandBuilder {
+        previewBlocks.add(PreviewBlock.SystemCommand("BOLD", if (enabled) "On" else "Off"))
         this.isBold = enabled
         if (enabled) boldOn() else boldOff()
         return this
     }
 
     fun underline(enabled: Boolean): ESCPosCommandBuilder {
+        previewBlocks.add(PreviewBlock.SystemCommand("UNDERLINE", if (enabled) "On" else "Off"))
         this.isUnderline = enabled
         if (enabled) underlineOn() else underlineOff()
         return this
     }
 
     fun invert(enabled: Boolean): ESCPosCommandBuilder {
+        previewBlocks.add(PreviewBlock.SystemCommand("INVERT", if (enabled) "On" else "Off"))
         this.isInverted = enabled
         if (enabled) invertOn() else invertOff()
         return this
     }
 
     fun bigFont(): ESCPosCommandBuilder {
+        previewBlocks.add(PreviewBlock.SystemCommand("FONT", "2x"))
         setTextSize(2, 2)
         return this
     }
 
     fun normalFont(): ESCPosCommandBuilder {
+        previewBlocks.add(PreviewBlock.SystemCommand("FONT", "1x"))
         setTextSize(1, 1)
         return this
     }
@@ -629,9 +676,11 @@ class ESCPosCommandBuilder(
 
     /** Sends the ESC @ command (printer reset/initialize). */
     fun initialize(): ESCPosCommandBuilder {
+        previewBlocks.add(PreviewBlock.SystemCommand("INIT", ""))
         writeRaw(0x1B, 0x40) // Reset
         setLeftMargin(config.leftMargin)
         setPrintableAreaWidth(config.paperWidthDots) // Align hardware to paper size
+        if (config.lineSpacing > 0) setLineSpacing(config.lineSpacing)
         return this
     }
 
@@ -640,6 +689,7 @@ class ESCPosCommandBuilder(
      * n = nL + nH * 256
      */
     fun setLeftMargin(dots: Int): ESCPosCommandBuilder {
+        previewBlocks.add(PreviewBlock.SystemCommand("LEFT MARGIN", "${dots}dots"))
         val nL = dots % 256
         val nH = dots / 256
         writeRaw(0x1D, 0x4C, nL, nH)
@@ -651,6 +701,7 @@ class ESCPosCommandBuilder(
      * n = nL + nH * 256
      */
     fun setPrintableAreaWidth(dots: Int): ESCPosCommandBuilder {
+        previewBlocks.add(PreviewBlock.SystemCommand("PRINT AREA", "${dots}dots"))
         val nL = dots % 256
         val nH = dots / 256
         writeRaw(0x1D, 0x57, nL, nH)
@@ -661,6 +712,7 @@ class ESCPosCommandBuilder(
      * Cuts the paper (full or partial, if supported).
      */
     fun cut(full: Boolean = true): ESCPosCommandBuilder {
+        previewBlocks.add(PreviewBlock.SystemCommand("CUT", if (full) "Full" else "Partial"))
         val mode: Int = if (full) 0x00 else 0x01
         writeRaw(0x1D, 0x56, mode)
         return this
@@ -671,6 +723,7 @@ class ESCPosCommandBuilder(
      * Usually pin 2 or pin 5 (Default pin 2).
      */
     fun openCashDrawer(pin: Int = 0): ESCPosCommandBuilder {
+        previewBlocks.add(PreviewBlock.SystemCommand("CASH DRAWER", "Pin $pin"))
         val p = if (pin == 0) 0x00 else 0x01
         writeRaw(0x1B, 0x70, p, 0x32, 0xFF)
         return this
@@ -682,6 +735,7 @@ class ESCPosCommandBuilder(
      * @param duration Duration of each beep (1..9 * 100ms).
      */
     fun beep(count: Int = 1, duration: Int = 1): ESCPosCommandBuilder {
+        previewBlocks.add(PreviewBlock.SystemCommand("BEEP", "$count x ${duration * 100}ms"))
         writeRaw(0x1B, 0x28, 0x41, 0x02, 0x00, count.coerceIn(1, 9), duration.coerceIn(1, 9))
         return this
     }
@@ -690,6 +744,7 @@ class ESCPosCommandBuilder(
      * Sends custom raw bytes to the printer.
      */
     fun rawCommand(vararg bytes: Int): ESCPosCommandBuilder {
+        previewBlocks.add(PreviewBlock.SystemCommand("RAW", bytes.joinToString(" ") { "0x${it.toString(16).padStart(2, '0')}" }))
         writeRaw(*bytes)
         return this
     }
@@ -699,6 +754,7 @@ class ESCPosCommandBuilder(
      * Some firmware ignores this command or uses vendor-specific alternatives.
      */
     fun setPrintDensity(level: Int): ESCPosCommandBuilder {
+        previewBlocks.add(PreviewBlock.SystemCommand("DENSITY", "Level $level"))
         writeRaw(0x12, 0x23, level.coerceIn(0, 15))
         return this
     }
@@ -712,6 +768,7 @@ class ESCPosCommandBuilder(
         time: Int = HeatConfig.DEFAULT.time,
         interval: Int = HeatConfig.DEFAULT.interval
     ): ESCPosCommandBuilder {
+        previewBlocks.add(PreviewBlock.SystemCommand("HEAT", "Dots=$dots Time=$time Interval=$interval"))
         writeRaw(
             0x1B,
             0x37,
@@ -730,6 +787,7 @@ class ESCPosCommandBuilder(
      * Applies a named quality profile using common density/heat commands.
      */
     fun printQuality(quality: PrintQuality): ESCPosCommandBuilder {
+        previewBlocks.add(PreviewBlock.SystemCommand("QUALITY", "density=${quality.density}"))
         setPrintDensity(quality.density)
         quality.heatConfig?.let { setHeatConfig(it) }
         return this
@@ -740,6 +798,7 @@ class ESCPosCommandBuilder(
      * ESC 3 n
      */
     fun setLineSpacing(dots: Int): ESCPosCommandBuilder {
+        previewBlocks.add(PreviewBlock.SystemCommand("LINE SPACING", "${dots}dots"))
         writeRaw(0x1B, 0x33, dots.coerceIn(0, 255))
         return this
     }
@@ -749,6 +808,7 @@ class ESCPosCommandBuilder(
      * ESC 2
      */
     fun resetLineSpacing(): ESCPosCommandBuilder {
+        previewBlocks.add(PreviewBlock.SystemCommand("LINE SPACING", "Default"))
         writeRaw(0x1B, 0x32)
         return this
     }
@@ -759,6 +819,7 @@ class ESCPosCommandBuilder(
      * @param page Code page index (check your printer's manual, e.g., 0x00 for PC437, 0x10 for WPC1252).
      */
     fun selectCodePage(page: Byte): ESCPosCommandBuilder {
+        previewBlocks.add(PreviewBlock.SystemCommand("CODE PAGE", "0x${page.toUByte().toString(16).padStart(2, '0')}"))
         writeRaw(0x1B, 0x74, page.toInt())
         return this
     }
@@ -771,6 +832,7 @@ class ESCPosCommandBuilder(
      * 4: Paper roll sensor status
      */
     fun checkStatus(type: Int): ESCPosCommandBuilder {
+        previewBlocks.add(PreviewBlock.SystemCommand("STATUS CHECK", "Type $type"))
         writeRaw(0x10, 0x04, type.coerceIn(1, 4))
         return this
     }
@@ -781,12 +843,14 @@ class ESCPosCommandBuilder(
 
     /** Enters Page Mode (ESC L). */
     fun enterPageMode(): ESCPosCommandBuilder {
+        previewBlocks.add(PreviewBlock.SystemCommand("PAGE MODE", "Enter"))
         writeRaw(0x1B, 0x4C)
         return this
     }
 
     /** Exits Page Mode and returns to Standard Mode (ESC S). */
     fun exitPageMode(): ESCPosCommandBuilder {
+        previewBlocks.add(PreviewBlock.SystemCommand("PAGE MODE", "Exit"))
         writeRaw(0x1B, 0x53)
         return this
     }
@@ -796,6 +860,7 @@ class ESCPosCommandBuilder(
      * All parameters are in dots.
      */
     fun setPagePrintArea(x: Int, y: Int, width: Int, height: Int): ESCPosCommandBuilder {
+        previewBlocks.add(PreviewBlock.SystemCommand("PAGE AREA", "$x,$y ${width}x$height"))
         val xL = x % 256; val xH = x / 256
         val yL = y % 256; val yH = y / 256
         val dxL = width % 256; val dxH = width / 256
@@ -808,6 +873,7 @@ class ESCPosCommandBuilder(
      * Sets the absolute vertical print position in Page Mode (GS $ nL nH).
      */
     fun setPageVerticalPosition(dots: Int): ESCPosCommandBuilder {
+        previewBlocks.add(PreviewBlock.SystemCommand("PAGE VERTICAL", "${dots}dots"))
         val nL = dots % 256
         val nH = dots / 256
         writeRaw(0x1D, 0x24, nL, nH)
@@ -818,6 +884,7 @@ class ESCPosCommandBuilder(
      * Sets the absolute horizontal print position (ESC $ nL nH).
      */
     fun setHorizontalPosition(dots: Int): ESCPosCommandBuilder {
+        previewBlocks.add(PreviewBlock.SystemCommand("H POSITION", "${dots}dots"))
         val nL = dots % 256
         val nH = dots / 256
         writeRaw(0x1B, 0x24, nL, nH)
@@ -828,6 +895,7 @@ class ESCPosCommandBuilder(
      * Prints all data in the page area and returns to Standard Mode (ESC FF).
      */
     fun printPageAndReturn(): ESCPosCommandBuilder {
+        previewBlocks.add(PreviewBlock.SystemCommand("PRINT PAGE", ""))
         writeRaw(0x1B, 0x0C)
         return this
     }
@@ -840,6 +908,7 @@ class ESCPosCommandBuilder(
      * 3: Top to bottom
      */
     fun setPageDirection(direction: Int): ESCPosCommandBuilder {
+        previewBlocks.add(PreviewBlock.SystemCommand("PAGE DIRECTION", direction.toString()))
         writeRaw(0x1B, 0x54, direction.coerceIn(0, 3))
         return this
     }
@@ -850,6 +919,7 @@ class ESCPosCommandBuilder(
      * @param mode 0: Normal, 1: Double-width, 2: Double-height, 3: Quadruple.
      */
     fun printNVImage(n: Int, mode: Int = 0): ESCPosCommandBuilder {
+        previewBlocks.add(PreviewBlock.SystemCommand("NV IMAGE", "#$n mode=$mode"))
         writeRaw(0x1C, 0x70, n, mode.coerceIn(0, 3))
         return this
     }
@@ -870,6 +940,7 @@ class ESCPosCommandBuilder(
         autoScale: Boolean = true,
         threshold: Int = 128
     ): ESCPosCommandBuilder {
+        previewBlocks.add(PreviewBlock.SystemCommand("DEFINE NV", "${width}x${height}"))
         val (finalPixels, finalW, finalH) = if (autoScale && width != config.paperWidthDots) {
             ImageScaler.scaleToFit(grayscale, width, height, config.paperWidthDots)
         } else {
@@ -884,6 +955,7 @@ class ESCPosCommandBuilder(
      * Deletes all NV bit images from the printer's non-volatile memory.
      */
     fun deleteNVBitImages(): ESCPosCommandBuilder {
+        previewBlocks.add(PreviewBlock.SystemCommand("DELETE NV", "All"))
         writeBytes(NVGraphicsHelper.deleteAllNVBitImages())
         return this
     }
@@ -899,6 +971,7 @@ class ESCPosCommandBuilder(
         keyCode1: Int = 0x20,
         keyCode2: Int = 0x20
     ): ESCPosCommandBuilder {
+        previewBlocks.add(PreviewBlock.SystemCommand("DEFINE GRAPHIC", "${width}x${height}"))
         val bytes = NVGraphicsHelper.defineDownloadGraphics(grayscale, width, height, keyCode1, keyCode2)
         writeBytes(bytes)
         return this
@@ -908,6 +981,7 @@ class ESCPosCommandBuilder(
      * Prints a previously defined download graphic.
      */
     fun printDownloadGraphic(keyCode1: Int = 0x20, keyCode2: Int = 0x20): ESCPosCommandBuilder {
+        previewBlocks.add(PreviewBlock.SystemCommand("PRINT GRAPHIC", ""))
         writeBytes(NVGraphicsHelper.printDownloadGraphics(keyCode1, keyCode2))
         return this
     }
@@ -950,6 +1024,7 @@ class ESCPosCommandBuilder(
     private fun invertOff() = writeRaw(0x1D, 0x42, 0x00)
 
     fun setAlignment(align: TextAlignment): ESCPosCommandBuilder {
+        previewBlocks.add(PreviewBlock.SystemCommand("ALIGN", align.name))
         this.currentAlignment = align
         val mode = when (align) {
             TextAlignment.LEFT -> 0
