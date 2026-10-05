@@ -120,6 +120,15 @@ kotlin {
             macosX64().compilations["main"].defaultSourceSet,
             macosArm64().compilations["main"].defaultSourceSet
         ).forEach { it.dependsOn(nativeMain) }
+
+        // ── iOS source set (actual implementations for iOS targets) ──
+        val iosMain by creating {
+            dependsOn(commonMain.get())
+        }
+        listOf(
+            iosArm64().compilations["main"].defaultSourceSet,
+            iosSimulatorArm64().compilations["main"].defaultSourceSet
+        ).forEach { it.dependsOn(iosMain) }
     }
 }
 
