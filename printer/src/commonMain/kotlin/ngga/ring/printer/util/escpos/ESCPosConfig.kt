@@ -13,6 +13,9 @@ data class ESCPosConfig(
     /** Left margin in dots. */
     val leftMargin: Int = 0,
 
+    /** Line spacing in dots between printed lines (0 = printer default, e.g. ~30 dots). */
+    val lineSpacing: Int = 0,
+
     /** Charset for encoding text. ESC/POS typically uses CP437, but UTF-8 is often supported. */
     val charset: String = "UTF-8"
 )

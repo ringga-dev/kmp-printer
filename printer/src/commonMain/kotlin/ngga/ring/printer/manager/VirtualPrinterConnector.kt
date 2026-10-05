@@ -1,7 +1,7 @@
 package ngga.ring.printer.manager
 
-import io.github.aakira.napier.Napier
 import ngga.ring.printer.model.PrinterConfig
+import ngga.ring.printer.util.PrinterLogger
 
 /**
  * Virtual Printer Emulator for Unit Testing and Debugging.
@@ -18,7 +18,7 @@ class VirtualPrinterConnector : BasePrinterConnector() {
 
     override suspend fun connect(config: PrinterConfig): Boolean {
         connected = true
-        Napier.i("VirtualPrinter: Connected to virtual emulator")
+        PrinterLogger.info("VirtualPrinter", "Connected to virtual emulator")
         return true
     }
 
@@ -41,7 +41,7 @@ class VirtualPrinterConnector : BasePrinterConnector() {
                     }
                     val text = "$alignPrefix$stylePrefix${currentLine}"
                     printHistory.add(text)
-                    Napier.d("Virtual: |$text|")
+                    PrinterLogger.debug("VirtualPrinter", "$text")
                     currentLine = StringBuilder()
                 }
                 0x1B -> { // ESC
@@ -89,7 +89,7 @@ class VirtualPrinterConnector : BasePrinterConnector() {
 
     override suspend fun disconnect() {
         connected = false
-        Napier.i("VirtualPrinter: Disconnected")
+        PrinterLogger.info("VirtualPrinter", "Disconnected")
     }
 
     override fun isConnected(): Boolean = connected

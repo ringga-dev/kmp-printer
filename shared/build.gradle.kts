@@ -60,7 +60,6 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(libs.compose.materialIconsExtended)
-            implementation(libs.compose.materialIconsCore)
             implementation(libs.kotlinx.datetime)
         }
         commonTest.dependencies {

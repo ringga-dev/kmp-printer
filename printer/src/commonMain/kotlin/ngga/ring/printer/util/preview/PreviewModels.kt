@@ -43,4 +43,6 @@ sealed class PreviewBlock {
     ) : PreviewBlock()
     
     object Space : PreviewBlock()
+    
+    data class SystemCommand(val label: String, val detail: String = "") : PreviewBlock()
 }

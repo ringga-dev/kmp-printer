@@ -65,7 +65,7 @@ dependencyResolutionManagement {
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("io.github.ringga-dev:kmp_printer:2.3.3")
+            implementation("io.github.ringga-dev:kmp_printer:2.3.6")
         }
     }
 }
@@ -77,7 +77,7 @@ kotlin {
 > <dependency>
 >     <groupId>io.github.ringga-dev</groupId>
 >     <artifactId>kmp_printer</artifactId>
->     <version>2.3.3</version> <!-- sync-version -->
+>     <version>2.3.6</version> <!-- sync-version -->
 > </dependency>
 > ```
 > *Available on Maven Central — no extra repository needed.*
@@ -194,6 +194,35 @@ printer.print(config) {
 }
 ```
 
+### 📐 Layout: Margin, Centering & Line Spacing
+
+`PrinterConfig` / `PrinterProfile` mendukung pengaturan margin, centering, dan
+jarak antar baris:
+
+```kotlin
+val config = PrinterConfig(
+    name = "Receipt Printer",
+    connectionType = "NETWORK",
+    address = "192.168.1.50",
+    characterPerLine = 32,
+    paperWidth = 58,
+    paperWidthDots = 384,   // direkomendasikan eksplisit — fallback heuristic bisa meleset
+    leftMargin = 20,        // margin kiri dalam dots
+    rightMargin = 0,        // margin kanan dalam dots (baru sejak 2.3.6)
+    autoCenter = false,     // true = margin kiri dicerminkan ke kanan (simetris)
+    lineSpacing = 40        // jarak antar baris dalam dots; 0 = default printer
+)
+```
+
+- Area printable = `paperWidthDots - leftMargin - rightMargin`, jadi isi tidak
+  lagi meluap/terpotong di sisi kanan.
+- `centerText(text)` dan `centerWrapped(text, maxLine)` memakai perataan
+  **hardware** (`ESC a 1`) — semua baris hasil word-wrap tetap center, termasuk
+  yang lebih dari 2 baris. Untuk perilaku lama (software padding) gunakan
+  `centerTextSingleLine(text)`.
+- `lineSpacing > 0` diterapkan otomatis saat `initialize()` via command
+  `ESC 3 n`.
+
 ---
 
 ## 📚 Documentation
@@ -258,6 +287,16 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 - Code style and PR process
 - Platform-specific testing
 - How to add new transport support
+
+---
+
+## ☕ Donasi
+
+Jika library ini membantu proyek Anda, dukung pengembangan dengan mentraktir kopi:
+
+[![Trakteer Saya](https://img.shields.io/badge/-Trakteer%20Saya-red?style=for-the-badge&logo=trakteer)](https://trakteer.id/ringga_dev/gift)
+
+👉 **[https://trakteer.id/ringga_dev/gift](https://trakteer.id/ringga_dev/gift)**
 
 ---
 

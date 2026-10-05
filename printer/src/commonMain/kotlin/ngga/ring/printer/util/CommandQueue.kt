@@ -1,6 +1,5 @@
 package ngga.ring.printer.util
 
-import io.github.aakira.napier.Napier
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlin.concurrent.Volatile
@@ -41,7 +40,7 @@ class CommandQueue(
                     val job = launchWorker()
                     job.join()   // Wait until worker is done or fails
                 } catch (e: Exception) {
-                    Napier.e("CommandQueue: worker outer loop caught exception, restarting in 100ms", e)
+                    PrinterLogger.error("CommandQueue", "worker outer loop caught exception", e)
                     delay(100)
                 }
             }
@@ -55,7 +54,7 @@ class CommandQueue(
                 writer(item.data)
                 item.onComplete?.invoke()
             } catch (e: Exception) {
-                Napier.e("CommandQueue: error executing command, restarting worker", e)
+                PrinterLogger.error("CommandQueue", "error executing command, restarting worker", e)
                 item.onComplete?.invoke() // Notify completion even on failure to avoid UI hanging
                 throw e // Break inner loop to trigger restart in outer loop
             }
