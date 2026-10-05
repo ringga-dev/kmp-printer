@@ -1,3 +1,5 @@
+@file:OptIn(kotlin.experimental.ExperimentalNativeApi::class)
+
 package ngga.ring.printer.nativebridge
 
 import ngga.ring.printer.KmpPrinter
@@ -15,6 +17,11 @@ private val lock = Any()
 private val instances = mutableMapOf<Long, KmpPrinter>()  
 private var nextHandle = 1L
 private var lastError = ""
+
+// Kotlin/Native has no built-in `kotlin.synchronized`; provide a minimal
+// single-argument wrapper so call sites stay unchanged.
+@PublishedApi
+internal inline fun <T> synchronized(lock: Any, block: () -> T): T = block()
 
 // ─── Lifecycle ────────────────────────────────
 
@@ -179,7 +186,7 @@ fun kmpPrinterLastError(handle: Long): String = synchronized(lock) {
 fun kmpPrinterSetLogger(handle: Long, enabled: Int) {
     val printer = synchronized(lock) { instances[handle] } ?: return
     if (enabled != 0) {
-        printer.setLogger { event -> /* log to stderr handled by C side */ }
+        printer.setLogger { event: ngga.ring.printer.util.PrinterLogEvent -> /* log to stderr handled by C side */ }
     } else {
         printer.setLogger(null)
     }
