@@ -33,6 +33,9 @@ fun AppNavigation(
         }
         AppScreen.UI_SHOWCASE -> {
             PrinterUiShowcaseScreen(
+                viewModel = viewModel,
+                isDarkTheme = isDarkTheme,
+                onToggleTheme = onToggleTheme,
                 onNavigateBack = { currentScreen = AppScreen.SETUP }
             )
         }
