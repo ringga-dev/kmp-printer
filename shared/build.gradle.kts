@@ -48,6 +48,7 @@ kotlin {
         }
         commonMain.dependencies {
             implementation(project(":printer"))
+            implementation(project(":printer-ui"))
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)
             implementation(libs.compose.material3)

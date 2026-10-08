@@ -11,7 +11,7 @@ actual class PrinterPermissionManager {
     actual constructor()
 
     actual fun hasPermissions(connectionType: String): Boolean {
-        val context = PrinterInitializer.getContext()
+        val context = PrinterInitializer.getContextOrNull() ?: return true
         return when (PrinterConnectionType.normalize(connectionType)) {
             PrinterConnectionType.BLUETOOTH,
             PrinterConnectionType.BLUETOOTH_LE -> {

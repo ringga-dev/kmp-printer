@@ -25,13 +25,13 @@ import java.util.*
  * Android Factory implementation.
  */
 actual class PrinterConnectorFactory : PrinterConnectorProvider {
-    private val context: Context
+    private val context: Context?
 
     actual constructor() {
-        this.context = PrinterInitializer.getContext()
+        this.context = PrinterInitializer.getContextOrNull()
     }
 
-    constructor(context: Context) {
+    constructor(context: Context?) {
         this.context = context
     }
 
@@ -39,7 +39,10 @@ actual class PrinterConnectorFactory : PrinterConnectorProvider {
         return when (PrinterConnectionType.normalize(config.connectionType)) {
             PrinterConnectionType.NETWORK -> AndroidNetworkConnector()
             PrinterConnectionType.BLUETOOTH -> AndroidBluetoothConnector()
-            PrinterConnectionType.BLUETOOTH_LE -> AndroidBleConnector(context)
+            PrinterConnectionType.BLUETOOTH_LE -> {
+                val ctx = context ?: throw IllegalStateException("Context required for BLE. Call PrinterInitializer.initialize() first.")
+                AndroidBleConnector(ctx)
+            }
             PrinterConnectionType.USB -> AndroidUsbConnector()
             PrinterConnectionType.VIRTUAL -> VirtualPrinterConnector()
             else -> object : PrinterConnector {
@@ -67,14 +70,22 @@ actual class PrinterConnectorFactory : PrinterConnectorProvider {
     }
 
     private fun bluetoothDiscovery(config: DiscoveryConfig, onLog: (String) -> Unit): Flow<List<DiscoveredPrinter>> = callbackFlow {
-        val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-        val adapter = bluetoothManager.adapter
         val discoveredDevices = Collections.synchronizedSet(mutableSetOf<DiscoveredPrinter>())
 
         if (config.showVirtualDevices) {
             discoveredDevices.add(DiscoveredPrinter("[VIRTUAL] Bluetooth Android", PrinterConnectionType.VIRTUAL, "00:AA:BB:CC:DD:EE"))
             launch { send(discoveredDevices.toList()) }
         }
+
+        val ctx = context
+        if (ctx == null) {
+            onLog("Warning: Context not initialized for Bluetooth scan")
+            close()
+            return@callbackFlow
+        }
+
+        val bluetoothManager = ctx.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
+        val adapter = bluetoothManager?.adapter
 
         if (adapter == null) {
             onLog("Error: Bluetooth adapter not available")
@@ -116,12 +127,12 @@ actual class PrinterConnectorFactory : PrinterConnectorProvider {
             }
         }
 
-        context.registerReceiver(receiver, IntentFilter(BluetoothDevice.ACTION_FOUND))
+        ctx.registerReceiver(receiver, IntentFilter(BluetoothDevice.ACTION_FOUND))
         adapter.startDiscovery()
 
         awaitClose {
             adapter.cancelDiscovery()
-            try { context.unregisterReceiver(receiver) } catch (e: Exception) {}
+            try { ctx.unregisterReceiver(receiver) } catch (e: Exception) {}
         }
     }.flowOn(Dispatchers.IO)
 
@@ -131,13 +142,16 @@ actual class PrinterConnectorFactory : PrinterConnectorProvider {
             discovered.add(DiscoveredPrinter("[VIRTUAL] USB Android Printer", PrinterConnectionType.VIRTUAL, "1234:5678"))
         }
         
-        val usbManager = context.getSystemService(Context.USB_SERVICE) as UsbManager
-        usbManager.deviceList.values.forEach { device ->
-            discovered.add(DiscoveredPrinter(
-                name = device.productName ?: "USB Device",
-                connectionType = PrinterConnectionType.USB,
-                address = "${device.vendorId}:${device.productId}"
-            ))
+        val ctx = context
+        if (ctx != null) {
+            val usbManager = ctx.getSystemService(Context.USB_SERVICE) as? UsbManager
+            usbManager?.deviceList?.values?.forEach { device ->
+                discovered.add(DiscoveredPrinter(
+                    name = device.productName ?: "USB Device",
+                    connectionType = PrinterConnectionType.USB,
+                    address = "${device.vendorId}:${device.productId}"
+                ))
+            }
         }
         emit(discovered)
     }.flowOn(Dispatchers.IO)

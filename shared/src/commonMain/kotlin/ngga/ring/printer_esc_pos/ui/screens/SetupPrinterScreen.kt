@@ -86,7 +86,8 @@ import ngga.ring.printer_esc_pos.viewmodel.PrinterViewModel
 fun SetupPrinterScreen(
     viewModel: PrinterViewModel,
     isDarkTheme: Boolean,
-    onToggleTheme: () -> Unit
+    onToggleTheme: () -> Unit,
+    onNavigateToShowcase: () -> Unit = {}
 ) {
     val config by viewModel.config.collectAsState()
     val connectionState by viewModel.connectionState.collectAsState()
@@ -144,6 +145,13 @@ fun SetupPrinterScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = onNavigateToShowcase) {
+                        Icon(
+                            imageVector = Icons.Rounded.Receipt,
+                            contentDescription = "Open UI Showcase",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
                     ConnectionStatusBadge(connectionState = connectionState)
                     Spacer(modifier = Modifier.width(6.dp))
                     IconButton(onClick = onToggleTheme) {

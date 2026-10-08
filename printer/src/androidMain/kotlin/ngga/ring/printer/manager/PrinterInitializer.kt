@@ -48,6 +48,10 @@ object PrinterInitializer {
         return context ?: throw IllegalStateException("PrinterInitializer not initialized. Call initialize() first.")
     }
 
+    fun getContextOrNull(): Context? {
+        return context
+    }
+
     fun getActivity(): ComponentActivity? {
         return activityRef?.get()
     }
