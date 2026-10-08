@@ -17,7 +17,7 @@ class TsplCommandBuilderTest {
             .build()
 
         val text = bytes.decodeToString()
-        assertTrue(text.contains("SIZE 40.0 mm, 30.0 mm"))
+        assertTrue(text.contains("SIZE ${40.0} mm, ${30.0} mm"))
         assertTrue(text.contains("CLS"))
         assertTrue(text.contains("TEXT 10,10,\"3\",0,1,1,\"PRINTER TEST\""))
         assertTrue(text.contains("BARCODE 10,40,\"128\",40,2,0,2,4,\"1234567890\""))
