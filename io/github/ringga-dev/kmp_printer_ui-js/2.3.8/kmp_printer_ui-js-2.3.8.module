@@ -1,0 +1,274 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "url": "../../kmp_printer-ui/2.3.8/kmp_printer-ui-2.3.8.module",
+    "group": "io.github.ringga-dev",
+    "module": "kmp_printer-ui",
+    "version": "2.3.8",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "8.14.5"
+    }
+  },
+  "variants": [
+    {
+      "name": "jsApiElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-api",
+        "org.jetbrains.kotlin.js.compiler": "ir",
+        "org.jetbrains.kotlin.platform.type": "js"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-dom-api-compat",
+          "version": {
+            "requires": "2.3.20"
+          }
+        },
+        {
+          "group": "io.github.ringga-dev",
+          "module": "kmp_printer",
+          "version": {
+            "requires": "2.3.8"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.3.20"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "kmp_printer-ui-js-2.3.8.klib",
+          "url": "kmp_printer_ui-js-2.3.8.klib",
+          "size": 3531759,
+          "sha512": "92eb8f83f93854ad1b2349af58be4eded2916461ee8698d9b2965919d15b211b5f30ead0e512c115a6456429ec98ac2f5485ff2def09b08073cd8f6eba58e59e",
+          "sha256": "e65f419e4544fd2abb55494651848eb05733f853bc52c1f38293e8be41ef0210",
+          "sha1": "30ae21b540c94b6d0beaafb03477aa6ccadbba49",
+          "md5": "b856b50087a4db13c3600fa52a544545"
+        }
+      ]
+    },
+    {
+      "name": "jsRuntimeElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-runtime",
+        "org.jetbrains.kotlin.js.compiler": "ir",
+        "org.jetbrains.kotlin.platform.type": "js"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-dom-api-compat",
+          "version": {
+            "requires": "2.3.20"
+          }
+        },
+        {
+          "group": "io.github.ringga-dev",
+          "module": "kmp_printer",
+          "version": {
+            "requires": "2.3.8"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.3.20"
+          }
+        },
+        {
+          "group": "org.jetbrains.compose.runtime",
+          "module": "runtime",
+          "version": {
+            "requires": "1.10.3"
+          }
+        },
+        {
+          "group": "org.jetbrains.compose.foundation",
+          "module": "foundation",
+          "version": {
+            "requires": "1.10.3"
+          }
+        },
+        {
+          "group": "org.jetbrains.compose.material3",
+          "module": "material3",
+          "version": {
+            "requires": "1.10.0-alpha05"
+          }
+        },
+        {
+          "group": "org.jetbrains.compose.ui",
+          "module": "ui",
+          "version": {
+            "requires": "1.10.3"
+          }
+        },
+        {
+          "group": "org.jetbrains.compose.components",
+          "module": "components-resources",
+          "version": {
+            "requires": "1.10.3"
+          }
+        },
+        {
+          "group": "org.jetbrains.compose.material",
+          "module": "material-icons-extended",
+          "version": {
+            "requires": "1.7.3"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-coroutines-core",
+          "version": {
+            "requires": "1.10.2"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "kmp_printer-ui-js-2.3.8.klib",
+          "url": "kmp_printer_ui-js-2.3.8.klib",
+          "size": 3531759,
+          "sha512": "92eb8f83f93854ad1b2349af58be4eded2916461ee8698d9b2965919d15b211b5f30ead0e512c115a6456429ec98ac2f5485ff2def09b08073cd8f6eba58e59e",
+          "sha256": "e65f419e4544fd2abb55494651848eb05733f853bc52c1f38293e8be41ef0210",
+          "sha1": "30ae21b540c94b6d0beaafb03477aa6ccadbba49",
+          "md5": "b856b50087a4db13c3600fa52a544545"
+        }
+      ]
+    },
+    {
+      "name": "jsSourcesElements-published",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-runtime",
+        "org.jetbrains.kotlin.js.compiler": "ir",
+        "org.jetbrains.kotlin.platform.type": "js"
+      },
+      "files": [
+        {
+          "name": "kmp_printer-ui-js-2.3.8-sources.jar",
+          "url": "kmp_printer_ui-js-2.3.8-sources.jar",
+          "size": 16374,
+          "sha512": "1276334301fada710cb31cf3db00d328c094bd70da618c77a73999f86559f1f70528d18a66e248e16e10d8e6731ea6d0175c49680dcc78403286e8ed39e490d5",
+          "sha256": "5136c60aced8edff2e83cdacca5fdb038a235ed322f1c6abe73a60674af12759",
+          "sha1": "d29d695c88c5d9cbbab5a0a46344030f218e99c9",
+          "md5": "f6eaf02506ff8c90a68966735dcbe0cb"
+        }
+      ]
+    },
+    {
+      "name": "jsResourcesElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.libraryelements": "kotlin-multiplatformresourcesjs",
+        "org.gradle.usage": "kotlin-multiplatformresourcesjs",
+        "org.jetbrains.kotlin.js.compiler": "ir",
+        "org.jetbrains.kotlin.platform.type": "js"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-dom-api-compat",
+          "version": {
+            "requires": "2.3.20"
+          }
+        },
+        {
+          "group": "io.github.ringga-dev",
+          "module": "kmp_printer",
+          "version": {
+            "requires": "2.3.8"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.3.20"
+          }
+        },
+        {
+          "group": "org.jetbrains.compose.runtime",
+          "module": "runtime",
+          "version": {
+            "requires": "1.10.3"
+          }
+        },
+        {
+          "group": "org.jetbrains.compose.foundation",
+          "module": "foundation",
+          "version": {
+            "requires": "1.10.3"
+          }
+        },
+        {
+          "group": "org.jetbrains.compose.material3",
+          "module": "material3",
+          "version": {
+            "requires": "1.10.0-alpha05"
+          }
+        },
+        {
+          "group": "org.jetbrains.compose.ui",
+          "module": "ui",
+          "version": {
+            "requires": "1.10.3"
+          }
+        },
+        {
+          "group": "org.jetbrains.compose.components",
+          "module": "components-resources",
+          "version": {
+            "requires": "1.10.3"
+          }
+        },
+        {
+          "group": "org.jetbrains.compose.material",
+          "module": "material-icons-extended",
+          "version": {
+            "requires": "1.7.3"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-coroutines-core",
+          "version": {
+            "requires": "1.10.2"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "kmp_printer-ui-2.3.8.kotlin_resources.zip",
+          "url": "kmp_printer_ui-js-2.3.8-kotlin_resources.kotlin_resources.zip",
+          "size": 350,
+          "sha512": "994306a03c5ccb4228927134cedd8730f0aa32a607aaa2184a57885335061202190585b30ec6df4d784e1ff9dcb327317688246afc8c2eb647c03471124b8b88",
+          "sha256": "7280376624e1ca080a6dca0c6eec86d8d43d7e5c6fa3da061a8e5b00423fd4d8",
+          "sha1": "3570df7c80eae345fe6148266a01769f111bca9f",
+          "md5": "90a05747b4a2843132197cc7e84805c6"
+        }
+      ]
+    }
+  ]
+}

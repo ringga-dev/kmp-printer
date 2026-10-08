@@ -1,0 +1,302 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "url": "../../kmp_printer-ui/2.3.8/kmp_printer-ui-2.3.8.module",
+    "group": "io.github.ringga-dev",
+    "module": "kmp_printer-ui",
+    "version": "2.3.8",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "8.14.5"
+    }
+  },
+  "variants": [
+    {
+      "name": "iosSimulatorArm64ApiElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-api",
+        "org.jetbrains.kotlin.native.target": "ios_simulator_arm64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "dependencies": [
+        {
+          "group": "io.github.ringga-dev",
+          "module": "kmp_printer",
+          "version": {
+            "requires": "2.3.8"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.3.20"
+          }
+        },
+        {
+          "group": "org.jetbrains.compose.runtime",
+          "module": "runtime",
+          "version": {
+            "requires": "1.10.3"
+          }
+        },
+        {
+          "group": "org.jetbrains.compose.foundation",
+          "module": "foundation",
+          "version": {
+            "requires": "1.10.3"
+          }
+        },
+        {
+          "group": "org.jetbrains.compose.material3",
+          "module": "material3",
+          "version": {
+            "requires": "1.10.0-alpha05"
+          }
+        },
+        {
+          "group": "org.jetbrains.compose.ui",
+          "module": "ui",
+          "version": {
+            "requires": "1.10.3"
+          }
+        },
+        {
+          "group": "org.jetbrains.compose.components",
+          "module": "components-resources",
+          "version": {
+            "requires": "1.10.3"
+          }
+        },
+        {
+          "group": "org.jetbrains.compose.material",
+          "module": "material-icons-extended",
+          "version": {
+            "requires": "1.7.3"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-coroutines-core",
+          "version": {
+            "requires": "1.10.2"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "printer-ui-iosSimulatorArm64Main-2.3.8.klib",
+          "url": "kmp_printer_ui-iossimulatorarm64-2.3.8.klib",
+          "size": 96130,
+          "sha512": "326d23893a48f6bc0415eb29c90434d65ce218fae5f5383f909846daed24b00340f7bdf57cb437ba18426d70eb5efc52e41c0ff98089b25bd1136780bacb9739",
+          "sha256": "3f375b6939c3bde8e0da58dc1256a8db23d8d206511e52df273d407f6b0a6fdb",
+          "sha1": "db259a97fc197c1f232865ef118d2fe33af27f66",
+          "md5": "ae2c072afd9f7366c3d9df6f7dd6873e"
+        }
+      ]
+    },
+    {
+      "name": "iosSimulatorArm64SourcesElements-published",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-runtime",
+        "org.jetbrains.kotlin.native.target": "ios_simulator_arm64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "files": [
+        {
+          "name": "kmp_printer-ui-iossimulatorarm64-2.3.8-sources.jar",
+          "url": "kmp_printer_ui-iossimulatorarm64-2.3.8-sources.jar",
+          "size": 16614,
+          "sha512": "4076deca6f91096bf2bd94b687d9a784303cc5c10d88948ec732868d3d056fc00b0665d9060208e07e792c4607d971d68a32922c27a46e9bb16addd25892fd9d",
+          "sha256": "47f367f96d7a55735f923210b3bf39771ee9d54f986129354a71d5a63674ba66",
+          "sha1": "349937960581fd9c7f611df4be6d604c4a57feeb",
+          "md5": "c630a7c3b20699074ad9dce81d0fe6f6"
+        }
+      ]
+    },
+    {
+      "name": "iosSimulatorArm64ResourcesElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.libraryelements": "kotlin-multiplatformresources",
+        "org.gradle.usage": "kotlin-multiplatformresources",
+        "org.jetbrains.kotlin.native.target": "ios_simulator_arm64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "dependencies": [
+        {
+          "group": "io.github.ringga-dev",
+          "module": "kmp_printer",
+          "version": {
+            "requires": "2.3.8"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.3.20"
+          }
+        },
+        {
+          "group": "org.jetbrains.compose.runtime",
+          "module": "runtime",
+          "version": {
+            "requires": "1.10.3"
+          }
+        },
+        {
+          "group": "org.jetbrains.compose.foundation",
+          "module": "foundation",
+          "version": {
+            "requires": "1.10.3"
+          }
+        },
+        {
+          "group": "org.jetbrains.compose.material3",
+          "module": "material3",
+          "version": {
+            "requires": "1.10.0-alpha05"
+          }
+        },
+        {
+          "group": "org.jetbrains.compose.ui",
+          "module": "ui",
+          "version": {
+            "requires": "1.10.3"
+          }
+        },
+        {
+          "group": "org.jetbrains.compose.components",
+          "module": "components-resources",
+          "version": {
+            "requires": "1.10.3"
+          }
+        },
+        {
+          "group": "org.jetbrains.compose.material",
+          "module": "material-icons-extended",
+          "version": {
+            "requires": "1.7.3"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-coroutines-core",
+          "version": {
+            "requires": "1.10.2"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "kmp_printer-ui-2.3.8.kotlin_resources.zip",
+          "url": "kmp_printer_ui-iossimulatorarm64-2.3.8-kotlin_resources.kotlin_resources.zip",
+          "size": 350,
+          "sha512": "23c75b3d382d812105b849531e9813d63db6dc74d157ea18ff8de5d01b5229ad08c77df9fba8e011b7513d17501712b68f32d75ed8b9028a43405214d785f1b9",
+          "sha256": "8cd84f2778342a959cc1f0ac14358f8305c0e8a5111e55e4c22bdcafdaf33be2",
+          "sha1": "e93692724dbae69b7fe55d3e67db827a4962f741",
+          "md5": "693de8291ad810864e5461993bc880b5"
+        }
+      ]
+    },
+    {
+      "name": "iosSimulatorArm64MetadataElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-metadata",
+        "org.jetbrains.kotlin.native.target": "ios_simulator_arm64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "dependencies": [
+        {
+          "group": "io.github.ringga-dev",
+          "module": "kmp_printer",
+          "version": {
+            "requires": "2.3.8"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.3.20"
+          }
+        },
+        {
+          "group": "org.jetbrains.compose.runtime",
+          "module": "runtime",
+          "version": {
+            "requires": "1.10.3"
+          }
+        },
+        {
+          "group": "org.jetbrains.compose.foundation",
+          "module": "foundation",
+          "version": {
+            "requires": "1.10.3"
+          }
+        },
+        {
+          "group": "org.jetbrains.compose.material3",
+          "module": "material3",
+          "version": {
+            "requires": "1.10.0-alpha05"
+          }
+        },
+        {
+          "group": "org.jetbrains.compose.ui",
+          "module": "ui",
+          "version": {
+            "requires": "1.10.3"
+          }
+        },
+        {
+          "group": "org.jetbrains.compose.components",
+          "module": "components-resources",
+          "version": {
+            "requires": "1.10.3"
+          }
+        },
+        {
+          "group": "org.jetbrains.compose.material",
+          "module": "material-icons-extended",
+          "version": {
+            "requires": "1.7.3"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-coroutines-core",
+          "version": {
+            "requires": "1.10.2"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "kmp_printer-ui-iossimulatorarm64-2.3.8-metadata.jar",
+          "url": "kmp_printer_ui-iossimulatorarm64-2.3.8-metadata.jar",
+          "size": 261,
+          "sha512": "fe9676bae46216a69cdf1ae1221530c53799bb0368c9e4cd32b266c249138fed52930413f1fb0f40804623cb4bb4eb85f094006a4e6a63ccdfbc660b4e4f1551",
+          "sha256": "dba546088e91bedf91173e8b207ab9f897861b08a3cfa0a7bd0559232529708d",
+          "sha1": "3ea8df9002379d0578b7159219f4bb2954577965",
+          "md5": "4794fa70ac6da83a0e0f3c917b3e6a0f"
+        }
+      ]
+    }
+  ]
+}

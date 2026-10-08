@@ -1,0 +1,331 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "io.github.ringga-dev",
+    "module": "kmp_printer",
+    "version": "2.3.8",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "8.14.5"
+    }
+  },
+  "variants": [
+    {
+      "name": "metadataApiElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-metadata",
+        "org.jetbrains.kotlin.platform.type": "common"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.3.20"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-coroutines-core",
+          "version": {
+            "requires": "1.10.2"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-datetime",
+          "version": {
+            "requires": "0.7.1"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "kmp_printer-metadata-2.3.8.jar",
+          "url": "kmp_printer-2.3.8.jar",
+          "size": 52739,
+          "sha512": "9453d8316096f15cd57f9ec5326befd5d8a3b7a9805070fae9ed496bc72e0ed9fd9648b366da68cc3896571b0f7b6dc65b521adb6f986f346f704e2d127ca3ee",
+          "sha256": "87582b61a28667261d1e0fd96d775f50dfcf2b9f45a68ec2a65d4784d72d0fb6",
+          "sha1": "40da309729cf19d85c3a59ac05c89db30979c49e",
+          "md5": "3613ad8a7c995429de3ca658c990a7c0"
+        }
+      ]
+    },
+    {
+      "name": "metadataSourcesElements",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-runtime",
+        "org.jetbrains.kotlin.platform.type": "common"
+      },
+      "files": [
+        {
+          "name": "kmp_printer-kotlin-2.3.8-sources.jar",
+          "url": "kmp_printer-2.3.8-sources.jar",
+          "size": 176284,
+          "sha512": "306010b4471d77e914f5eb63fa5e78ff19cff0be629ff715973917cd0d51b1e7cb379e80671c6b970d4d8134da484109cc2b4d2e5c85e7109d585a2f5bae6258",
+          "sha256": "dd1b60649adf319e8b3d6804e1e3c69500c9c2b20ff976e2fe01196475b63127",
+          "sha1": "9326f1d429f0d286460252e6034022f474c0729d",
+          "md5": "a319d62d948dc9cc964cbc11c5b5cf5d"
+        }
+      ]
+    },
+    {
+      "name": "releaseApiElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "android",
+        "org.gradle.usage": "java-api",
+        "org.jetbrains.kotlin.platform.type": "androidJvm"
+      },
+      "available-at": {
+        "url": "../../kmp_printer-android/2.3.8/kmp_printer-android-2.3.8.module",
+        "group": "io.github.ringga-dev",
+        "module": "kmp_printer-android",
+        "version": "2.3.8"
+      }
+    },
+    {
+      "name": "releaseRuntimeElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "android",
+        "org.gradle.usage": "java-runtime",
+        "org.jetbrains.kotlin.platform.type": "androidJvm"
+      },
+      "available-at": {
+        "url": "../../kmp_printer-android/2.3.8/kmp_printer-android-2.3.8.module",
+        "group": "io.github.ringga-dev",
+        "module": "kmp_printer-android",
+        "version": "2.3.8"
+      }
+    },
+    {
+      "name": "releaseSourcesElements-published",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.jvm.environment": "android",
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime",
+        "org.jetbrains.kotlin.platform.type": "androidJvm"
+      },
+      "available-at": {
+        "url": "../../kmp_printer-android/2.3.8/kmp_printer-android-2.3.8.module",
+        "group": "io.github.ringga-dev",
+        "module": "kmp_printer-android",
+        "version": "2.3.8"
+      }
+    },
+    {
+      "name": "iosArm64ApiElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-api",
+        "org.jetbrains.kotlin.native.target": "ios_arm64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "available-at": {
+        "url": "../../kmp_printer-iosarm64/2.3.8/kmp_printer-iosarm64-2.3.8.module",
+        "group": "io.github.ringga-dev",
+        "module": "kmp_printer-iosarm64",
+        "version": "2.3.8"
+      }
+    },
+    {
+      "name": "iosArm64SourcesElements-published",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-runtime",
+        "org.jetbrains.kotlin.native.target": "ios_arm64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "available-at": {
+        "url": "../../kmp_printer-iosarm64/2.3.8/kmp_printer-iosarm64-2.3.8.module",
+        "group": "io.github.ringga-dev",
+        "module": "kmp_printer-iosarm64",
+        "version": "2.3.8"
+      }
+    },
+    {
+      "name": "iosArm64MetadataElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-metadata",
+        "org.jetbrains.kotlin.native.target": "ios_arm64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "available-at": {
+        "url": "../../kmp_printer-iosarm64/2.3.8/kmp_printer-iosarm64-2.3.8.module",
+        "group": "io.github.ringga-dev",
+        "module": "kmp_printer-iosarm64",
+        "version": "2.3.8"
+      }
+    },
+    {
+      "name": "iosSimulatorArm64ApiElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-api",
+        "org.jetbrains.kotlin.native.target": "ios_simulator_arm64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "available-at": {
+        "url": "../../kmp_printer-iossimulatorarm64/2.3.8/kmp_printer-iossimulatorarm64-2.3.8.module",
+        "group": "io.github.ringga-dev",
+        "module": "kmp_printer-iossimulatorarm64",
+        "version": "2.3.8"
+      }
+    },
+    {
+      "name": "iosSimulatorArm64SourcesElements-published",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-runtime",
+        "org.jetbrains.kotlin.native.target": "ios_simulator_arm64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "available-at": {
+        "url": "../../kmp_printer-iossimulatorarm64/2.3.8/kmp_printer-iossimulatorarm64-2.3.8.module",
+        "group": "io.github.ringga-dev",
+        "module": "kmp_printer-iossimulatorarm64",
+        "version": "2.3.8"
+      }
+    },
+    {
+      "name": "iosSimulatorArm64MetadataElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-metadata",
+        "org.jetbrains.kotlin.native.target": "ios_simulator_arm64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "available-at": {
+        "url": "../../kmp_printer-iossimulatorarm64/2.3.8/kmp_printer-iossimulatorarm64-2.3.8.module",
+        "group": "io.github.ringga-dev",
+        "module": "kmp_printer-iossimulatorarm64",
+        "version": "2.3.8"
+      }
+    },
+    {
+      "name": "jsApiElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-api",
+        "org.jetbrains.kotlin.js.compiler": "ir",
+        "org.jetbrains.kotlin.platform.type": "js"
+      },
+      "available-at": {
+        "url": "../../kmp_printer-js/2.3.8/kmp_printer-js-2.3.8.module",
+        "group": "io.github.ringga-dev",
+        "module": "kmp_printer-js",
+        "version": "2.3.8"
+      }
+    },
+    {
+      "name": "jsRuntimeElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-runtime",
+        "org.jetbrains.kotlin.js.compiler": "ir",
+        "org.jetbrains.kotlin.platform.type": "js"
+      },
+      "available-at": {
+        "url": "../../kmp_printer-js/2.3.8/kmp_printer-js-2.3.8.module",
+        "group": "io.github.ringga-dev",
+        "module": "kmp_printer-js",
+        "version": "2.3.8"
+      }
+    },
+    {
+      "name": "jsSourcesElements-published",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-runtime",
+        "org.jetbrains.kotlin.js.compiler": "ir",
+        "org.jetbrains.kotlin.platform.type": "js"
+      },
+      "available-at": {
+        "url": "../../kmp_printer-js/2.3.8/kmp_printer-js-2.3.8.module",
+        "group": "io.github.ringga-dev",
+        "module": "kmp_printer-js",
+        "version": "2.3.8"
+      }
+    },
+    {
+      "name": "jvmApiElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "standard-jvm",
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-api",
+        "org.jetbrains.kotlin.platform.type": "jvm"
+      },
+      "available-at": {
+        "url": "../../kmp_printer-jvm/2.3.8/kmp_printer-jvm-2.3.8.module",
+        "group": "io.github.ringga-dev",
+        "module": "kmp_printer-jvm",
+        "version": "2.3.8"
+      }
+    },
+    {
+      "name": "jvmRuntimeElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "standard-jvm",
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime",
+        "org.jetbrains.kotlin.platform.type": "jvm"
+      },
+      "available-at": {
+        "url": "../../kmp_printer-jvm/2.3.8/kmp_printer-jvm-2.3.8.module",
+        "group": "io.github.ringga-dev",
+        "module": "kmp_printer-jvm",
+        "version": "2.3.8"
+      }
+    },
+    {
+      "name": "jvmSourcesElements-published",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.jvm.environment": "standard-jvm",
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime",
+        "org.jetbrains.kotlin.platform.type": "jvm"
+      },
+      "available-at": {
+        "url": "../../kmp_printer-jvm/2.3.8/kmp_printer-jvm-2.3.8.module",
+        "group": "io.github.ringga-dev",
+        "module": "kmp_printer-jvm",
+        "version": "2.3.8"
+      }
+    }
+  ]
+}
