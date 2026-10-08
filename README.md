@@ -140,6 +140,72 @@ printer.print(config) {
 }
 ```
 
+### 📱 Typed Devices & Discovery (`PrinterDevice`)
+
+Mendukung model `PrinterDevice` yang strongly-typed per tipe koneksi (`Bluetooth`, `Ble`, `Usb`, `Network`, `Serial`, `Virtual`):
+
+```kotlin
+import ngga.ring.printer.model.PrinterConnection
+import ngga.ring.printer.model.PrinterDevices
+import ngga.ring.printer.model.PrinterProfile
+
+// 1. Scan / Discovery Otomatis
+printer.discoverDevices(PrinterConnection.BLUETOOTH).collect { devices ->
+    devices.forEach { device ->
+        println("Device: ${device.name} - ${device.address}")
+    }
+}
+
+// 2. Inisialisasi Manual via Factory
+val cashierUsb = PrinterDevices.usb("Epson TM-T82", "USB_RAW:04B8:0202")
+val kitchenNet = PrinterDevices.network("Kitchen", host = "192.168.1.200", port = 9100)
+val portableBt = PrinterDevices.bluetooth("RPP02N", "00:11:22:33:44:55")
+
+// 3. Cetak langsung dengan Device & Profile
+printer.print(kitchenNet, profile = PrinterProfile.MM80) {
+    line("ORDER #102")
+    cut()
+}
+```
+
+### ⚡ Multi-Printer Parallel Sessions (`PrinterSession`)
+
+Untuk aplikasi POS yang mencetak ke banyak printer secara bersamaan tanpa saling memutus koneksi:
+
+```kotlin
+val cashierSession = printer.openSession(PrinterDevices.usb("Kasir", "USB_RAW:04B8:0202"))
+val kitchenSession = printer.openSession(PrinterDevices.network("Dapur", "192.168.1.200"))
+
+// Cetak paralel ke kasir dan dapur
+cashierSession.print { line("Struk Pembayaran") }
+kitchenSession.print { line("Pesanan Dapur") }
+```
+
+### 🏷️ TSPL Label Printing (Stiker & Barcode)
+
+Dukungan pembuatan stiker label thermal (TSC/TSPL protocol):
+
+```kotlin
+printer.printLabel(cashierUsb, widthMm = 40.0, heightMm = 30.0) {
+    direction(0)
+    text(x = 10, y = 10, content = "PRODUK UTAMA", font = "3")
+    barcode(x = 10, y = 45, data = "89912345678", type = "128", height = 40)
+    qrcode(x = 200, y = 45, data = "https://example.com")
+    print(sets = 1, copies = 1)
+}
+```
+
+### 🌍 Arabic & RTL Text Shaping
+
+Penataan teks bahasa Arab dan RTL otomatis untuk printer thermal:
+
+```kotlin
+printer.print(portableBt) {
+    lineArabic("شكرا لزيارتكم - مرحباً بكم")
+    cut()
+}
+```
+
 ### 🔍 Printer Discovery (Network)
 
 ```kotlin
@@ -164,22 +230,14 @@ printer.monitorStatus(config, intervalMs = 2000).collect { status ->
 }
 ```
 
-### 🎛 Typed Transport Configs (New API)
+### 🎛 Typed Transport Configs
 
 ```kotlin
-// Recommended for new code — avoids hardcoded strings
 val networkConfig = PrinterConfig(
     name = "Kitchen Printer",
     connection = PrinterConnection.NETWORK,
     profile = PrinterProfile.MM58,
     address = "192.168.1.50"
-)
-
-val bleConfig = PrinterConfig(
-    name = "Portable Printer",
-    connection = PrinterConnection.BLE,
-    address = "00:11:22:33:44:55",
-    profile = PrinterProfile.MM80
 )
 ```
 

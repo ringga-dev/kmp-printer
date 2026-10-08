@@ -98,6 +98,29 @@ class KmpPrinter(
         return discovery(type.value, config, onLog)
     }
 
+    /**
+     * Discovers printer devices returning strongly-typed [PrinterDevice] objects.
+     */
+    fun discoverDevices(
+        type: PrinterConnection,
+        config: DiscoveryConfig = DiscoveryConfig(),
+        onLog: (String) -> Unit = {}
+    ): Flow<List<PrinterDevice>> {
+        return discovery(type, config, onLog).map { list ->
+            list.map { it.toPrinterDevice() }
+        }
+    }
+
+    fun discoverDevices(
+        type: String,
+        config: DiscoveryConfig = DiscoveryConfig(),
+        onLog: (String) -> Unit = {}
+    ): Flow<List<PrinterDevice>> {
+        return discovery(type, config, onLog).map { list ->
+            list.map { it.toPrinterDevice() }
+        }
+    }
+
     fun platformReport(): PrinterPlatformReport {
         return diagnosticsUseCase.report()
     }
