@@ -156,6 +156,21 @@ class ESCPosCommandBuilder(
         return this
     }
 
+    /**
+     * Prints text with Arabic letter shaping and right-to-left (RTL) reordering.
+     */
+    fun lineArabic(text: String): ESCPosCommandBuilder {
+        val processed = ngga.ring.printer.util.bidi.ArabicShaper.processForThermalPrinter(text)
+        lineAuto(processed)
+        return this
+    }
+
+    fun textArabic(text: String): ESCPosCommandBuilder {
+        val processed = ngga.ring.printer.util.bidi.ArabicShaper.processForThermalPrinter(text)
+        text(processed)
+        return this
+    }
+
     fun text(text: String): ESCPosCommandBuilder {
         writeText(text)
         return this

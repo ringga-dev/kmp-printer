@@ -75,6 +75,10 @@ class KmpPrinter(
         return newCommandBuilder(config.toPrinterConfig())
     }
 
+    fun newCommandBuilder(device: PrinterDevice, profile: PrinterProfile = PrinterProfile.MM58): ESCPosCommandBuilder {
+        return newCommandBuilder(device.toPrinterConfig(profile))
+    }
+
     /**
      * Discovers printers based on the specified type.
      */
@@ -122,6 +126,10 @@ class KmpPrinter(
         return repository.testConnection(config)
     }
 
+    suspend fun testConnection(device: PrinterDevice, profile: PrinterProfile = PrinterProfile.MM58): PrintStatus {
+        return testConnection(device.toPrinterConfig(profile))
+    }
+
     /**
      * Prints a professionally styled receipt using the specified configuration and data.
      */
@@ -129,6 +137,12 @@ class KmpPrinter(
         config: PrinterConfig,
         data: ByteArray,
     ): Flow<PrintStatus> = printReceiptUseCase(config, data)
+
+    fun printReceipt(
+        device: PrinterDevice,
+        data: ByteArray,
+        profile: PrinterProfile = PrinterProfile.MM58
+    ): Flow<PrintStatus> = printReceipt(device.toPrinterConfig(profile), data)
 
     /**
      * Sends raw ESC/POS bytes to the printer.
@@ -143,10 +157,18 @@ class KmpPrinter(
         return printRaw(config.toPrinterConfig(), data)
     }
 
+    fun printRaw(device: PrinterDevice, data: ByteArray, profile: PrinterProfile = PrinterProfile.MM58): Flow<PrintStatus> {
+        return printRaw(device.toPrinterConfig(profile), data)
+    }
+
     /**
      * Prints a professional hardware test page containing styles, barcodes, and QR codes.
      */
     fun printTestPage(config: PrinterConfig): Flow<PrintStatus> = printTestPageUseCase(config)
+
+    fun printTestPage(device: PrinterDevice, profile: PrinterProfile = PrinterProfile.MM58): Flow<PrintStatus> {
+        return printTestPage(device.toPrinterConfig(profile))
+    }
 
     /**
      * Prints using a DSL-style builder.
@@ -172,6 +194,41 @@ class KmpPrinter(
         return print(config.toPrinterConfig(), block)
     }
 
+    suspend fun print(
+        device: PrinterDevice,
+        profile: PrinterProfile = PrinterProfile.MM58,
+        block: ESCPosCommandBuilder.() -> Unit
+    ): Flow<PrintStatus> {
+        return print(device.toPrinterConfig(profile), block)
+    }
+
+    /**
+     * Prints a label using TSPL command builder DSL.
+     */
+    suspend fun printLabel(
+        config: PrinterConfig,
+        widthMm: Double = 40.0,
+        heightMm: Double = 30.0,
+        block: ngga.ring.printer.util.tspl.TsplCommandBuilder.() -> Unit
+    ): Flow<PrintStatus> = flow {
+        emit(PrintStatus.Processing)
+        val builder = ngga.ring.printer.util.tspl.TsplCommandBuilder(widthMm, heightMm)
+        builder.block()
+        printRaw(config, builder.build()).collect { status ->
+            emit(status)
+        }
+    }
+
+    suspend fun printLabel(
+        device: PrinterDevice,
+        widthMm: Double = 40.0,
+        heightMm: Double = 30.0,
+        profile: PrinterProfile = PrinterProfile.MM58,
+        block: ngga.ring.printer.util.tspl.TsplCommandBuilder.() -> Unit
+    ): Flow<PrintStatus> {
+        return printLabel(device.toPrinterConfig(profile), widthMm, heightMm, block)
+    }
+
     /**
      * Monitors the real-time status of the connected printer.
      * Emits PrinterStatus updates (online, paper out, cover open, etc.).
@@ -183,11 +240,32 @@ class KmpPrinter(
         return repository.monitorStatus(config, intervalMs)
     }
 
+    fun monitorStatus(device: PrinterDevice, profile: PrinterProfile = PrinterProfile.MM58, intervalMs: Long = 2000): Flow<PrinterStatus> {
+        return monitorStatus(device.toPrinterConfig(profile), intervalMs)
+    }
+
     /**
      * Queries the printer status once.
      */
     suspend fun queryStatus(): PrinterStatus {
         return repository.queryStatus()
+    }
+
+    /**
+     * Creates an isolated, dedicated [PrinterSession] for this config.
+     * Useful when managing multiple concurrent printers (e.g. Kitchen and Cashier).
+     */
+    fun openSession(config: PrinterConfig): ngga.ring.printer.session.PrinterSession {
+        val connector = connectorFactory.create(config)
+        return ngga.ring.printer.session.DefaultPrinterSession(config, connector)
+    }
+
+    fun openSession(device: PrinterDevice, profile: PrinterProfile = PrinterProfile.MM58): ngga.ring.printer.session.PrinterSession {
+        return openSession(device.toPrinterConfig(profile))
+    }
+
+    fun openSession(config: PrinterTransportConfig): ngga.ring.printer.session.PrinterSession {
+        return openSession(config.toPrinterConfig())
     }
 
     /**
