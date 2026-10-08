@@ -41,16 +41,16 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Run JVM tests
-        run: ./gradlew :printer:jvmTest --no-daemon
+        run: ./gradlew :printer:jvmTest :printer-ui:jvmTest --no-daemon
 
       - name: Compile KMP targets
-        run: ./gradlew :printer:compileKotlinMetadata :printer:compileKotlinJs --no-daemon
+        run: ./gradlew :printer:compileKotlinMetadata :printer:compileKotlinJs :printer-ui:compileKotlinMetadata :printer-ui:compileKotlinJs --no-daemon
 
       - name: Compile Android library
-        run: ./gradlew :printer:compileDebugKotlinAndroid --no-daemon
+        run: ./gradlew :printer:compileDebugKotlinAndroid :printer-ui:compileDebugKotlinAndroid --no-daemon
 
       - name: Run Android unit tests
-        run: ./gradlew :printer:testDebugUnitTest --no-daemon
+        run: ./gradlew :printer:testDebugUnitTest :printer-ui:testDebugUnitTest --no-daemon
 
       - name: Set up Chrome
         uses: browser-actions/setup-chrome@v1

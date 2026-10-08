@@ -45,16 +45,16 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Run JVM tests
-        run: ./gradlew :printer:jvmTest --no-daemon
+        run: ./gradlew :printer:jvmTest :printer-ui:jvmTest --no-daemon
 
       - name: Compile KMP targets
-        run: ./gradlew :printer:compileKotlinMetadata :printer:compileKotlinJs --no-daemon
+        run: ./gradlew :printer:compileKotlinMetadata :printer:compileKotlinJs :printer-ui:compileKotlinMetadata :printer-ui:compileKotlinJs --no-daemon
 
       - name: Compile Android target
-        run: ./gradlew :printer:compileDebugKotlinAndroid --no-daemon
+        run: ./gradlew :printer:compileDebugKotlinAndroid :printer-ui:compileDebugKotlinAndroid --no-daemon
 
       - name: Run Android unit tests
-        run: ./gradlew :printer:testDebugUnitTest --no-daemon
+        run: ./gradlew :printer:testDebugUnitTest :printer-ui:testDebugUnitTest --no-daemon
 
       - name: Run JS browser tests
         uses: browser-actions/setup-chrome@v1
@@ -80,7 +80,7 @@ jobs:
         id: version
         shell: bash
         run: |
-          version="$(grep '^LIB_VERSION=' gradle.properties | cut -d'=' -f2 | tr -d '\\r' | xargs)"
+          version="$(grep '^LIB_VERSION=' gradle.properties | cut -d'=' -f2 | tr -d '\r' | xargs)"
           if [ -z "$version" ]; then
             echo "LIB_VERSION is missing" >&2
             exit 1
@@ -118,21 +118,22 @@ jobs:
           distribution: temurin
           cache: gradle
 
-
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
       - name: Make Gradle wrapper executable
         run: chmod +x ./gradlew
 
-      - name: Build AAR
-        run: ./gradlew :printer:assembleRelease --no-daemon
+      - name: Build AARs
+        run: ./gradlew :printer:assembleRelease :printer-ui:assembleRelease --no-daemon
 
-      - name: Upload AAR
+      - name: Upload AARs
         uses: actions/upload-artifact@v4
         with:
           name: kmp_printer-aar
-          path: printer/build/outputs/aar/kmp_printer-release.aar
+          path: |
+            printer/build/outputs/aar/kmp_printer-release.aar
+            printer-ui/build/outputs/aar/kmp_printer-ui-release.aar
           if-no-files-found: error
 
   build-ios:
@@ -156,23 +157,27 @@ jobs:
       - name: Make Gradle wrapper executable
         run: chmod +x ./gradlew
 
-      - name: Build XCFramework
-        run: ./gradlew :printer:assembleKmpPrinterXCFramework --no-daemon
+      - name: Build XCFrameworks
+        run: ./gradlew :printer:assembleKmpPrinterXCFramework :printer-ui:assembleKmpPrinterUiXCFramework --no-daemon
 
       - name: Run iOS simulator tests
         run: ./gradlew :printer:iosSimulatorArm64Test --no-daemon
 
-      - name: Zip XCFramework
+      - name: Zip XCFrameworks
         shell: bash
         run: |
           cd printer/build/XCFrameworks/release
           zip -r ../../../KmpPrinter.xcframework.zip KmpPrinter.xcframework
+          cd ../../../../printer-ui/build/XCFrameworks/release
+          zip -r ../../../KmpPrinterUi.xcframework.zip KmpPrinterUi.xcframework
 
-      - name: Upload XCFramework
+      - name: Upload XCFrameworks
         uses: actions/upload-artifact@v4
         with:
           name: kmp_printer-xcframework
-          path: printer/KmpPrinter.xcframework.zip
+          path: |
+            printer/KmpPrinter.xcframework.zip
+            printer-ui/KmpPrinterUi.xcframework.zip
           if-no-files-found: error
 
   build-jvm:
@@ -196,14 +201,16 @@ jobs:
       - name: Make Gradle wrapper executable
         run: chmod +x ./gradlew
 
-      - name: Build JVM Jar
-        run: ./gradlew :printer:jvmJar --no-daemon
+      - name: Build JVM Jars
+        run: ./gradlew :printer:jvmJar :printer-ui:jvmJar --no-daemon
 
-      - name: Upload JVM Jar
+      - name: Upload JVM Jars
         uses: actions/upload-artifact@v4
         with:
           name: kmp_printer-jvm
-          path: printer/build/libs/kmp_printer-jvm-*.jar
+          path: |
+            printer/build/libs/kmp_printer-jvm-*.jar
+            printer-ui/build/libs/kmp_printer-ui-jvm-*.jar
           if-no-files-found: error
 
   deploy-github-maven:
@@ -226,33 +233,36 @@ jobs:
           distribution: temurin
           cache: gradle
 
-
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
       - name: Make Gradle wrapper executable
         run: chmod +x ./gradlew
 
-      - name: Generate Maven repository
+      - name: Generate Maven repositories
         env:
           GPG_SIGNING_KEY: ${{ secrets.GPG_SIGNING_KEY }}
           GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
-        run: ./gradlew :printer:publishAllPublicationsToLocalRepoRepository --no-daemon
+        run: |
+          ./gradlew :printer:publishAllPublicationsToLocalRepoRepository :printer-ui:publishAllPublicationsToLocalRepoRepository --no-daemon
+          mkdir -p build/unified-repo
+          cp -r printer/build/repo/* build/unified-repo/ || true
+          cp -r printer-ui/build/repo/* build/unified-repo/ || true
 
       - name: Create Sonatype bundle
         shell: bash
         run: |
           bundle_name="sonatype-bundle-${{ needs.setup.outputs.lib_version }}.zip"
-          cd printer/build/repo
-          zip -r -X "../../../$bundle_name" .
-          zip -d "../../../$bundle_name" "__MACOSX*" "*.DS_Store*" || true
+          cd build/unified-repo
+          zip -r -X "../../$bundle_name" .
+          zip -d "../../$bundle_name" "__MACOSX*" "*.DS_Store*" || true
 
       - name: Deploy to maven-repo branch
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: maven-repo
-          folder: printer/build/repo
+          folder: build/unified-repo
           target-folder: .
           clean: false
           commit-message: Publish v${{ needs.setup.outputs.lib_version }} to GitHub Maven
@@ -325,16 +335,18 @@ jobs:
             release_artifacts/kmp_printer-jvm/**/*
             release_artifacts/sonatype-central-bundle/**/*
           body: |
-            ## KmpPrinter v${{ needs.setup.outputs.lib_version }}
+            ## KmpPrinter & KmpPrinterUi v${{ needs.setup.outputs.lib_version }}
 
-            Kotlin Multiplatform ESC/POS thermal printing library for Android, iOS, JVM/Desktop, and JS.
+            Kotlin Multiplatform ESC/POS & TSPL thermal printing library and Compose Multiplatform UI components for Android, iOS, JVM/Desktop, and Web.
 
-            Supported transports: Network TCP, USB, Serial, Bluetooth Classic, BLE, and Virtual — availability depends on platform and hardware. See `docs/TRANSPORT_SUPPORT.md`.
-
-            ### 📦 Maven Central (soon)
+            ### 📦 Maven Central
 
             ```kotlin
+            // Core Engine
             implementation("io.github.ringga-dev:kmp_printer:${{ needs.setup.outputs.lib_version }}")
+
+            // Compose Multiplatform UI Components
+            implementation("io.github.ringga-dev:kmp_printer-ui:${{ needs.setup.outputs.lib_version }}")
             ```
 
             ### 🐙 GitHub Maven
@@ -345,6 +357,7 @@ jobs:
             }
             dependencies {
                 implementation("io.github.ringga-dev:kmp_printer:${{ needs.setup.outputs.lib_version }}")
+                implementation("io.github.ringga-dev:kmp_printer-ui:${{ needs.setup.outputs.lib_version }}")
             }
             ```
           draft: false
