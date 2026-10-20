@@ -5,13 +5,17 @@ object PrinterConfigs {
         name: String,
         host: String,
         port: Int = 9100,
+        reconnectOnDrop: Boolean = true,
+        maxBackoffMs: Long = 30_000,
         block: PrinterConfig.() -> PrinterConfig = { this }
     ): PrinterConfig {
         return PrinterConfig(
             name = name,
             connectionType = PrinterConnectionType.NETWORK,
             address = host,
-            port = port
+            port = port,
+            reconnectOnDrop = reconnectOnDrop,
+            maxBackoffMs = maxBackoffMs
         ).block()
     }
 

@@ -36,6 +36,13 @@ data class PrinterConfig(
     val bleBridgeCommand: String? = null,
     val bluetoothClassicAutoBind: Boolean = true,
     val bluetoothClassicRfcommDevice: String = "/dev/rfcomm0",
+    // Retry + Auto-reconnect
+    val reconnectOnDrop: Boolean = true,
+    val maxBackoffMs: Long = 30_000,
+    val backoffMultiplier: Double = 2.0,
+    val backoffJitterMs: Long = 500,
+    val healthCheckIntervalMs: Long = 5_000,
+    val healthCheckTimeoutMs: Long = 2_000,
 ) {
     constructor(
         name: String,
@@ -100,7 +107,13 @@ data class PrinterConfig(
         bleCommandDelayMs = bleCommandDelayMs,
         bleBridgeCommand = bleBridgeCommand,
         bluetoothClassicAutoBind = bluetoothClassicAutoBind,
-        bluetoothClassicRfcommDevice = bluetoothClassicRfcommDevice
+        bluetoothClassicRfcommDevice = bluetoothClassicRfcommDevice,
+        reconnectOnDrop = reconnectOnDrop,
+        maxBackoffMs = maxBackoffMs,
+        backoffMultiplier = backoffMultiplier,
+        backoffJitterMs = backoffJitterMs,
+        healthCheckIntervalMs = healthCheckIntervalMs,
+        healthCheckTimeoutMs = healthCheckTimeoutMs
     )
 
     constructor(
@@ -160,7 +173,13 @@ data class PrinterConfig(
         bleCommandDelayMs = bleCommandDelayMs,
         bleBridgeCommand = bleBridgeCommand,
         bluetoothClassicAutoBind = bluetoothClassicAutoBind,
-        bluetoothClassicRfcommDevice = bluetoothClassicRfcommDevice
+        bluetoothClassicRfcommDevice = bluetoothClassicRfcommDevice,
+        reconnectOnDrop = reconnectOnDrop,
+        maxBackoffMs = maxBackoffMs,
+        backoffMultiplier = backoffMultiplier,
+        backoffJitterMs = backoffJitterMs,
+        healthCheckIntervalMs = healthCheckIntervalMs,
+        healthCheckTimeoutMs = healthCheckTimeoutMs
     )
 
     val connection: PrinterConnection
