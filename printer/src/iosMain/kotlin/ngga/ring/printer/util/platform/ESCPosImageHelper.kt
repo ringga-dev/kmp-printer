@@ -75,4 +75,23 @@ actual object ESCPosImageHelper {
         val bytes = CommonHelper.packPixelsToRaster(bitonal, targetWidth, targetHeight)
         return Triple(bytes, targetWidth, targetHeight)
     }
+
+    /**
+     * Decodes PNG/JPEG/BMP/GIF/WebP bytes via ImageIO (CGImageSource) into a
+     * UIImage, then reuses [processToRaster] so the dithering path stays shared.
+     */
+    @OptIn(ExperimentalForeignApi::class)
+    actual suspend fun decodeImageBytes(data: ByteArray, maxWidth: Int): Triple<ByteArray, Int, Int>? {
+        return try {
+            val nsData = data.usePinned { pinned ->
+                NSData.dataWithBytes(pinned.addressOf(0), data.size.toULong())
+            }
+            val source = CGImageSourceCreateWithData(nsData, null) ?: return null
+            val cgImage = CGImageSourceCreateImageAtIndex(source, 0uL, null) ?: return null
+            val uiImage = UIImage.imageWithCGImage(cgImage)
+            processToRaster(uiImage, maxWidth)
+        } catch (_: Exception) {
+            null
+        }
+    }
 }

@@ -46,4 +46,13 @@ actual object ESCPosImageHelper {
         val bytes = CommonHelper.packPixelsToRaster(bitonal, width, height)
         return Triple(bytes, width, height)
     }
+
+    actual suspend fun decodeImageBytes(data: ByteArray, maxWidth: Int): Triple<ByteArray, Int, Int>? {
+        return try {
+            val image = javax.imageio.ImageIO.read(data.inputStream()) ?: return null
+            processToRaster(image, maxWidth)
+        } catch (_: Exception) {
+            null
+        }
+    }
 }

@@ -54,6 +54,14 @@ class JvmESCPosRenderer : ESCPosRenderer {
     }
 
     override suspend fun renderSvg(svgString: String, targetWidth: Int): BooleanArray? = null
+
+    override fun pdfPageCount(data: ByteArray): Int {
+        return try {
+            Loader.loadPDF(data).use { document -> document.numberOfPages }
+        } catch (_: Exception) {
+            0
+        }
+    }
 }
 
 actual fun getPlatformRenderer(): ESCPosRenderer = JvmESCPosRenderer()

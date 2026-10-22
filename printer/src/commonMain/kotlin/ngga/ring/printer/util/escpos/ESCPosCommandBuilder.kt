@@ -1,8 +1,10 @@
 package ngga.ring.printer.util.escpos
 
 import ngga.ring.printer.util.platform.encodeString
+import ngga.ring.printer.util.platform.ESCPosImageHelper as PlatformImageHelper
 import ngga.ring.printer.util.preview.PreviewBlock
 import ngga.ring.printer.util.preview.PreviewResult
+import ngga.ring.printer.model.PrintFileType
 import ngga.ring.printer.model.QRCodeLevel
 import ngga.ring.printer.model.BarcodeType
 import ngga.ring.printer.model.HeatConfig
@@ -414,6 +416,81 @@ class ESCPosCommandBuilder(
             // Platform doesn't support PDF rendering
         }
         return this
+    }
+
+    /**
+     * Decodes an image file (PNG/JPEG/BMP/GIF/WebP) from raw bytes and prints it.
+     *
+     * File-based counterpart of [image]: the caller hands over the bytes of a
+     * downloaded or picked file and the platform decoder does the rest, so no
+     * platform-specific image object is required.
+     *
+     * @param data Encoded image file bytes.
+     * @param center Horizontally centre the image on the paper.
+     * @return `true` when the image decoded and was queued, `false` when the
+     *         bytes could not be decoded. Nothing is printed when `false`.
+     */
+    suspend fun printImageFile(data: ByteArray, center: Boolean = true): Boolean {
+        val raster = PlatformImageHelper.decodeImageBytes(data, config.paperWidthDots)
+            ?: return false
+        image(raster.first, raster.second, raster.third, center)
+        return true
+    }
+
+    /**
+     * Renders one PDF page and prints it.
+     *
+     * Returns `false` when the platform cannot render PDFs (the web target has
+     * no PDF renderer yet) or when the page index is out of range, so callers
+     * can surface the failure instead of a silent no-op.
+     *
+     * @param data Raw PDF file bytes.
+     * @param pageIndex Zero-based page index.
+     * @param center Horizontally centre the page on the paper.
+     */
+    suspend fun printPdf(data: ByteArray, pageIndex: Int = 0, center: Boolean = true): Boolean {
+        val width = config.paperWidthDots
+        if (width <= 0) return false
+        val bitonal = getPlatformRenderer().renderPdfPage(data, pageIndex, width) ?: return false
+        val height = bitonal.size / width
+        if (height <= 0) return false
+        image(ESCPosImageHelper.packPixelsToRaster(bitonal, width, height), width, height, center)
+        return true
+    }
+
+    /**
+     * Prints every page of a PDF in order.
+     *
+     * Returns `false` when the platform reports no readable pages.
+     */
+    suspend fun printPdfAll(data: ByteArray, center: Boolean = true): Boolean {
+        val pages = getPlatformRenderer().pdfPageCount(data)
+        if (pages <= 0) return false
+        var printed = 0
+        for (page in 0 until pages) {
+            if (printPdf(data, page, center)) printed++
+        }
+        return printed > 0
+    }
+
+    /**
+     * Prints any supported file, detecting the type from magic bytes when [type]
+     * is [PrintFileType.AUTO].
+     *
+     * @return `true` when something was queued for printing.
+     */
+    suspend fun printFile(
+        data: ByteArray,
+        type: PrintFileType = PrintFileType.AUTO,
+        center: Boolean = true
+    ): Boolean {
+        val resolved = if (type == PrintFileType.AUTO) PrintFileType.fromBytes(data) else type
+        return when (resolved) {
+            PrintFileType.PDF -> printPdf(data, 0, center)
+            PrintFileType.PNG, PrintFileType.JPEG, PrintFileType.GIF,
+            PrintFileType.BMP, PrintFileType.WEBP -> printImageFile(data, center)
+            PrintFileType.AUTO, null -> false
+        }
     }
 
     /**

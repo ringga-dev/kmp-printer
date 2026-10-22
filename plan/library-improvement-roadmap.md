@@ -149,6 +149,51 @@ test dan tidak bergantung pada encoder bawaan platform.
 
 ---
 
+## Fase 5 — Print File (Gambar & PDF) ✅
+
+**Selesai.** Sebelumnya untuk mencetak gambar pemanggil harus menyiapkan objek
+platform sendiri (`Bitmap` / `UIImage` / `BufferedImage` / `HTMLImageElement`),
+dan PDF hanya punya `printPdfPage` yang menelan error secara diam-diam.
+
+### Yang ditambahkan
+
+| File | Isi |
+|---|---|
+| `model/PrintFileType.kt` | Enum tipe + deteksi **magic bytes** (PNG/JPEG/GIF/BMP/WebP/PDF) |
+| `util/escpos/ESCPosCommandBuilder.kt` | `printImageFile`, `printPdf`, `printPdfAll`, `printFile` |
+| `util/platform/ESCPosImageHelper.kt` | `decodeImageBytes` (expect) — decode file → raster |
+| `util/escpos/ESCPosRenderer.kt` | `pdfPageCount` (expect) |
+| 4 × `actual` platform | ImageIO / BitmapFactory / CGImageSource / browser decoder |
+| `PrintFileTypeTest` | 10 test deteksi magic bytes |
+
+### Keputusan yang diambil
+
+**`decodeImageBytes` mengembalikan `null`, bukan exception.** File rusak atau
+truncated tidak boleh menjatuhkan job cetak lain di queue.
+
+**Semua fungsi baru mengembalikan `Boolean`.** `printPdfPage` yang lama
+mengembalikan `ESCPosCommandBuilder` dan menelan error — perilaku itu
+dipertahankan (kontrak tidak diubah), tapi fungsi baru memberi sinyal kegagalan
+supaya pemanggil bisa menampilkan pesan.
+
+**PDF di web tetap tidak didukung.** Browser tidak punya rasterizer PDF bawaan;
+membawa pdf.js (±1 MB + web worker) adalah keputusan packaging aplikasi.
+`printPdf` mengembalikan `false` di web, bukan gagal diam-diam.
+
+**Deteksi dari magic bytes, bukan ekstensi file.** Nama file bisa bohong; byte
+pertama tidak. WebP butuh 12 byte karena tag `WEBP` ada di offset 8.
+
+### Dukungan
+
+| Target | Gambar | PDF |
+|---|:---:|:---:|
+| JVM | ✅ | ✅ PDFBox |
+| Android | ✅ | ✅ PdfRenderer |
+| iOS | ✅ | ✅ PDFKit |
+| Web | ✅ | ❌ |
+
+---
+
 ## Prinsip yang dipakai
 
 - **Jangan ubah kontrak.** `encodeString`, `ESCPosImageHelper`,

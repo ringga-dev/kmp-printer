@@ -1,7 +1,10 @@
 package ngga.ring.printer.util.platform
 
 import kotlinx.browser.document
+import kotlinx.browser.window
 import ngga.ring.printer.util.escpos.ESCPosImageHelper as CommonHelper
+import org.w3c.dom.Blob
+import org.w3c.dom.BlobPart
 import org.w3c.dom.HTMLCanvasElement
 import org.w3c.dom.HTMLImageElement
 import org.w3c.dom.events.Event
@@ -113,5 +116,30 @@ actual object ESCPosImageHelper {
         return dynamicImage != null &&
             dynamicImage.width != null &&
             dynamicImage.height != null
+    }
+
+    /**
+     * Decodes PNG/JPEG/BMP/GIF/WebP bytes by handing them to the browser's own
+     * image decoder through a blob URL, then reusing [processToRasterAsync] so
+     * the scaling and dithering path stays identical to the other platforms.
+     *
+     * Returns `null` on any decode failure instead of throwing, so a truncated
+     * download cannot crash an in-flight print job.
+     */
+    actual suspend fun decodeImageBytes(data: ByteArray, maxWidth: Int): Triple<ByteArray, Int, Int>? {
+        var objectUrl: String? = null
+        return try {
+            val url: dynamic = window.asDynamic().URL
+            val blob: dynamic = Blob(arrayOf(data.asDynamic() as BlobPart))
+            objectUrl = url.createObjectURL(blob) as String
+
+            val image = document.createElement("img") as HTMLImageElement
+            image.src = objectUrl
+            processToRasterAsync(image, maxWidth)
+        } catch (_: Throwable) {
+            null
+        } finally {
+            objectUrl?.let { window.asDynamic().URL.revokeObjectURL(it) }
+        }
     }
 }

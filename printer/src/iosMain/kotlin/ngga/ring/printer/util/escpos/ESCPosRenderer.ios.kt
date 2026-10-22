@@ -93,6 +93,19 @@ class IosESCPosRenderer : ESCPosRenderer {
     }
 
     override suspend fun renderSvg(svgString: String, targetWidth: Int): BooleanArray? = null
+
+    @OptIn(ExperimentalForeignApi::class)
+    override fun pdfPageCount(data: ByteArray): Int {
+        return try {
+            val nsData = data.usePinned { pinned ->
+                NSData.dataWithBytes(pinned.addressOf(0), data.size.toULong())
+            }
+            val document = PDFDocument(data = nsData) ?: return 0
+            document.pageCount.toInt()
+        } catch (_: Exception) {
+            0
+        }
+    }
 }
 
 actual fun getPlatformRenderer(): ESCPosRenderer = IosESCPosRenderer()
