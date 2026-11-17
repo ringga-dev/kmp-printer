@@ -18,8 +18,8 @@ data class JvmPrintQueueInfo(
     val looksLikeBluetooth: Boolean
 )
 
-class JvmPrintQueueService {
-    fun listQueues(): List<JvmPrintQueueInfo> {
+open class JvmPrintQueueService {
+    open fun listQueues(): List<JvmPrintQueueInfo> {
         return PrintServiceLookup.lookupPrintServices(null, null).map { service ->
             val lowerName = service.name.lowercase()
             JvmPrintQueueInfo(
@@ -36,7 +36,7 @@ class JvmPrintQueueService {
         }
     }
 
-    fun findQueue(name: String?): PrintService? {
+    open fun findQueue(name: String?): PrintService? {
         val services = PrintServiceLookup.lookupPrintServices(null, null)
         if (name.isNullOrBlank()) {
             return PrintServiceLookup.lookupDefaultPrintService() ?: services.firstOrNull()
@@ -64,6 +64,16 @@ class JvmPrintServiceConnector(
         configureFlowControl(config)
         printService = queueService.findQueue(config.address)
         printService != null
+    }
+
+    /**
+     * Bypasses [BasePrinterConnector] chunking.
+     * Operating system print spoolers (Windows Spooler / CUPS) treat each print job as a discrete document.
+     * Chunking the raw byte stream into multiple fragments would cause the spooler to emit multiple separate
+     * print jobs, causing printers to cut or form-feed repeatedly between fragments.
+     */
+    override suspend fun sendData(data: ByteArray): Boolean = withContext(Dispatchers.IO) {
+        sendRawData(data)
     }
 
     override suspend fun sendRawData(data: ByteArray): Boolean = withContext(Dispatchers.IO) {

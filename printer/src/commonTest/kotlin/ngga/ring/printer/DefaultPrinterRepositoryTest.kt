@@ -3,6 +3,9 @@ package ngga.ring.printer
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.async
 import kotlinx.coroutines.test.runTest
 import ngga.ring.printer.manager.PrinterConnector
 import ngga.ring.printer.manager.PrinterConnectorProvider
@@ -16,6 +19,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertSame
+import kotlin.test.assertTrue
 
 class DefaultPrinterRepositoryTest {
     @Test
@@ -76,6 +80,43 @@ class DefaultPrinterRepositoryTest {
 
         assertEquals(2, connector.sendCalls)
         assertIs<PrintStatus.Error>(result.last())
+    }
+
+    @Test
+    fun monitorStatusAutoConnectsWhenDisconnected() = runTest {
+        val connector = FakeConnector()
+        val repository = DefaultPrinterRepository(FakeConnectorProvider(connector))
+        val printer = config()
+
+        // monitorStatus should connect before polling
+        val statusList = repository.monitorStatus(printer, intervalMs = 1000)
+        // Check that connector connect was called
+        assertEquals(0, connector.connectCalls)
+        // Taking 1 emission will trigger flow collection
+        val first = statusList.first()
+        assertEquals(1, connector.connectCalls)
+        assertTrue(first != null)
+    }
+
+    @Test
+    fun concurrentPrintRawQueuesSequentiallyUnderMutex() = runTest {
+        val connector = FakeConnector()
+        val repository = DefaultPrinterRepository(FakeConnectorProvider(connector))
+        val printer = config()
+
+        // Run 5 concurrent print operations
+        val results = coroutineScope {
+            (1..5).map { i ->
+                async {
+                    repository.printRaw(printer, byteArrayOf(i.toByte())).toList()
+                }
+            }.map { it.await() }
+        }
+        assertEquals(5, results.size)
+        results.forEach { res ->
+            assertEquals(PrintStatus.Success, res.last())
+        }
+        assertEquals(5, connector.sendCalls)
     }
 
     private fun config(

@@ -141,12 +141,15 @@ class ReceiptService {
         return builder.feedLines(3).cut()
     }
 
-    private fun formatTimestamp(timestamp: Long): String {
+    internal fun formatTimestamp(
+        timestamp: Long,
+        timeZone: TimeZone = TimeZone.currentSystemDefault()
+    ): String {
         return try {
             val instant = Instant.fromEpochMilliseconds(timestamp)
-            val ldt = instant.toLocalDateTime(TimeZone.currentSystemDefault())
+            val ldt = instant.toLocalDateTime(timeZone)
             val day = ldt.day.toString().padStart(2, '0')
-            val month = ldt.month.toString().padStart(2, '0')
+            val month = ldt.month.number.toString().padStart(2, '0')
             val year = ldt.year
             val hour = ldt.hour.toString().padStart(2, '0')
             val minute = ldt.minute.toString().padStart(2, '0')

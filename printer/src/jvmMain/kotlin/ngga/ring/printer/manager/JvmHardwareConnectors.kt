@@ -142,6 +142,11 @@ class JvmBluetoothClassicConnector(
         false
     }
 
+    override suspend fun sendData(data: ByteArray): Boolean {
+        // Forward directly to activeConnector.sendData without secondary chunking
+        return activeConnector?.sendData(data) ?: false
+    }
+
     override suspend fun sendRawData(data: ByteArray): Boolean {
         return activeConnector?.sendData(data) ?: false
     }
