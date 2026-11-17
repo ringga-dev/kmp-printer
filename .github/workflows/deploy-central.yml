@@ -1,0 +1,58 @@
+name: 📦 Deploy Bundle to Maven Central
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (e.g. 2.4.0)'
+        required: true
+        default: '2.4.0'
+
+permissions:
+  contents: read
+
+jobs:
+  upload-sonatype:
+    name: Upload Bundle to Sonatype Central Portal
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Sonatype bundle from GitHub Release
+        shell: bash
+        run: |
+          version="${{ github.event.inputs.version }}"
+          bundle_url="https://github.com/ringga-dev/kmp-printer/releases/download/v${version}/sonatype-bundle-${version}.zip"
+          echo "Downloading bundle from $bundle_url ..."
+          curl -sL "$bundle_url" -o "sonatype-bundle-${version}.zip"
+          if [ ! -s "sonatype-bundle-${version}.zip" ]; then
+            echo "❌ Bundle file is empty or download failed!"
+            exit 1
+          fi
+          echo "✅ Bundle downloaded successfully ($(ls -lh sonatype-bundle-${version}.zip | awk '{print $5}'))"
+
+      - name: Upload to Maven Central Portal
+        shell: bash
+        env:
+          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+        run: |
+          version="${{ github.event.inputs.version }}"
+          bundle_zip="sonatype-bundle-${version}.zip"
+          echo "Uploading $bundle_zip to Sonatype Central Portal..."
+          response=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST \
+            -u "${SONATYPE_USERNAME}:${SONATYPE_PASSWORD}" \
+            -F "bundle=@${bundle_zip}" \
+            "https://central.sonatype.com/api/v1/publisher/upload")
+          
+          body=$(echo "$response" | sed -e '$d')
+          status=$(echo "$response" | tail -n1 | cut -d':' -f2)
+          
+          echo "Response Body: $body"
+          echo "HTTP Status: $status"
+          
+          if [ "$status" -ge 200 ] && [ "$status" -lt 300 ]; then
+            echo "✅ Upload Successful! Deployment ID / Status: $body"
+            echo "Check status at: https://central.sonatype.com/publishing/deployments"
+          else
+            echo "❌ Upload failed with HTTP status $status"
+            exit 1
+          fi
