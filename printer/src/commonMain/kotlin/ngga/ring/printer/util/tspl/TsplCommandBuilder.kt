@@ -8,8 +8,8 @@ class TsplCommandBuilder(
     val widthMm: Double = 40.0,
     val heightMm: Double = 30.0
 ) {
-    private val commands = mutableListOf<String>()
-    private val rawPayloads = mutableListOf<ByteArray>()
+    private val parts = mutableListOf<ByteArray>()
+    private var hasPrint = false
 
     init {
         size(widthMm, heightMm)
@@ -17,11 +17,15 @@ class TsplCommandBuilder(
         cls()
     }
 
+    private fun appendCommand(cmd: String) {
+        parts.add("$cmd\r\n".encodeToByteArray())
+    }
+
     /**
      * Sets label size in millimeters.
      */
     fun size(width: Double, height: Double): TsplCommandBuilder {
-        commands.add("SIZE $width mm, $height mm")
+        appendCommand("SIZE $width mm, $height mm")
         return this
     }
 
@@ -29,7 +33,7 @@ class TsplCommandBuilder(
      * Sets gap distance between labels.
      */
     fun gap(distanceMm: Double = 2.0, offsetMm: Double = 0.0): TsplCommandBuilder {
-        commands.add("GAP $distanceMm mm, $offsetMm mm")
+        appendCommand("GAP $distanceMm mm, $offsetMm mm")
         return this
     }
 
@@ -37,7 +41,7 @@ class TsplCommandBuilder(
      * Sets print orientation (0 = normal, 1 = reversed 180°).
      */
     fun direction(direction: Int = 0): TsplCommandBuilder {
-        commands.add("DIRECTION $direction")
+        appendCommand("DIRECTION $direction")
         return this
     }
 
@@ -45,7 +49,7 @@ class TsplCommandBuilder(
      * Clears the label image buffer.
      */
     fun cls(): TsplCommandBuilder {
-        commands.add("CLS")
+        appendCommand("CLS")
         return this
     }
 
@@ -62,7 +66,7 @@ class TsplCommandBuilder(
         xMultiplication: Int = 1,
         yMultiplication: Int = 1
     ): TsplCommandBuilder {
-        commands.add("TEXT $x,$y,\"$font\",$rotation,$xMultiplication,$yMultiplication,\"$content\"")
+        appendCommand("TEXT $x,$y,\"$font\",$rotation,$xMultiplication,$yMultiplication,\"$content\"")
         return this
     }
 
@@ -81,7 +85,7 @@ class TsplCommandBuilder(
         narrow: Int = 2,
         wide: Int = 4
     ): TsplCommandBuilder {
-        commands.add("BARCODE $x,$y,\"$type\",$height,$readable,$rotation,$narrow,$wide,\"$data\"")
+        appendCommand("BARCODE $x,$y,\"$type\",$height,$readable,$rotation,$narrow,$wide,\"$data\"")
         return this
     }
 
@@ -99,7 +103,7 @@ class TsplCommandBuilder(
         mode: String = "A",
         rotation: Int = 0
     ): TsplCommandBuilder {
-        commands.add("QRCODE $x,$y,$eccLevel,$cellWidth,$mode,$rotation,\"$data\"")
+        appendCommand("QRCODE $x,$y,$eccLevel,$cellWidth,$mode,$rotation,\"$data\"")
         return this
     }
 
@@ -113,7 +117,7 @@ class TsplCommandBuilder(
         yEnd: Int,
         thickness: Int = 2
     ): TsplCommandBuilder {
-        commands.add("BOX $xStart,$yStart,$xEnd,$yEnd,$thickness")
+        appendCommand("BOX $xStart,$yStart,$xEnd,$yEnd,$thickness")
         return this
     }
 
@@ -121,7 +125,34 @@ class TsplCommandBuilder(
      * Draws a horizontal/vertical line.
      */
     fun line(x: Int, y: Int, width: Int, height: Int): TsplCommandBuilder {
-        commands.add("BAR $x,$y,$width,$height")
+        appendCommand("BAR $x,$y,$width,$height")
+        return this
+    }
+
+    /**
+     * Draws a monochrome bitmap graphic onto the label buffer.
+     *
+     * In TSPL standard:
+     * Header: `BITMAP X,Y,width,height,mode,` followed immediately by [data] byte array, followed by `\r\n`.
+     *
+     * @param x X-coordinate in dots
+     * @param y Y-coordinate in dots
+     * @param widthBytes Bitmap width in bytes (dots / 8)
+     * @param heightDots Bitmap height in dots
+     * @param mode 0 = OVERWRITE, 1 = OR, 2 = XOR
+     * @param data Raw 1-bit monochrome bitmap byte array
+     */
+    fun bitmap(
+        x: Int,
+        y: Int,
+        widthBytes: Int,
+        heightDots: Int,
+        mode: Int = 0,
+        data: ByteArray
+    ): TsplCommandBuilder {
+        parts.add("BITMAP $x,$y,$widthBytes,$heightDots,$mode,".encodeToByteArray())
+        parts.add(data)
+        parts.add("\r\n".encodeToByteArray())
         return this
     }
 
@@ -129,7 +160,7 @@ class TsplCommandBuilder(
      * Triggers the label cutter (if hardware cutter is installed).
      */
     fun cut(): TsplCommandBuilder {
-        commands.add("CUT")
+        appendCommand("CUT")
         return this
     }
 
@@ -139,30 +170,27 @@ class TsplCommandBuilder(
      * @param copies Number of copies per set (default 1).
      */
     fun print(sets: Int = 1, copies: Int = 1): TsplCommandBuilder {
-        commands.add("PRINT $sets,$copies")
+        hasPrint = true
+        appendCommand("PRINT $sets,$copies")
         return this
     }
 
     /**
      * Generates all TSPL commands as a raw byte array terminated with CRLF.
+     * If [print] has not been explicitly called, automatically appends `PRINT 1,1`.
      */
     fun build(): ByteArray {
-        val sb = StringBuilder()
-        for (cmd in commands) {
-            sb.append(cmd).append("\r\n")
+        if (!hasPrint) {
+            appendCommand("PRINT 1,1")
+            hasPrint = true
         }
-        val textBytes = sb.toString().encodeToByteArray()
-        if (rawPayloads.isEmpty()) return textBytes
 
-        var totalSize = textBytes.size
-        for (payload in rawPayloads) totalSize += payload.size
-
+        val totalSize = parts.sumOf { it.size }
         val result = ByteArray(totalSize)
-        textBytes.copyInto(result, 0)
-        var offset = textBytes.size
-        for (payload in rawPayloads) {
-            payload.copyInto(result, offset)
-            offset += payload.size
+        var offset = 0
+        for (part in parts) {
+            part.copyInto(result, offset)
+            offset += part.size
         }
         return result
     }

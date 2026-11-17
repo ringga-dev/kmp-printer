@@ -1,5 +1,6 @@
 package ngga.ring.printer.util
 
+import kotlin.math.pow
 import kotlin.random.Random
 
 /**
@@ -29,7 +30,7 @@ object ReconnectPolicy {
         maxDelayMs: Long,
         jitterMs: Long
     ): Long {
-        val exponential = baseDelayMs * Math.pow(multiplier, attempt.toDouble())
+        val exponential = baseDelayMs * multiplier.pow(attempt.toDouble())
         val capped = minOf(exponential.toLong(), maxDelayMs)
         val jitter = if (jitterMs > 0) Random.nextLong(jitterMs + 1) else 0L
         return capped + jitter
