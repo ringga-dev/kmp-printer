@@ -65,10 +65,10 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             // Core Engine
-            implementation("io.github.ringga-dev:kmp_printer:2.3.6")
+            implementation("io.github.ringga-dev:kmp_printer:2.4.0")
             
             // Optional: Compose Multiplatform UI Components (Adaptive & Zero-Bloat)
-            implementation("io.github.ringga-dev:kmp_printer-ui:2.3.6")
+            implementation("io.github.ringga-dev:kmp_printer-ui:2.4.0")
         }
     }
 }
@@ -80,14 +80,14 @@ kotlin {
 > <dependency>
 >     <groupId>io.github.ringga-dev</groupId>
 >     <artifactId>kmp_printer</artifactId>
->     <version>2.3.6</version>
+>     <version>2.4.0</version>
 > </dependency>
 >
 > <!-- UI Components -->
 > <dependency>
 >     <groupId>io.github.ringga-dev</groupId>
 >     <artifactId>kmp_printer-ui</artifactId>
->     <version>2.3.6</version>
+>     <version>2.4.0</version>
 > </dependency>
 > ```
 > *Available on Maven Central — no extra repository needed.*

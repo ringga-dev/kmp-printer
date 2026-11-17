@@ -36,6 +36,10 @@ tasks.register("syncDocumentationVersion") {
                     "io.github.ringga-dev:kmp_printer:$version"
                 )
                 .replace(
+                    Regex("""io\.github\.ringga-dev:kmp_printer-ui:[^")`\s]+"""),
+                    "io.github.ringga-dev:kmp_printer-ui:$version"
+                )
+                .replace(
                     Regex("""source version configured in this repository is `[^`]+`"""),
                     "source version configured in this repository is `$version`"
                 )
@@ -48,8 +52,8 @@ tasks.register("syncDocumentationVersion") {
                     "Current source version: `$version`"
                 )
                 .replace(
-                    Regex("""<version>[^<]+</version> <!-- sync-version -->"""),
-                    "<version>$version</version> <!-- sync-version -->"
+                    Regex("""<version>[^<]+</version>( <!-- sync-version -->)?"""),
+                    "<version>$version</version>"
                 )
                 .replace(
                     Regex("""img\.shields\.io/badge/v[0-9]+\.[0-9]+\.[0-9]+"""),
