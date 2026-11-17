@@ -1,0 +1,158 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "url": "../../kmp_printer/2.4.0/kmp_printer-2.4.0.module",
+    "group": "io.github.ringga-dev",
+    "module": "kmp_printer",
+    "version": "2.4.0",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "8.14.5"
+    }
+  },
+  "variants": [
+    {
+      "name": "jvmApiElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "standard-jvm",
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-api",
+        "org.jetbrains.kotlin.platform.type": "jvm"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.3.20"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "kmp_printer-jvm-2.4.0.jar",
+          "url": "kmp_printer-jvm-2.4.0.jar",
+          "size": 705899,
+          "sha512": "f207acee0b2ee54c133450869e408d180163530dec18baf21661c3b8cfb9f8298c8a13ed973f110ccc784be151cb6556dda4958bc979f32372f82c2d76f18045",
+          "sha256": "93bcf2fc4ad25d6695eb84a0602ffd4c1b4a16c1b95a3abd1f9a88685cc27ec2",
+          "sha1": "1a967e9b0cf7a96e76d369df7c2139a887660bf1",
+          "md5": "0e830925e97c33291d354f3ab82d3c78"
+        }
+      ]
+    },
+    {
+      "name": "jvmRuntimeElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "standard-jvm",
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime",
+        "org.jetbrains.kotlin.platform.type": "jvm"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.3.20"
+          }
+        },
+        {
+          "group": "com.fazecast",
+          "module": "jSerialComm",
+          "version": {
+            "requires": "2.11.0"
+          }
+        },
+        {
+          "group": "org.usb4java",
+          "module": "usb4java",
+          "version": {
+            "requires": "1.3.0"
+          }
+        },
+        {
+          "group": "org.usb4java",
+          "module": "libusb4java",
+          "version": {
+            "requires": "1.3.0"
+          }
+        },
+        {
+          "group": "net.java.dev.jna",
+          "module": "jna",
+          "version": {
+            "requires": "5.14.0"
+          }
+        },
+        {
+          "group": "net.java.dev.jna",
+          "module": "jna-platform",
+          "version": {
+            "requires": "5.14.0"
+          }
+        },
+        {
+          "group": "org.apache.pdfbox",
+          "module": "pdfbox",
+          "version": {
+            "requires": "3.0.1"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-coroutines-core",
+          "version": {
+            "requires": "1.10.2"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-datetime",
+          "version": {
+            "requires": "0.7.1"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "kmp_printer-jvm-2.4.0.jar",
+          "url": "kmp_printer-jvm-2.4.0.jar",
+          "size": 705899,
+          "sha512": "f207acee0b2ee54c133450869e408d180163530dec18baf21661c3b8cfb9f8298c8a13ed973f110ccc784be151cb6556dda4958bc979f32372f82c2d76f18045",
+          "sha256": "93bcf2fc4ad25d6695eb84a0602ffd4c1b4a16c1b95a3abd1f9a88685cc27ec2",
+          "sha1": "1a967e9b0cf7a96e76d369df7c2139a887660bf1",
+          "md5": "0e830925e97c33291d354f3ab82d3c78"
+        }
+      ]
+    },
+    {
+      "name": "jvmSourcesElements-published",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.jvm.environment": "standard-jvm",
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime",
+        "org.jetbrains.kotlin.platform.type": "jvm"
+      },
+      "files": [
+        {
+          "name": "kmp_printer-jvm-2.4.0-sources.jar",
+          "url": "kmp_printer-jvm-2.4.0-sources.jar",
+          "size": 206631,
+          "sha512": "9c615f973365819cf44fc5a743934721e26792653a51c5d41ed2bc119410981e8f9953e2aabe8ce3b4c2f05b9c5a0d76b4dc55b338eb28b8c38c1a5d7a97f016",
+          "sha256": "1f39a425a77b441ea2ffae8dddfb004cf13f1ef0df75294823beb9d10f326dad",
+          "sha1": "dc04d6b5105c56cbc43b7e5ade2712236576c876",
+          "md5": "fe3fb1af6cde44f1c91749d2968cee62"
+        }
+      ]
+    }
+  ]
+}

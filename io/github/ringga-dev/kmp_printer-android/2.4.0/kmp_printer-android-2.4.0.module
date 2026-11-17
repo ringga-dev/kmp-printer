@@ -1,0 +1,198 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "url": "../../kmp_printer/2.4.0/kmp_printer-2.4.0.module",
+    "group": "io.github.ringga-dev",
+    "module": "kmp_printer",
+    "version": "2.4.0",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "8.14.5"
+    }
+  },
+  "variants": [
+    {
+      "name": "releaseApiElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "android",
+        "org.gradle.usage": "java-api",
+        "org.jetbrains.kotlin.platform.type": "androidJvm"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.3.20"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "kmp_printer-release.aar",
+          "url": "kmp_printer-android-2.4.0.aar",
+          "size": 588815,
+          "sha512": "b4a46199347acaac2e597db10b488dcd5ff3ec7b15476962f498de789af0445f62fc7c24740cb5130aba00c4d850d7dab4dcee441f78b3d4cb2f7cd364a65c9c",
+          "sha256": "ae81e2af75f6085180816072276df425f1898041d45cd1136539803a468b061b",
+          "sha1": "3d1d389dec213050cd26cf22c408dd2b2f4c5d55",
+          "md5": "a5104189529e05532c1e47dd98ed524b"
+        }
+      ]
+    },
+    {
+      "name": "releaseRuntimeElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "android",
+        "org.gradle.usage": "java-runtime",
+        "org.jetbrains.kotlin.platform.type": "androidJvm"
+      },
+      "dependencies": [
+        {
+          "group": "androidx.appcompat",
+          "module": "appcompat",
+          "version": {
+            "requires": "1.7.0"
+          },
+          "excludes": [
+            {
+              "group": "org.jetbrains.kotlin",
+              "module": "kotlin-stdlib-common"
+            },
+            {
+              "group": "org.jetbrains.kotlin",
+              "module": "kotlin-test-common"
+            },
+            {
+              "group": "org.jetbrains.kotlin",
+              "module": "kotlin-test-annotations-common"
+            }
+          ]
+        },
+        {
+          "group": "com.google.android.material",
+          "module": "material",
+          "version": {
+            "requires": "1.12.0"
+          },
+          "excludes": [
+            {
+              "group": "org.jetbrains.kotlin",
+              "module": "kotlin-stdlib-common"
+            },
+            {
+              "group": "org.jetbrains.kotlin",
+              "module": "kotlin-test-common"
+            },
+            {
+              "group": "org.jetbrains.kotlin",
+              "module": "kotlin-test-annotations-common"
+            }
+          ]
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.3.20"
+          },
+          "excludes": [
+            {
+              "group": "org.jetbrains.kotlin",
+              "module": "kotlin-stdlib-common"
+            },
+            {
+              "group": "org.jetbrains.kotlin",
+              "module": "kotlin-test-common"
+            },
+            {
+              "group": "org.jetbrains.kotlin",
+              "module": "kotlin-test-annotations-common"
+            }
+          ]
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-coroutines-core",
+          "version": {
+            "requires": "1.10.2"
+          },
+          "excludes": [
+            {
+              "group": "org.jetbrains.kotlin",
+              "module": "kotlin-stdlib-common"
+            },
+            {
+              "group": "org.jetbrains.kotlin",
+              "module": "kotlin-test-common"
+            },
+            {
+              "group": "org.jetbrains.kotlin",
+              "module": "kotlin-test-annotations-common"
+            }
+          ]
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-datetime",
+          "version": {
+            "requires": "0.7.1"
+          },
+          "excludes": [
+            {
+              "group": "org.jetbrains.kotlin",
+              "module": "kotlin-stdlib-common"
+            },
+            {
+              "group": "org.jetbrains.kotlin",
+              "module": "kotlin-test-common"
+            },
+            {
+              "group": "org.jetbrains.kotlin",
+              "module": "kotlin-test-annotations-common"
+            }
+          ]
+        }
+      ],
+      "files": [
+        {
+          "name": "kmp_printer-release.aar",
+          "url": "kmp_printer-android-2.4.0.aar",
+          "size": 588815,
+          "sha512": "b4a46199347acaac2e597db10b488dcd5ff3ec7b15476962f498de789af0445f62fc7c24740cb5130aba00c4d850d7dab4dcee441f78b3d4cb2f7cd364a65c9c",
+          "sha256": "ae81e2af75f6085180816072276df425f1898041d45cd1136539803a468b061b",
+          "sha1": "3d1d389dec213050cd26cf22c408dd2b2f4c5d55",
+          "md5": "a5104189529e05532c1e47dd98ed524b"
+        }
+      ]
+    },
+    {
+      "name": "releaseSourcesElements-published",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.jvm.environment": "android",
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime",
+        "org.jetbrains.kotlin.platform.type": "androidJvm"
+      },
+      "files": [
+        {
+          "name": "kmp_printer-android-2.4.0-sources.jar",
+          "url": "kmp_printer-android-2.4.0-sources.jar",
+          "size": 195609,
+          "sha512": "774e351cf32af95393c8fb810b67c6bc01f63bb4f6810cdbc137dac35413c192fca812d4af78ba85ca164e31ae2fff30a45448a8363417834838a50dfea9f5ba",
+          "sha256": "99472491e0755fb377418dcb759cf1479777936160736a3b0f045b923f396bd9",
+          "sha1": "78ac22f94ec5de327bd9a8c4eb574d4719320abc",
+          "md5": "9d4993f370c516065cd821899e24734b"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,130 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "url": "../../kmp_printer/2.4.0/kmp_printer-2.4.0.module",
+    "group": "io.github.ringga-dev",
+    "module": "kmp_printer",
+    "version": "2.4.0",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "8.14.5"
+    }
+  },
+  "variants": [
+    {
+      "name": "iosSimulatorArm64ApiElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-api",
+        "org.jetbrains.kotlin.native.target": "ios_simulator_arm64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.3.20"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-coroutines-core",
+          "version": {
+            "requires": "1.10.2"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-datetime",
+          "version": {
+            "requires": "0.7.1"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "printer-iosSimulatorArm64Main-2.4.0.klib",
+          "url": "kmp_printer-iossimulatorarm64-2.4.0.klib",
+          "size": 533624,
+          "sha512": "2616d7a1d0c4dd3595a38bd9bcc1cc3682ae697f30d27b098c53ce86c9d4c08bc701c55752116172d2b2b6fa4ac759a93a2ccc6d240dc6b728acdbb44d1de86e",
+          "sha256": "b8dd274c42103b832b0fb3169ed73fd262f444cf4d7cc4c3b2bfac47af0776ff",
+          "sha1": "9dc2f393c63a15a08a112aa056448ef82c4c0eb3",
+          "md5": "6aa211dceb0eb84b0180997374805705"
+        }
+      ]
+    },
+    {
+      "name": "iosSimulatorArm64SourcesElements-published",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-runtime",
+        "org.jetbrains.kotlin.native.target": "ios_simulator_arm64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "files": [
+        {
+          "name": "kmp_printer-iossimulatorarm64-2.4.0-sources.jar",
+          "url": "kmp_printer-iossimulatorarm64-2.4.0-sources.jar",
+          "size": 186575,
+          "sha512": "63c84694c18c9640fcd6b12a412bc39095ab865b49fa23cc235867333ce7a918f5878c054c59fd0d8e6714141a789ef58c7eb0351dc0d1946614b7bc927a6360",
+          "sha256": "398c9c2e3064e37e784910356f1c7f53ffd4a086ec97ffe6d7a26a78ad8e30fc",
+          "sha1": "04a2e04d0c2de1b24717549283fa4a0de8a7d478",
+          "md5": "4a19259c66e49762261306138c79bfbf"
+        }
+      ]
+    },
+    {
+      "name": "iosSimulatorArm64MetadataElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-metadata",
+        "org.jetbrains.kotlin.native.target": "ios_simulator_arm64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.3.20"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-coroutines-core",
+          "version": {
+            "requires": "1.10.2"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-datetime",
+          "version": {
+            "requires": "0.7.1"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "kmp_printer-iossimulatorarm64-2.4.0-metadata.jar",
+          "url": "kmp_printer-iossimulatorarm64-2.4.0-metadata.jar",
+          "size": 7190,
+          "sha512": "34d049ab9889d15b21998c2fbe806c8336ea5161bd51dc49852396f5dbd81869031f2f2dcfacc3fe57d4ced3ba2f29266dcf3fa0ceaf9e28b3df432db8fd3a7e",
+          "sha256": "4d90c62e80d26140edf09667e897285400cccea6da9577bf6000e367f40c0d83",
+          "sha1": "0042596c797bc0b829fc93822c4ddd7bd20dddb8",
+          "md5": "b72191a13e695c69c4da6bd9824cd804"
+        }
+      ]
+    }
+  ]
+}
