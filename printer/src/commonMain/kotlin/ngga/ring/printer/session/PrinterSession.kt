@@ -48,6 +48,21 @@ interface PrinterSession {
     fun printRaw(data: ByteArray): Flow<PrintStatus>
 
     /**
+     * Pulses the cash drawer kick pin to open the cash drawer.
+     * @param pin Drawer kick pin (0 for Pin 2, 1 for Pin 5).
+     * @return true if command was sent successfully.
+     */
+    suspend fun openCashDrawer(pin: Int = 0): Boolean
+
+    /**
+     * Sends a beep sound command to the printer buzzer.
+     * @param count Number of beeps (1..9).
+     * @param duration Duration multiplier (1..9 * 100ms).
+     * @return true if command was sent successfully.
+     */
+    suspend fun beep(count: Int = 1, duration: Int = 1): Boolean
+
+    /**
      * Queries printer hardware status once.
      */
     suspend fun queryStatus(): PrinterStatus

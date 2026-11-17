@@ -1,6 +1,7 @@
 package ngga.ring.printer.util.preview
 
 import ngga.ring.printer.util.escpos.TextAlignment
+import ngga.ring.printer.util.platform.CharsetTableSingleByte
 
 /**
  * ESC/POS Virtual Renderer — Parses raw ESC/POS byte arrays into a list of VirtualLines.
@@ -39,6 +40,7 @@ object ESCPosVirtualRenderer {
         var alignment = TextAlignment.LEFT
         var widthMultiplier = 1
         var heightMultiplier = 1
+        var activeCodePage: Byte = 0
 
         var i = 0
         while (i < data.size) {
@@ -73,6 +75,7 @@ object ESCPosVirtualRenderer {
                             alignment = TextAlignment.LEFT
                             widthMultiplier = 1
                             heightMultiplier = 1
+                            activeCodePage = 0
                         }
                         // ESC a n — Alignment
                         0x61 -> {
@@ -92,8 +95,12 @@ object ESCPosVirtualRenderer {
                         0x2D -> {
                             if (i + 1 < data.size) isUnderline = (data[++i].toInt() and 0xFF) != 0
                         }
-                        // ESC t n — Code page (skip)
-                        0x74 -> { if (i + 1 < data.size) i++ }
+                        // ESC t n — Code page
+                        0x74 -> {
+                            if (i + 1 < data.size) {
+                                activeCodePage = data[++i]
+                            }
+                        }
                         // ESC ( A — Beep (skip pL pH n1 n2)
                         0x28 -> {
                             if (i + 1 < data.size) {
@@ -251,9 +258,10 @@ object ESCPosVirtualRenderer {
                     currentLine.append(b.toChar())
                 }
 
-                // Extended ASCII (0x80-0xFF) — best effort
+                // Extended ASCII (0x80-0xFF)
                 in 0x80..0xFF -> {
-                    currentLine.append('?')
+                    val decodedChar = decodeExtendedAscii(b, activeCodePage)
+                    currentLine.append(decodedChar)
                 }
             }
             i++
@@ -303,5 +311,27 @@ object ESCPosVirtualRenderer {
             }
             appendLine("└${"─".repeat(paperWidth)}┘")
         }
+    }
+
+    internal fun decodeExtendedAscii(byteVal: Int, codePage: Byte): Char {
+        val table = when (codePage.toInt() and 0xFF) {
+            0 -> CharsetTableSingleByte.CP437_DECODE
+            1 -> CharsetTableSingleByte.ISO_8859_1_DECODE
+            16 -> CharsetTableSingleByte.WINDOWS_1252_DECODE
+            else -> null
+        }
+        if (table != null) {
+            if (byteVal in 0 until table.length) {
+                val ch = table[byteVal]
+                if (ch != '\u0000' && ch != '\ufffd') return ch
+            }
+            return '?'
+        }
+        // Fallback for unknown code page: try CP437 table, otherwise byteVal.toChar()
+        if (byteVal in 0 until CharsetTableSingleByte.CP437_DECODE.length) {
+            val ch = CharsetTableSingleByte.CP437_DECODE[byteVal]
+            if (ch != '\u0000' && ch != '\ufffd') return ch
+        }
+        return if (byteVal in 0x80..0xFF) byteVal.toChar() else '?'
     }
 }

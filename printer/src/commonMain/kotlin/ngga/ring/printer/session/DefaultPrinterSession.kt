@@ -107,6 +107,16 @@ class DefaultPrinterSession(
         }
     }
 
+    override suspend fun openCashDrawer(pin: Int): Boolean {
+        val builder = ESCPosCommandBuilder.fromPrinterConfig(config).openCashDrawer(pin)
+        return sendData(builder.build())
+    }
+
+    override suspend fun beep(count: Int, duration: Int): Boolean {
+        val builder = ESCPosCommandBuilder.fromPrinterConfig(config).beep(count, duration)
+        return sendData(builder.build())
+    }
+
     override suspend fun queryStatus(): PrinterStatus = mutex.withLock {
         if (!connector.isConnected()) return PrinterStatus(isOnline = false)
         return statusMonitor.queryStatus(connector)

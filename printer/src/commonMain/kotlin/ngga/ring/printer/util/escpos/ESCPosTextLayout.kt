@@ -124,40 +124,114 @@ object ESCPosTextLayout {
         }
     }
 
+    private fun calculateColumnWidths(weights: List<Int>, totalWidth: Int): List<Int> {
+        val totalWeight = weights.sum().toDouble()
+        if (totalWeight <= 0.0) return emptyList()
+        val charsPerWeight = totalWidth / totalWeight
+        val widths = mutableListOf<Int>()
+        var allocated = 0
+        for (index in weights.indices) {
+            val colWidth = if (index == weights.lastIndex) {
+                (totalWidth - allocated).coerceAtLeast(0)
+            } else {
+                (weights[index] * charsPerWeight).toInt().coerceAtLeast(0)
+            }
+            allocated += colWidth
+            widths.add(colWidth)
+        }
+        return widths
+    }
+
+    private fun formatCell(text: String, colWidth: Int, alignment: TextAlignment): String {
+        if (colWidth <= 0) return ""
+        val trimmed = if (text.length > colWidth) text.take(colWidth) else text
+        return when (alignment) {
+            TextAlignment.LEFT -> trimmed.padEnd(colWidth)
+            TextAlignment.RIGHT -> trimmed.padStart(colWidth)
+            TextAlignment.CENTER -> {
+                val totalPad = (colWidth - trimmed.length).coerceAtLeast(0)
+                val leftPad = totalPad / 2
+                val rightPad = totalPad - leftPad
+                " ".repeat(leftPad) + trimmed + " ".repeat(rightPad)
+            }
+        }
+    }
+
     /**
-     * Produces a multi-column table row using weights.
+     * Produces a multi-column table row using weights and optional per-column alignments.
      */
     fun tableRow(
         columns: List<String>,
         weights: List<Int>,
-        maxCharsPerLine: Int
+        maxCharsPerLine: Int,
+        alignments: List<TextAlignment> = emptyList()
     ): String {
         if (columns.isEmpty() || weights.isEmpty() || columns.size != weights.size) return ""
         
         val safeMax = (maxCharsPerLine - SAFETY_MARGIN).coerceAtLeast(1)
-        val totalWeight = weights.sum().toDouble()
-        val charsPerWeight = safeMax / totalWeight
+        val colWidths = calculateColumnWidths(weights, safeMax)
+        if (colWidths.isEmpty()) return ""
         
         return buildString {
-            columns.zip(weights).forEachIndexed { index, (text, weight) ->
-                val colWidth = if (index == columns.lastIndex) {
-                    safeMax - length
-                } else {
-                    (weight * charsPerWeight).toInt()
+            columns.indices.forEach { index ->
+                val text = columns[index]
+                val colWidth = colWidths[index]
+                val alignment = alignments.getOrNull(index) ?: when {
+                    index == 0 -> TextAlignment.LEFT
+                    index == columns.lastIndex -> TextAlignment.RIGHT
+                    else -> TextAlignment.CENTER
                 }
                 
                 val content = if (text.length > colWidth) {
                     text.take((colWidth - 1).coerceAtLeast(0)) + " "
                 } else {
-                    val alignment = if (index == 0) "left" else if (index == columns.lastIndex) "right" else "center"
-                    when (alignment) {
-                        "left" -> text.padEnd(colWidth)
-                        "right" -> text.padStart(colWidth)
-                        else -> centeredText(text, colWidth + SAFETY_MARGIN) // pass back full width since safety is here
-                    }
+                    formatCell(text, colWidth, alignment)
                 }
                 append(content.take(colWidth))
             }
         }
+    }
+
+    /**
+     * Produces a multi-line table row where overflowing column text is word-wrapped
+     * across multiple lines, while maintaining per-column alignment and column boundaries.
+     */
+    fun tableRowWrapped(
+        columns: List<String>,
+        weights: List<Int>,
+        maxCharsPerLine: Int,
+        alignments: List<TextAlignment> = emptyList()
+    ): List<String> {
+        if (columns.isEmpty() || weights.isEmpty() || columns.size != weights.size) return emptyList()
+
+        val safeMax = (maxCharsPerLine - SAFETY_MARGIN).coerceAtLeast(1)
+        val colWidths = calculateColumnWidths(weights, safeMax)
+        if (colWidths.isEmpty()) return emptyList()
+
+        val wrappedColumns = columns.indices.map { index ->
+            val colWidth = colWidths[index]
+            wrapText(columns[index], colWidth)
+        }
+
+        val maxLines = wrappedColumns.maxOfOrNull { it.size } ?: 0
+        if (maxLines == 0) return emptyList()
+
+        val result = mutableListOf<String>()
+        for (lineIdx in 0 until maxLines) {
+            val lineString = buildString {
+                for (colIdx in columns.indices) {
+                    val colWidth = colWidths[colIdx]
+                    val alignment = alignments.getOrNull(colIdx) ?: when {
+                        colIdx == 0 -> TextAlignment.LEFT
+                        colIdx == columns.lastIndex -> TextAlignment.RIGHT
+                        else -> TextAlignment.CENTER
+                    }
+                    val cellText = wrappedColumns[colIdx].getOrNull(lineIdx) ?: ""
+                    append(formatCell(cellText, colWidth, alignment))
+                }
+            }
+            result.add(lineString)
+        }
+        return result
     }
 }

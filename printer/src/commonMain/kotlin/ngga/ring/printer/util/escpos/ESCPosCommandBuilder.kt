@@ -120,11 +120,44 @@ class ESCPosCommandBuilder(
     }
 
     /**
-     * Prints a row of a table with relative weights.
-     * Use this for complex product listings.
+     * Prints a row of a table with relative weights and optional per-column alignment.
+     * When [autoWrap] is true, overflowing text is word-wrapped across multiple lines.
      */
-    fun tableRow(columns: List<String>, weights: List<Int>): ESCPosCommandBuilder {
-        line(ESCPosTextLayout.tableRow(columns, weights, config.charsPerLine / currentWidthMultiplier))
+    fun tableRow(
+        columns: List<String>,
+        weights: List<Int>,
+        alignments: List<TextAlignment> = emptyList(),
+        autoWrap: Boolean = false
+    ): ESCPosCommandBuilder {
+        val maxChars = config.charsPerLine / currentWidthMultiplier
+        if (autoWrap) {
+            val lines = ESCPosTextLayout.tableRowWrapped(columns, weights, maxChars, alignments)
+            lines.forEach { line(it) }
+        } else {
+            line(ESCPosTextLayout.tableRow(columns, weights, maxChars, alignments))
+        }
+        return this
+    }
+
+    /**
+     * Prints a multi-line wrapped table row with relative weights and optional per-column alignment.
+     */
+    fun tableRowWrapped(
+        columns: List<String>,
+        weights: List<Int>,
+        alignments: List<TextAlignment> = emptyList()
+    ): ESCPosCommandBuilder {
+        return tableRow(columns, weights, alignments, autoWrap = true)
+    }
+
+    /**
+     * Writes long text wrapped across multiple lines using [ESCPosTextLayout.wrapText],
+     * preventing silent text truncation.
+     */
+    fun lineWrapped(text: String): ESCPosCommandBuilder {
+        val safeMax = (config.charsPerLine / currentWidthMultiplier - 1).coerceAtLeast(1)
+        val lines = ESCPosTextLayout.wrapText(text, safeMax)
+        lines.forEach { line(it) }
         return this
     }
 

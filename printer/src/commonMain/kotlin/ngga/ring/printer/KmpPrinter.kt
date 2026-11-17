@@ -185,6 +185,41 @@ class KmpPrinter(
     }
 
     /**
+     * Direct shortcut to pulse the cash drawer kick pin to open the cash drawer.
+     * @param pin Drawer kick pin (0 for Pin 2, 1 for Pin 5).
+     */
+    fun openCashDrawer(config: PrinterConfig, pin: Int = 0): Flow<PrintStatus> {
+        val builder = newCommandBuilder(config).openCashDrawer(pin)
+        return printRaw(config, builder.build())
+    }
+
+    fun openCashDrawer(device: PrinterDevice, pin: Int = 0, profile: PrinterProfile = PrinterProfile.MM58): Flow<PrintStatus> {
+        return openCashDrawer(device.toPrinterConfig(profile), pin)
+    }
+
+    fun openCashDrawer(config: PrinterTransportConfig, pin: Int = 0): Flow<PrintStatus> {
+        return openCashDrawer(config.toPrinterConfig(), pin)
+    }
+
+    /**
+     * Direct shortcut to send a beep sound command to the printer buzzer.
+     * @param count Number of beeps (1..9).
+     * @param duration Duration multiplier (1..9 * 100ms).
+     */
+    fun beep(config: PrinterConfig, count: Int = 1, duration: Int = 1): Flow<PrintStatus> {
+        val builder = newCommandBuilder(config).beep(count, duration)
+        return printRaw(config, builder.build())
+    }
+
+    fun beep(device: PrinterDevice, count: Int = 1, duration: Int = 1, profile: PrinterProfile = PrinterProfile.MM58): Flow<PrintStatus> {
+        return beep(device.toPrinterConfig(profile), count, duration)
+    }
+
+    fun beep(config: PrinterTransportConfig, count: Int = 1, duration: Int = 1): Flow<PrintStatus> {
+        return beep(config.toPrinterConfig(), count, duration)
+    }
+
+    /**
      * Prints a professional hardware test page containing styles, barcodes, and QR codes.
      */
     fun printTestPage(config: PrinterConfig): Flow<PrintStatus> = printTestPageUseCase(config)
