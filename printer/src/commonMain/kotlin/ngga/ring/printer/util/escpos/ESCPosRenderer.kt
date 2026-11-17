@@ -17,6 +17,18 @@ interface ESCPosRenderer {
      * Renders an SVG string into bitonal bytes.
      */
     suspend fun renderSvg(svgString: String, targetWidth: Int): BooleanArray?
+
+    /**
+     * Returns the number of pages in a PDF document.
+     *
+     * Useful to loop over every page before printing. Returns `0` when the
+     * platform cannot read the document (for example PDF support is not
+     * available on the web target) or when the bytes are not a valid PDF.
+     *
+     * @param data The PDF file bytes.
+     * @return Page count, or 0 when the document cannot be read.
+     */
+    fun pdfPageCount(data: ByteArray): Int
 }
 
 /**

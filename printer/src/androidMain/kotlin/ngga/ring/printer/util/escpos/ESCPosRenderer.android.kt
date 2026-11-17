@@ -71,6 +71,25 @@ class AndroidESCPosRenderer : ESCPosRenderer {
         // For now, we stub it as it's less common than PDF in POS.
         return null
     }
+
+    override fun pdfPageCount(data: ByteArray): Int {
+        var tempFile: File? = null
+        return try {
+            val f = File.createTempFile("page_count", ".pdf")
+            tempFile = f
+            FileOutputStream(f).use { it.write(data) }
+            val pfd = ParcelFileDescriptor.open(f, ParcelFileDescriptor.MODE_READ_ONLY)
+            val renderer = PdfRenderer(pfd)
+            val count = renderer.pageCount
+            renderer.close()
+            pfd.close()
+            count
+        } catch (_: Exception) {
+            0
+        } finally {
+            tempFile?.delete()
+        }
+    }
 }
 
 actual fun getPlatformRenderer(): ESCPosRenderer = AndroidESCPosRenderer()

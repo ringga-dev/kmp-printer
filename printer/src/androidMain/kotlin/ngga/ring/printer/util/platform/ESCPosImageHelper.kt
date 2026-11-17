@@ -63,4 +63,14 @@ actual object ESCPosImageHelper {
         
         return Triple(bytes, width, height)
     }
+
+    actual suspend fun decodeImageBytes(data: ByteArray, maxWidth: Int): Triple<ByteArray, Int, Int>? {
+        return try {
+            val bitmap = android.graphics.BitmapFactory.decodeByteArray(data, 0, data.size)
+                ?: return null
+            processToRaster(bitmap, maxWidth)
+        } catch (_: Exception) {
+            null
+        }
+    }
 }

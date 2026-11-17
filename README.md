@@ -293,10 +293,42 @@ val config = PrinterConfig(
 
 ---
 
+### 🖼️ Print File: Gambar & PDF
+
+Cetak file langsung dari bytes — gambar (PNG/JPEG/BMP/GIF/WebP) maupun PDF —
+tanpa menyusun teks manual:
+
+```kotlin
+val imageBytes = download("https://cdn.toko.com/logo.png")
+val pdfBytes   = download("https://cdn.toko.com/invoice.pdf")
+
+printer.print(profile = PrinterProfile.MM80) {
+    printImageFile(imageBytes, center = true)  // gambar dari bytes
+    printPdf(pdfBytes, pageIndex = 0)           // satu halaman PDF
+    printPdfAll(pdfBytes)                      // semua halaman
+    feed(3)
+    cut()
+}
+
+// Atau satu fungsi dengan deteksi otomatis dari magic bytes
+printer.print(profile = PrinterProfile.MM80) {
+    printFile(fileBytes)                       // AUTO
+    printFile(fileBytes, type = PrintFileType.PDF)
+}
+```
+
+Gambar didukung di **semua platform**. PDF didukung di **JVM, Android, iOS**;
+web belum (browser tidak punya rasterizer PDF bawaan — `printPdf` mengembalikan
+`false` di sana, bukan gagal diam-diam). Lihat
+[Print File](docs/PRINT_FILE.md).
+
+---
+
 ## 📚 Documentation
 
 | Document | Description |
 |---|---|
+| [Print File](docs/PRINT_FILE.md) | Cetak gambar & PDF langsung dari bytes |
 | [Transport Support](docs/TRANSPORT_SUPPORT.md) | Platform-by-platform transport compatibility |
 | [Printer OS Setup](docs/PRINTER_OS_SETUP.md) | OS-level driver & permission setup (Linux udev, Windows, macOS) |
 | [API & Migration](docs/API_MIGRATION.md) | Typed configs, profiles, migration from v1 |
